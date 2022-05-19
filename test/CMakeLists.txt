@@ -1,5 +1,5 @@
 ########################################################################
-# Adding MdcCanIf Library tests
+# Adding exi converter tests
 ########################################################################
 cmake_minimum_required(VERSION 3.8.1)
 
@@ -24,7 +24,7 @@ target_link_libraries(exi_converter_test PUBLIC gtest gmock exi_converter ${PYTH
 # Configure GoogleTest framework
 include(GoogleTest)
 gtest_add_tests(TARGET exi_converter_test
-                TEST_LIST   all_mdccanif_test)
+                TEST_LIST   all_exi_converter_test)
 set_tests_properties(${all_exi_converter_test} PROPERTIES TIMEOUT 10)
 
 set(LINT_SRCS ${LINT_SRCS} ${TEST_SRCS} PARENT_SCOPE)
