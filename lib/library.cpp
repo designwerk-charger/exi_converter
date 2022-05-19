@@ -7,7 +7,7 @@ static std::string getStringCanIf() {
     return "blabla";
 }
 
-// the module name "mdccanif" must be the same as the one in the cmake file
+// the module name "exi_converter" must be the same as the one in the cmake file
 PYBIND11_MODULE(exi_converter, m) {
     m.doc() = R"pbdoc(
         Designwerk EXI Converter Library
