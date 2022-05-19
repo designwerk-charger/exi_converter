@@ -1,0 +1,25 @@
+---
+version: 2
+plan:
+  project-key: MDC3
+  key: EXILIB
+  name: EXI Converter Library
+
+stages:
+  - Unittests:
+      jobs:
+        - RunUnittestsJob
+
+
+RunUnittestsJob:
+  tasks:
+    - script: ./run.sh unittests
+  final-tasks:
+    # This will parse the default files `**/test-reports/*.xml` for junit
+    - test-parser: junit
+  artifacts:
+    -
+      name: C++ Test Coverage Report
+      location: test-coverage/cpp_html/
+      pattern: '**/'
+      required: true
