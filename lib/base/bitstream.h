@@ -9,9 +9,15 @@ class BitStream {
 public:
     BitStream(uint8_t * input_data, size_t length);
 
-    uint32_t get_next_n_bits(uint8_t bits);
+    void get_next_n_bits(uint8_t bits, uint8_t * data);
 
-    void add_n_bits(uint8_t bits, uint32_t data);
+    void add_n_bits(uint8_t bits, uint8_t * data);
+
+private:
+    size_t length_;
+    uint8_t * exi_data_;
+    uint32_t bit_counter_;
+    uint32_t num_bits_;
 };
 
 #endif //EXI_CONVERTER_BITSTREAM_H
