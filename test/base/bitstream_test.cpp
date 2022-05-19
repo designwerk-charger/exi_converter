@@ -18,17 +18,17 @@ TEST(ExiCodecTest, TestGetCorrectBitsOfstream) {
     EXPECT_EQ(0b11111111011011, *data);
 } */
 
-TEST(ExiCodecTest, TestThrowInvalidArgumentException_When_InitializingWithLenghZero) {
+TEST(ExiCodecTest, ThrowInvalidArgumentException_When_InitializingWithLenghZero) {
     EXPECT_THROW(BitStream(NULL, 0), std::invalid_argument);
 }
 
-TEST(ExiCodecTest_GetNextNBits, TestThrowInvalidArgumentException_When_Bits0) {
+TEST(ExiCodecTest_GetNextNBits, ThrowInvalidArgumentException_When_Bits0) {
     BitStream bs(NULL, 1);
     uint8_t output_data;
     EXPECT_THROW(bs.get_next_n_bits(0, &output_data), std::invalid_argument);
 }
 
-TEST(ExiCodecTest_GetNextNBits, TestThrowInvalidArgumentException_When_DataIsNull) {
+TEST(ExiCodecTest_GetNextNBits, ThrowInvalidArgumentException_When_DataIsNull) {
     BitStream bs(NULL, 1);
     EXPECT_THROW(bs.get_next_n_bits(2, NULL), std::invalid_argument);
 }
@@ -105,6 +105,8 @@ TEST(ExiCodecTest_GetNextNBits, ReturnsBitAndByte_when_OneBitAndOneByteRequested
     bs.get_next_n_bits(8, reinterpret_cast<uint8_t *>(&output_data2));
 
     ASSERT_EQ(output_data1, 0x01);
-    ASSERT_EQ(output_data2, (0xDE << 1) + 1); // 0xBD
+    // 0xDE -> 11011110
+    // 0xAD -> 10101101
+    // --> 10111101 -> 0xBD
+    ASSERT_EQ(output_data2, 0xBD); // 0xBD
 }
-

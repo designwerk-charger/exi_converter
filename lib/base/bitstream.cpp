@@ -1,5 +1,6 @@
 #include "bitstream.h"
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 
 
@@ -20,24 +21,49 @@ void BitStream::get_next_n_bits(uint8_t bits, uint8_t * data) {
         throw std::range_error("Requested number of bits is not available!");
 
     uint32_t bit_counter_end = bit_counter_ + bits;
-    uint32_t bits_taken = 0;
+    uint8_t bits_taken = 0;
+    uint8_t bits_placed = 0;
     while (bit_counter_ != bit_counter_end) {
         uint32_t byte_address = bit_counter_ >> 3;
-        uint8_t bits_to_take = std::min(static_cast<uint8_t>(8 - (bit_counter_ - (byte_address << 3))), bits);
-        uint8_t partial_byte = exi_data_[byte_address] >> (8 - bits_to_take) & ((1 << bits_to_take) - 1);
-        data[bits_taken >> 3] = partial_byte;
+        uint8_t position_within_byte = bit_counter_ - (byte_address << 3);
+        uint8_t bits_to_take = std::min(static_cast<uint8_t>(8 - position_within_byte),
+                                        static_cast<uint8_t>(bits - bits_taken));
+        uint8_t target_byte = exi_data_[byte_address];
+        uint8_t target_byte_shifted = (target_byte >> (8 - position_within_byte - bits_to_take));
+        uint8_t bit_mask = (1 << bits_to_take) - 1;
+        uint8_t partial_byte = target_byte_shifted & bit_mask;
+
+        // putting the bits to output data
+        uint8_t target_byte_address = bits_placed >> 3;
+        uint8_t bits_left_in_byte = 8-(bits_placed - (target_byte_address << 3));
+
+        if (bits_to_take > bits_left_in_byte) {
+            data[target_byte_address] = (data[target_byte_address] << bits_left_in_byte) +
+                    (partial_byte >> bits_left_in_byte);
+            bit_mask = (1 << (bits_to_take-bits_left_in_byte)) - 1;
+            data[target_byte_address+1] = partial_byte & bit_mask;
+        } else {
+            if (bits_left_in_byte != 8) {
+                data[target_byte_address] = (data[target_byte_address] << bits_left_in_byte) +
+                        partial_byte;
+            } else {
+                data[target_byte_address] = partial_byte;
+            }
+        }
+
+        bits_placed += bits_to_take;
         bit_counter_ += bits_to_take;
         bits_taken += bits_to_take;
     }
-    return;
 
-    uint8_t addr_offset;
-    uint32_t subset;
-    uint32_t value;
-    addr_offset = bit_counter_ >> 5;  // divide by 32
-    subset = exi_data_[addr_offset];
-    value = subset >> (32 - bits - (bit_counter_ - (addr_offset << 3)));
-    value = ((1 << bits) - 1) & value;
+    #ifndef NDEBUG
+        std::cout << "getting " << std::dec << static_cast<int>(bits) << "bit(s) from position "
+        << bit_counter_ - bits << " -> 0x";
+        for (uint32_t byte=0; byte <= (bits-1 >> 3); byte++) {
+            std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
+        }
+        std::cout << std::endl;
+    #endif
 }
 
 void add_n_bits(uint8_t bits, uint8_t * data) {}
