@@ -2,6 +2,10 @@
 import argparse
 import os
 
+from dom.base_types import BaseTypes
+from dom.enums import Enums
+from dom.type_tree import TypeTree
+
 
 class CmdLineParser:
 
@@ -15,7 +19,11 @@ class CmdLineParser:
             description='Code Generator for Designwerk EXI Converter Library',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        parser.add_argument('--output_path',  help='Directory path to where the generated files will be placed.')
+        parser.add_argument('--output_path', required=True,
+                            help='Directory path to where the generated files will be placed.')
+
+        parser.add_argument('--schema_path', required=True,
+                            help='Directory where the schema files are located.')
 
         return parser
 
@@ -26,15 +34,13 @@ class CmdLineParser:
 if __name__ == '__main__':
     args = CmdLineParser().get_args()
 
-    with open(os.path.join(args.output_path, "gen_test.cpp"), 'w') as f:
-        f.write('#include "gen_test.h"\n'
-                'void GenTest::dummy(void) {}\n')
+    tt = TypeTree(schema_file=os.path.join(args.schema_path, 'iso15118_2/V2G_CI_MsgDef.xsd'))
 
-    with open(os.path.join(args.output_path, "gen_test.h"), 'w') as f:
-        f.write("#pragma once\n\n"
-                "class GenTest {\n"
-                "public:\n"
-                "void dummy(void);\n"
-                "};\n")
+    # write a header file describing basic types which are used by generated code
+    basic_types = BaseTypes(tt.type_tree)
+    basic_types.write_base_type_header(args.output_path)
 
-    print(args.output_path)
+    # generate a header defining all enumerations used
+    enums = Enums(tt.type_tree)
+    enums.write_enum_type_header(args.output_path)
+    enums.write_enum_type_source(args.output_path)

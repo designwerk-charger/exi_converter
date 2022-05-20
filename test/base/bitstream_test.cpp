@@ -110,3 +110,5 @@ TEST(ExiCodecTest_GetNextNBits, ReturnsBitAndByte_when_OneBitAndOneByteRequested
     // --> 10111101 -> 0xBD
     ASSERT_EQ(output_data2, 0xBD); // 0xBD
 }
+
+

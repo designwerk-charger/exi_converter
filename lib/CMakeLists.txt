@@ -8,20 +8,21 @@ set(GENERATED_FILES_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(GENERATED_FILES_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
 
 set(GENERATED_SOURCES
-        ${GENERATED_FILES_DIR}/gen_test.cpp
+        ${GENERATED_FILES_DIR}/enum_types.cpp
 )
 
 set(GENERATED_HEADERS
-        ${GENERATED_FILES_DIR}/gen_test.h
+        ${GENERATED_FILES_DIR}/enum_types.h
+        ${GENERATED_FILES_DIR}/base_types.h
 )
 
 ########################################################################
 # Generate source code for xml schemas
-file(GLOB XSD_FILES ${PROJECT_SOURCE_DIR}/schemas/*.xsd)
-file(GLOB GENERATOR_FILES ${PROJECT_SOURCE_DIR}/code_generator/*.py)
+file(GLOB_RECURSE XSD_FILES ${PROJECT_SOURCE_DIR}/schemas/*.xsd)
+file(GLOB_RECURSE GENERATOR_FILES ${PROJECT_SOURCE_DIR}/code_generator/*.py)
 add_custom_command(
-        OUTPUT ${GENERATED_FILES_DIR}/gen_test.cpp ${GENERATED_FILES_DIR}/gen_test.h
-        COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --output_path=${GENERATED_FILES_DIR}
+        OUTPUT ${GENERATED_SOURCES} ${GENERATED_HEADERS}
+        COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --output_path=${GENERATED_FILES_DIR} --schema_path=${PROJECT_SOURCE_DIR}/schemas
         DEPENDS ${XSD_FILES} ${GENERATOR_FILES}
 )
 

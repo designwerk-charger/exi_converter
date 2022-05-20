@@ -10,6 +10,7 @@ include_directories(../testlib/googletest-release-1.10.0/googletest/include)
 include_directories(../testlib/googletest-release-1.10.0/googlemock/include)
 include_directories(../lib)
 include_directories(.)
+include_directories(${GENERATED_FILES_DIR})
 
 
 add_definitions(-DPROJECT_ROOT=\"${CMAKE_SOURCE_DIR}\")

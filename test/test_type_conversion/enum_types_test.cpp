@@ -1,0 +1,22 @@
+#include "base_types.h"
+#include "enum_types.h"
+
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
+
+class MockBaseTypes : public BaseTypes {
+ public:
+    // uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits)
+    MOCK_METHOD(uint32_t , extractNBitsForEnum, (uint32_t), (override));
+};
+
+TEST(EnumTypesTest, decode_responseCodeType) {
+    MockBaseTypes mock;
+    EnumTypes et(&mock);
+    ON_CALL(mock, extractNBitsForEnum).WillByDefault(::testing::Return(10));
+
+    std::string result = et.decode_responseCodeType();
+
+    ASSERT_EQ(result, "FAILED_CertificateExpired");
+}
