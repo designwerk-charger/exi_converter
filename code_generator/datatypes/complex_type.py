@@ -1,5 +1,6 @@
 from typing import List
 
+from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 from datatypes.element import Element
 
@@ -26,7 +27,22 @@ class ComplexType(BaseType):
         return all_simple_types
 
     def get_child_types(self) -> List[BaseType]:
-        childs = []
+        childs = [self]
         for child in self.child_elements:
-            childs += child.element_type.get_child_types()
+            for child_child in child.element_type.get_child_types():
+                childs.append(child_child)
         return childs
+
+    @property
+    def encode_function(self):
+        return CppFunction(function_name=f"encode_{self.type_name}",
+                           return_type="void", arguments="bool",
+                           comment="",
+                           code="")
+
+    @property
+    def decode_function(self):
+        return CppFunction(function_name=f"decode_{self.type_name}",
+                           return_type="bool", arguments="void",
+                           comment="",
+                           code="")

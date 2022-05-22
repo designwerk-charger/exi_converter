@@ -1,33 +1,36 @@
 #include "base_types.h"
 
-std::string BaseTypes::extractHexBin(uint8_t bytes) {
+
+void BaseTypes::injectHexBin(std::string) { }
+
+std::string BaseTypes::extractHexBin(uint8_t max_length) {
     return "";
 }
 
 uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
-    return 0;
 }
 
-std::string BaseTypes::extractString(void) {
+void BaseTypes::injectString(std::string value) { }
+
+std::string BaseTypes::extractString() {
     return "";
 }
 
-uint32_t BaseTypes::extractNaturalNumber(uint8_t n_bytes) {
+void BaseTypes::injectNaturalNumber(int32_t number) { }
+
+int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     return 0;
 }
 
-int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes) {
-    return 0;
-}
+void BaseTypes::injectBoolValue(bool) { }
 
-bool BaseTypes::extractBoolValue(void) {
+bool BaseTypes::extractBoolValue() {
     return false;
 }
 
-void BaseTypes::injectBoolValue(bool) {
-}
+void BaseTypes::injectBase64Value(std::string value) { }
 
-std::string BaseTypes::extractBase64Value(void) {
+std::string BaseTypes::extractBase64Value() {
     return "";
 }
 

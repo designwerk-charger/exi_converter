@@ -51,13 +51,13 @@ class TypeTree:
             else:
                 return StringType("string", t.sequence_type) #{t.name}
         elif t.sequence_type == "xs:decimal":
-            return DecimalType("decimal", t.sequence_type) # [{t.min_value};{t.max_value}]"
+            return DecimalType("decimal", t.sequence_type, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
         elif t.sequence_type == "xs:float":
             raise TypeError(f"Float type ist not supported! {t}")
         elif t.sequence_type == "xs:boolean":
             return BoolType("bool", t.sequence_type)
         elif t.sequence_type == "xs:hexBinary":
-            return HexBinType("hexBin", t.sequence_type)
+            return HexBinType("hexBin", t.sequence_type, max_length=t.max_length)
         elif t.sequence_type == "xs:base64Binary":
             return Base64Type("base64", t.sequence_type)
         else:

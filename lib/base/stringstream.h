@@ -1,17 +1,25 @@
-#ifndef EXI_CONVERTER_STRINGSTREAM_H
-#define EXI_CONVERTER_STRINGSTREAM_H
+#pragma once
 
 #include <cstdint>
 #include <cstdio>
+#include <string>
+#include <sstream>
+#include <vector>
 
 class StringStream {
-public:
-    StringStream();
+  public:
+    StringStream(const std::string & input_data);
 
-    uint32_t get_next_n_bits(uint8_t bits);
+    std::string get_next_item(void);
 
-    void add_n_bits(uint8_t bits, uint32_t data);
+    void start_key(const std::string & key);
+    void add_value(const std::string & value);
+    void add_value(int32_t value);
+    void end_key();
+
+  private:
+    std::ostringstream output_data_;
+    std::string input_data_;
+    std::vector<std::string> input_items_;
+    uint8_t item_cnt_;
 };
-
-
-#endif //EXI_CONVERTER_STRINGSTREAM_H

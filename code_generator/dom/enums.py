@@ -22,8 +22,6 @@ class Enums:
             if isinstance(t, EnumType):
                 self.all_enum_types.append(t)
 
-
-
         self.cpp_class = CppClass(class_name="EnumTypes", derived_from_class=None,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
                                            "#include \"base_types.h\"\n")
@@ -66,8 +64,8 @@ class Enums:
                 f.write(enum.get_definition())
                 f.write("\n\n")
 
-    def write_enum_type_header(self, directory: str):
+    def write_enum_conversion_header(self, directory: str):
         self.cpp_class.write_h(directory)
 
-    def write_enum_type_source(self, directory: str):
+    def write_enum_conversion_source(self, directory: str):
         self.cpp_class.write_cpp(directory)

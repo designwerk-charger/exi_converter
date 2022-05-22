@@ -20,4 +20,4 @@ class BaseTypes:
 
     def write_base_type_header(self, directory: str):
         self.cpp_class.write_h(directory)
-        self.cpp_class.write_cpp(directory)
+        # self.cpp_class.write_cpp(directory)
