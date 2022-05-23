@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 
 #include <iostream>
+#include "base/bitstream.h"
 
 static std::string getStringCanIf() {
     return "blabla";
@@ -22,7 +23,7 @@ PYBIND11_MODULE(exi_converter, m) {
 #else
     m.attr("__version__") = "dev";
 #endif
-    m.def("getStringCanIf", &getStringCanIf); //
+    m.def("getStringCanIf", &getStringCanIf);
 
     pybind11::class_<ExiCodec>(m, "ExiCodec", "Class to encode and decode EXI")
             .def(pybind11::init<>())
@@ -36,9 +37,8 @@ char* ExiCodec::encode(std::string json_str, std::string ns) {
     return (char*)"RETURN_BYTE_STREAM_OF_ENCODED_EXI";
 }
 
-std::string ExiCodec::decode(char* byte_stream, std::string ns) {
-    std::cout << "input byte-stream: "<< byte_stream << std::endl;
-    std::cout << "function decode ..." << std::endl;
+std::string ExiCodec::decode(uint8_t * byte_stream, uint32_t length,  std::string ns) {
+    BitStream bitstream(byte_stream, length);
     return "return_json_of_decoded_EXI";
 }
 

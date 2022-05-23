@@ -17,6 +17,8 @@ class StringStream {
     void add_value(int32_t value);
     void end_key();
 
+    std::string get_full_stream();
+
   private:
     std::ostringstream output_data_;
     std::string input_data_;

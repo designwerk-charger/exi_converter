@@ -2,21 +2,6 @@
 
 #include "base/bitstream.h"
 
-/*
-TEST(BitStreamTest, TestGetCorrectBitsOfstream) {
-    //uint8_t raw_data [3] = {0b01100000, 0b01011010, 0b00001111};
-    uint32_t raw_data [3] = {0xAFFEDEAD, 0xBEAF0000, 0xABCDEFFF};
-    BitStream bs(raw_data, 8);
-
-    // uint32_t bit_seq =
-    uint8_t data[3];
-    bs.get_next_n_bits(2, data);
-    EXPECT_EQ(2, *data);
-    bs.get_next_n_bits(5, data);
-    EXPECT_EQ(23, *data);
-    bs.get_next_n_bits(14, data);
-    EXPECT_EQ(0b11111111011011, *data);
-} */
 
 TEST(BitStreamTest, ThrowInvalidArgumentException_When_InitializingWithLenghZero) {
     EXPECT_THROW(BitStream(NULL, 0), std::invalid_argument);

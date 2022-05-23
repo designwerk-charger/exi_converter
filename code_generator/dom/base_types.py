@@ -14,7 +14,9 @@ class BaseTypes:
         self.cpp_class = CppClass(class_name="BaseTypes", derived_from_class=None, virtual=True,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n"
                                            "#include \"base/bitstream.h\"\n")
-
+        self.cpp_class.add_member("BitStream * bit_stream_;\n")
+        self.cpp_class.add_constructor("BitStream * bit_stream",
+                                       "bit_stream_ = bit_stream;\n")
         for t in self.simple_types.values():
             self.cpp_class.add_functions(t.get_base_type_functions())
 

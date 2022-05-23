@@ -1,5 +1,7 @@
 #include "base_types.h"
 
+BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
+
 
 void BaseTypes::injectHexBin(std::string) { }
 

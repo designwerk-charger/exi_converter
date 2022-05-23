@@ -7,12 +7,15 @@
 
 class MockBaseTypes : public BaseTypes {
  public:
+    MockBaseTypes(BitStream * bs) : BaseTypes(bs) {}  // NOLINT
     // uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits)
     MOCK_METHOD(uint32_t , extractNBitsForEnum, (uint32_t), (override));
 };
 
 TEST(EnumTypesTest, decode_responseCodeType) {
-    MockBaseTypes mock;
+    uint8_t data;
+    BitStream bs(&data, 1);
+    MockBaseTypes mock(&bs);
     EnumTypes et(&mock);
     ON_CALL(mock, extractNBitsForEnum).WillByDefault(::testing::Return(10));
 
@@ -20,3 +23,4 @@ TEST(EnumTypesTest, decode_responseCodeType) {
 
     ASSERT_EQ(result, "FAILED_CertificateExpired");
 }
+

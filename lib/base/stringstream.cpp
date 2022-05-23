@@ -24,3 +24,7 @@ void StringStream::start_key(const std::string & key) { }
 void StringStream::end_key() { }
 void StringStream::add_value(const std::string & value) { }
 void StringStream::add_value(int32_t value) { }
+
+std::string StringStream::get_full_stream() {
+    return output_data_.str();
+}

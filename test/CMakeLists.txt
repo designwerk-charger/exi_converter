@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 3.8.1)
 # Collect test sources and include directories
 file(GLOB TEST_TYPE_CONV_SRC type_conversion/*.cpp)
 file(GLOB TEST_BASE_SRC base/*.cpp)
-set(TEST_SRCS ${TEST_TYPE_CONV_SRC} ${TEST_BASE_SRC})
+file(GLOB TEST_DECODING_SRC decoding/*.cpp)
+set(TEST_SRCS ${TEST_TYPE_CONV_SRC} ${TEST_BASE_SRC} ${TEST_DECODING_SRC})
 
 include_directories(../testlib/googletest-release-1.10.0/googletest/include)
 include_directories(../testlib/googletest-release-1.10.0/googlemock/include)
