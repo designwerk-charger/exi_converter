@@ -7,7 +7,7 @@ from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
 from datatypes.element import Element
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type
-from dom.ccs_messages import ISO15118_2_MSGS
+from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
 
 
 class TypeTree:
@@ -16,7 +16,7 @@ class TypeTree:
         self._schema = xmlschema.XMLSchema(source=schema_file)
 
         self._type_tree = []
-        top_level_msgs = self.get_full_list_of_message_types(ISO15118_2_MSGS)
+        top_level_msgs = self.get_full_list_of_message_types(ISO15118_2_MSGS) + ISO15118_2_MAIN_TYPES
         for name, types in self._schema.types.target_dict.items():
             if types.local_name in top_level_msgs:
                 self._type_tree.append(self.diveIntoType(types))
