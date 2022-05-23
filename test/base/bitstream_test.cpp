@@ -95,3 +95,20 @@ TEST(BitStreamTest_GetNextNBits, ReturnsBitAndByte_when_OneBitAndOneByteRequeste
     // --> 10111101 -> 0xBD
     ASSERT_EQ(output_data2, 0xBD);  // 0xBD
 }
+
+TEST(BitStreamTest_GetNextNBits, Returns2singleBitsAnd7bits_when_2SingleBitsAnd7BitsRequested) {
+    uint8_t four_byte_input[] = {0b01000101, 0b01111010, 0b10001000, 0x7F};
+    uint32_t output_data1 = 0;
+    uint32_t output_data2 = 0;
+    uint32_t output_data3 = 0;
+
+    BitStream bs(four_byte_input, 5);
+
+    bs.get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data1));
+    bs.get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data2));
+    bs.get_next_n_bits(7, reinterpret_cast<uint8_t *>(&output_data3));
+
+    ASSERT_EQ(output_data1, 0x00);
+    ASSERT_EQ(output_data2, 0x01);
+    ASSERT_EQ(output_data3, 0b00001010);
+}
