@@ -22,6 +22,10 @@ class TypeTree:
                 self._type_tree.append(self.diveIntoType(types))
 
     @property
+    def schema(self):
+        return self._schema
+
+    @property
     def type_tree(self) -> List[BaseType]:
         return self._type_tree
 
@@ -59,6 +63,9 @@ class TypeTree:
         elif t.sequence_type == "xs:hexBinary":
             return HexBinType("hexBin", t.sequence_type, max_length=t.max_length)
         elif t.sequence_type == "xs:base64Binary":
+            return Base64Type("base64", t.sequence_type)
+        elif t.sequence_type == "xs:anyURI":
+            #Todo MB Fix type
             return Base64Type("base64", t.sequence_type)
         else:
             raise TypeError(f"The type {t.sequence_type} ist not supported! {t}")

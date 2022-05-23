@@ -41,7 +41,9 @@ int main(int argc, char *argv[]) {
         uint8_t * bindata = static_cast<uint8_t *>(malloc(length));
         hex2bin(hexstr.c_str(), bindata);
 
-        tmp.decode(bindata, length, std::string(argv[3]));
+        std::string output = tmp.decode(bindata, length, std::string(argv[3]));
+
+        std::cout << output << std::endl;
         return 0;
     } else if (std::string(argv[1]) == "encode") {
         char* byte_stream = (char*)"BYTE_STREAM_AS_STRING";

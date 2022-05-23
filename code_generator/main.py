@@ -3,6 +3,7 @@ import argparse
 import os
 
 from dom.base_types import BaseTypes
+from dom.body_message import BodyMessage
 from dom.complex_types import ComplexTypes
 from dom.enums import Enums
 from dom.type_tree import TypeTree
@@ -46,7 +47,11 @@ if __name__ == '__main__':
     enums.write_enum_conversion_header(args.output_path)
     enums.write_enum_conversion_source(args.output_path)
 
-    # generate
+    # generate classes for encoding and decoding complex types
     ct = ComplexTypes(tt.type_tree)
     ct.write_complex_type_conversion_header(args.output_path)
     ct.write_complex_type_conversion_source(args.output_path)
+
+    bm = BodyMessage(tt.schema, ct)
+    bm.write_body_conversion_header(args.output_path)
+    bm.write_body_conversion_source(args.output_path)

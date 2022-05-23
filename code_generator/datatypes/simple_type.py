@@ -131,7 +131,7 @@ class StringType(SimpleType):
 
 
 class DecimalType(SimpleType):
-    TYPE_SIZE = {'long': 8, 'int': 4, 'short': 2, 'byte': 1}
+    TYPE_SIZE = {'long': 8, 'int': 4, 'integer': 4, 'short': 2, 'byte': 1, 'HMACOutputLengthType': 4}
 
     def __init__(self, type_name: str, type_namespace: str, detail_type, min_val, max_val):
         super().__init__(type_name, type_namespace)

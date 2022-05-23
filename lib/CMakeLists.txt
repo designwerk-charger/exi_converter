@@ -10,12 +10,14 @@ set(GENERATED_FILES_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
 set(GENERATED_SOURCES
         ${GENERATED_FILES_DIR}/enum_types.cpp
         ${GENERATED_FILES_DIR}/complex_types.cpp
+        ${GENERATED_FILES_DIR}/body_message.cpp
 )
 
 set(GENERATED_HEADERS
         ${GENERATED_FILES_DIR}/enum_types.h
         ${GENERATED_FILES_DIR}/base_types.h
         ${GENERATED_FILES_DIR}/complex_types.h
+        ${GENERATED_FILES_DIR}/body_message.h
 )
 
 ########################################################################

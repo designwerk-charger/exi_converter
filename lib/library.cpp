@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include "base/bitstream.h"
+#include "complex_types.h"
+#include "base_types.h"
+#include "body_message.h"
 
 static std::string getStringCanIf() {
     return "blabla";
@@ -39,7 +42,35 @@ char* ExiCodec::encode(std::string json_str, std::string ns) {
 
 std::string ExiCodec::decode(uint8_t * byte_stream, uint32_t length,  std::string ns) {
     BitStream bitstream(byte_stream, length);
-    return "return_json_of_decoded_EXI";
+
+    // checking header byte
+    uint8_t exi_options;
+    bitstream.get_next_n_bits(8, &exi_options);
+    std::cout << "decoding message " << ns << " with options 0x" << std::hex << int(exi_options) << std::endl;
+
+    uint8_t message_id;
+    bitstream.get_next_n_bits(7, &message_id);
+    if (message_id != 76) {
+        std::cerr << "V2G_Message with ID 76 was expected! Instead got ID " << int(message_id) << std::endl;
+    }
+
+    BaseTypes base_types(&bitstream);
+    EnumTypes enums(&base_types);
+    StringStream stringstream("");
+    ComplexTypes complex_types(&base_types, &enums, &stringstream);
+    BodyMessage body_message(&complex_types, &bitstream);
+
+    stringstream.start_key("V2G_Message");
+    stringstream.start_key("Header");
+    complex_types.decode_MessageHeaderType();
+    stringstream.end_key();
+
+    stringstream.start_key("Body");
+    body_message.decodeBody();
+    stringstream.end_key();
+
+    stringstream.end_key();
+    return stringstream.get_full_stream();
 }
 
 ExiCodec::ExiCodec() {
