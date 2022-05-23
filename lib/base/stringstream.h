@@ -20,6 +20,8 @@ class StringStream {
     std::string get_full_stream();
 
   private:
+    enum commands_t {nocmd, startkey, addvalue, endkey};
+    commands_t last_command_;
     std::ostringstream output_data_;
     std::string input_data_;
     std::vector<std::string> input_items_;
