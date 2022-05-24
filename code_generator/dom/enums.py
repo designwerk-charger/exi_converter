@@ -39,7 +39,7 @@ class Enums:
             code += f"\t\"{item}\",\n"
         code += "};\n"
         code += f"uint8_t enum_num = base_types->extractNBitsForEnum({num_bits});\n" \
-                f"if (enum_num > {num_items}) [[unlikely]] ""{\n" \
+                f"if (enum_num >= {num_items}) [[unlikely]] ""{\n" \
                 "\tstd::ostringstream stm;\n" \
                 "\tstm << \"Enum value \" << enum_num << \"exceeds maximum of {num_items}!\";\n" \
                 f"\tthrow std::runtime_error(stm.str());\n" \

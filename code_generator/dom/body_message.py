@@ -52,8 +52,7 @@ class BodyMessage:
                         f"\t\tbreak;\n"
             else:
                 code += f"\tcase {key}: throw std::runtime_error(\"The type {value.type.local_name} with number {key}" \
-                        f", can not be directly decoded!\");\n" \
-                        f"\t\tbreak;\n"
+                        f", can not be directly decoded!\");\n"
 
         code += f"\tdefault:\n" \
                 f"\t\tstd::ostringstream stm;\n" \
