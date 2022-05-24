@@ -58,20 +58,20 @@ std::string ExiCodec::decode(std::vector<uint8_t> byte_stream,  std::string ns) 
     EnumTypes enums(&base_types);
     StringStream stringstream("");
     ComplexTypes complex_types(&base_types, &enums, &stringstream);
-    BodyMessage body_message(&complex_types, &bitstream);
+    BodyMessage body_message(&complex_types, &bitstream, &stringstream);
 
     stringstream.start_key("V2G_Message");
     base_types.check_event_code_is_0("StartV2G_Message");
     stringstream.start_key("Header");
     base_types.check_event_code_is_0("StartHeader");
     complex_types.decode_MessageHeaderType();
-    base_types.check_event_code_is_0("EndHeader");
-    stringstream.end_key();
+    //base_types.check_event_code_is_0("EndHeader");
+    stringstream.end_key(); // header
 
     stringstream.start_key("Body");
     base_types.check_event_code_is_0("Body");
     body_message.decodeBody();
-    stringstream.end_key();
+    stringstream.end_key(); // body
 
     stringstream.end_key();
     return stringstream.get_full_stream();

@@ -92,6 +92,17 @@ void BaseTypes::check_event_code_is_0(std::string current_type_name) {
     }
 }
 
+uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current_type_name) {
+    uint8_t event_code;
+    bit_stream_->get_next_n_bits(n_bits, &event_code);
+
+#ifndef NDEBUG
+    std::cout << "check multibit event code for '" << current_type_name << "' --> " << std::dec << int(event_code)
+    << std::endl;
+#endif
+    return event_code;
+}
+
 // todo llr: string??
 std::string BaseTypes::extractBase64Value() {
     return "";

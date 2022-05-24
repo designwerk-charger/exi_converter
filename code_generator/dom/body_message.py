@@ -34,10 +34,10 @@ class BodyMessage:
         relevant_body_elements_numbered = self.get_top_elements_sorted_lexicographically(schema)
 
         self.cpp_class = CppClass(class_name="BodyMessage", derived_from_class=None,
-                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n")
-        self.cpp_class.add_member("ComplexTypes * complex_types_;\nBitStream * bit_stream_;")
-        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream",
-                                       "complex_types_ = complex_types;\n\tbit_stream_ = bit_stream;\n")
+                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/stringstream.h\"\n")
+        self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n\tStringStream * string_stream_;")
+        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, StringStream * string_stream",
+                                       "complex_types_ = complex_types;\n\tbit_stream_ = bit_stream;\n\tstring_stream_ = string_stream;\n")
 
         self.cpp_class.add_function(self.getDecodeFunction(relevant_body_elements_numbered))
 
@@ -45,10 +45,12 @@ class BodyMessage:
     def getDecodeFunction(self, elements) -> CppFunction:
         code = f"uint8_t message_type;\n" \
                f"bit_stream_->get_next_n_bits(7, &message_type);\n" \
-               f"switch(message_type) ""{\n"
+               f"switch(message_type+4) ""{\n"  # Todo MBN: Why do i need to add 4???
         for key, value in elements.items():
             if value.type.local_name in self.complex_type_names:
-                code += f"\tcase {key}: complex_types_->decode_{value.type.local_name}();\n" \
+                code += f"\tcase {key}:\n" \
+                        f"\t\tstring_stream_->start_key(\"{value.type.local_name}\");\n" \
+                        f"\t\tcomplex_types_->decode_{value.type.local_name}();\n" \
                         f"\t\tbreak;\n"
             else:
                 code += f"\tcase {key}: throw std::runtime_error(\"The type {value.type.local_name} with number {key}" \
@@ -58,7 +60,8 @@ class BodyMessage:
                 f"\t\tstd::ostringstream stm;\n" \
                 f"\t\tstm << \"The requested value \" << message_type << \" is out of range!\";\n" \
                 f"\t\tthrow std::runtime_error(stm.str());\n" \
-                f"}};\n"
+                f"}};\n" \
+                f"string_stream_->end_key();\n"
 
         return CppFunction(function_name="decodeBody",
                            return_type="void",

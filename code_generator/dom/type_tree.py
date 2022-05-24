@@ -82,5 +82,6 @@ class TypeTree:
                     components.append(Element(c.local_name, TypeTree.diveIntoType(TypeTree.extractComponentType(c)),
                                               is_optional=is_optional, max_items=c.max_occurs))
                 if isinstance(c, XsdAttribute):
-                    components.append(Element(c.local_name, TypeTree.diveIntoType(TypeTree.extractComponentType(c)), False))
+                    optional = True if c.use == "optional" else False
+                    components.append(Element(c.local_name, TypeTree.diveIntoType(TypeTree.extractComponentType(c)), optional))
             return ComplexType(t.local_name, t.sequence_type, components)

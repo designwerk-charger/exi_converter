@@ -26,6 +26,11 @@ class BaseTypes:
                                                 code="",
                                                 comment=""
                                                 ))
+        self.cpp_class.add_function(CppFunction(function_name="get_event_code_with_n_bits",
+                                                return_type="uint8_t", arguments="int8_t n_bits, std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
 
     def write_base_type_header(self, directory: str):
         self.cpp_class.write_h(directory)
