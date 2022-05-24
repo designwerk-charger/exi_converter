@@ -48,25 +48,25 @@ void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) { }
 int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     uint32_t output_data = 0;
     int32_t int_number = 0;
+    int32_t sign_factor = 1;
     bool is_negative = false;
     if (!is_unsigned) {
         bit_stream_->get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data));
-        is_negative = output_data;
+        if (output_data) {
+            sign_factor = -1;
+        }
     }
 
     bool read_another_octet = true;
     uint8_t bit_shifter = 0;
     while (read_another_octet) {
-        bit_stream_->get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data));
-        read_another_octet = output_data;
-        bit_stream_->get_next_n_bits(7, reinterpret_cast<uint8_t *>(&output_data));
+        bit_stream_->get_next_n_bits(8, reinterpret_cast<uint8_t *>(&output_data));
+        read_another_octet = output_data & 0x0080;
+        output_data = output_data & 0x007F;
         int_number = int_number + (output_data << bit_shifter);
         bit_shifter += 7;
     }
-    if (is_negative) {
-        return (-1 * int_number);
-    }
-    return int_number;
+    return sign_factor * int_number;
 }
 
 void BaseTypes::injectBoolValue(bool) { }
