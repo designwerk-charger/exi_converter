@@ -57,3 +57,14 @@ TEST(BaseTypeTest, GetStringFromExiStream_When_AskedForString) {
 
     ASSERT_EQ(bt_out, "HELLO");
 }
+
+TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
+    uint8_t exi_data[] = {0xDE, 0xAD, 0xBE, 0xAF};
+    BitStream bs(exi_data, 4);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractHexBin(4);
+
+    ASSERT_EQ(bt_out, "DEADBEAF");
+}
