@@ -40,8 +40,8 @@ char* ExiCodec::encode(std::string json_str, std::string ns) {
     return (char*)"RETURN_BYTE_STREAM_OF_ENCODED_EXI";
 }
 
-std::string ExiCodec::decode(uint8_t * byte_stream, uint32_t length,  std::string ns) {
-    BitStream bitstream(byte_stream, length);
+std::string ExiCodec::decode(std::vector<uint8_t> byte_stream,  std::string ns) {
+    BitStream bitstream(byte_stream);
 
     // checking header byte
     uint8_t exi_options;

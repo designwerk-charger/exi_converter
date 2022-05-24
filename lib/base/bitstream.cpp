@@ -11,6 +11,14 @@ BitStream::BitStream(uint8_t * input_data, size_t length)
     }
 }
 
+BitStream::BitStream(const std::vector<uint8_t> & input_data)
+        : exi_data_(const_cast<uint8_t *>(input_data.data())), length_(input_data.size()), bit_counter_(0),
+        num_bits_(input_data.size() << 3) {
+    if (input_data.size() < 1) {
+        throw std::invalid_argument("Bitstream can not be initialized with size < 1.");
+    }
+}
+
 // Todo: This function should be replaced by the get_max_4bytes
 void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
     if (data == nullptr)

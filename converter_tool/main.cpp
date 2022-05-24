@@ -1,3 +1,4 @@
+#include <vector>
 #include "library.h"
 
 int char2int(char input) {
@@ -12,11 +13,13 @@ int char2int(char input) {
 
 // This function assumes src to be a zero terminated sanitized string with
 // an even number of [0-9a-f] characters, and target to be sufficiently large
-void hex2bin(const char* src, uint8_t * target) {
+std::vector<uint8_t> hex2bin(const char* src) {
+    std::vector<uint8_t> output;
     while(*src && src[1]) {
-        *(target++) = char2int(*src)*16 + char2int(src[1]);
+        output.push_back(char2int(*src)*16 + char2int(src[1]));
         src += 2;
     }
+    return output;
 }
 
 void printUsage() {
@@ -37,11 +40,9 @@ int main(int argc, char *argv[]) {
 
     if (std::string(argv[1]) == "decode") {
         std::string hexstr(argv[2]);
-        int32_t length = hexstr.size() >> 1;
-        uint8_t * bindata = static_cast<uint8_t *>(malloc(length));
-        hex2bin(hexstr.c_str(), bindata);
+        auto bindata = hex2bin(hexstr.c_str());
 
-        std::string output = tmp.decode(bindata, length, std::string(argv[3]));
+        std::string output = tmp.decode(bindata, std::string(argv[3]));
 
         std::cout << output << std::endl;
         return 0;

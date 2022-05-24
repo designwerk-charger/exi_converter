@@ -4,10 +4,12 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <vector>
 
 class BitStream {
 public:
     BitStream(uint8_t * input_data, size_t length);
+    BitStream(const std::vector<uint8_t> & input_data);
 
     void get_next_n_bits(uint32_t bitsrequested, uint8_t * data);
 
