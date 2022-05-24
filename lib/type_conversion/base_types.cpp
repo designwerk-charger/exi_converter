@@ -21,12 +21,14 @@ void BaseTypes::injectString(std::string value) { }
 std::string BaseTypes::extractString() {
     uint8_t length_str;
     bit_stream_->get_next_n_bits(8, &length_str);
-    uint8_t* out_string = new uint8_t[length_str + 1];
+    uint8_t* out_chars = new uint8_t[length_str + 1];
 
-    bit_stream_->get_next_n_bits((length_str) * 8, out_string);
-    out_string[length_str] = 0;
+    bit_stream_->get_next_n_bits((length_str) * 8, out_chars);
+    out_chars[length_str] = 0;
 
-    return std::string(reinterpret_cast<const char *>(out_string));
+    std::string out_string(reinterpret_cast<const char *>(out_chars));
+    delete [] out_chars;
+    return out_string;
 }
 
 void BaseTypes::injectNaturalNumber(int32_t number) { }
