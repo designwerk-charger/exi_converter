@@ -53,7 +53,7 @@ void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
     }
 
     #ifndef NDEBUG
-        std::cout << "getting " << std::dec << static_cast<int>(bitsrequested) << "bit(s) from position "
+        std::cout << "\tgetting " << std::dec << static_cast<int>(bitsrequested) << "bit(s) from position "
                   << bit_counter_ - bitsrequested << " -> 0x";
         for (uint32_t byte=0; byte <= (bitsrequested - 1 >> 3); byte++) {
             std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
@@ -64,7 +64,7 @@ void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
 
 uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
     uint32_t address_32bit = bit_counter_ >> 5;
-    uint32_t bit_available_for_takeout = 32 - (bit_counter_ - (address_32bit >> 5));
+    uint32_t bit_available_for_takeout = 32 - (bit_counter_ - (address_32bit << 5));
 
     uint32_t value1 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_)[address_32bit]);
 

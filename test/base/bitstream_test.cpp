@@ -140,6 +140,18 @@ TEST(BitStreamTest_GetNextNBits, Returns2singleBitsAnd7bits_when_2SingleBitsAnd7
     ASSERT_EQ(output_data3, 0b00001010);
 }
 
+TEST(BitStreamTest_GetNextNBits, Returns8Byte) {
+    uint8_t byte_input[] = {0xF0, 0x5F, 0xBD, 0x2A, 0x93, 0x5C, 0x8E, 0xC5, 0x17};
+    BitStream bs(byte_input, 9);
+    uint8_t databytes[8];
+
+    bs.get_next_n_bits(8*8, databytes);
+
+    for (int i=0; i < 8; i++) {
+        ASSERT_EQ(databytes[i], byte_input[i]);
+    }
+}
+
 
 TEST(BitStreamTest_GetMax4Bytes, ReturnsOneBit) {
     uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
