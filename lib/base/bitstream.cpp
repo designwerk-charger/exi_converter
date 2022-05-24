@@ -30,7 +30,7 @@ void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
 
     uint32_t bits_taken = 0;
     while (bits_taken < bitsrequested) {
-        uint32_t bits_to_take = std::min(bitsrequested, 32u);
+        uint32_t bits_to_take = std::min(bitsrequested-bits_taken, 32u);
         uint32_t d;
         switch ((bits_to_take-1)>>3) {
             case 0:
@@ -82,6 +82,7 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
         uint32_t remaining_bits = bitsrequested - bit_available_for_takeout;
         value1 = value1 & ((1 << bit_available_for_takeout) - 1);
         value2 = (value2 >> (32-remaining_bits)) & ((1 << remaining_bits) - 1);
+        bit_counter_ += bitsrequested;
         return (value1 << remaining_bits) + value2;
     }
 }
