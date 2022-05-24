@@ -152,8 +152,8 @@ class DecimalType(SimpleType):
 
     @property
     def encode_function(self):
-        return CppFunction(function_name="injectNaturalNumber",
-                           return_type="void", arguments="int32_t number",
+        return CppFunction(function_name="injectIntegerNumber",
+                           return_type="void", arguments="int32_t number, bool is_unsigned",
                            comment="",
                            code="")
 

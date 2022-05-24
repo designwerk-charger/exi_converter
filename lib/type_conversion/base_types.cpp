@@ -31,7 +31,7 @@ std::string BaseTypes::extractString() {
     return out_string;
 }
 
-void BaseTypes::injectNaturalNumber(int32_t number) { }
+void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) { }
 
 int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     uint32_t output_data = 0;
