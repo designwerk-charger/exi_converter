@@ -9,9 +9,12 @@ class BitStream {
 public:
     BitStream(uint8_t * input_data, size_t length);
 
-    void get_next_n_bits(uint8_t bits, uint8_t * data);
+    void get_next_n_bits(uint32_t bitsrequested, uint8_t * data);
 
     void add_n_bits(uint8_t bits, uint8_t * data);
+
+    // Subfunctions
+    uint32_t get_max_4bytes(uint8_t bitsrequested);
 
 private:
     size_t length_;

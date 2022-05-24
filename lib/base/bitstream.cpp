@@ -4,7 +4,6 @@
 #include <algorithm>
 
 
-// TODO(LLR): Implement and Test
 BitStream::BitStream(uint8_t * input_data, size_t length)
     : exi_data_(input_data), length_(length), bit_counter_(0), num_bits_(length << 3) {
     if (length < 1) {
@@ -12,58 +11,71 @@ BitStream::BitStream(uint8_t * input_data, size_t length)
     }
 }
 
-void BitStream::get_next_n_bits(uint8_t bits, uint8_t * data) {
+// Todo: This function should be replaced by the get_max_4bytes
+void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
     if (data == nullptr)
         throw std::invalid_argument("output data argument is NULL!");
-    if (bits == 0)
+    if (bitsrequested == 0)
         throw std::invalid_argument("requested number of bits can not be 0!");
-    if (bits > num_bits_)
+    if (bitsrequested > num_bits_)
         throw std::range_error("Requested number of bits is not available!");
 
-    uint32_t bit_counter_end = bit_counter_ + bits;
-    uint8_t bits_taken = 0;
-    uint8_t bits_placed = 0;
-    while (bit_counter_ != bit_counter_end) {
-        uint32_t byte_address = bit_counter_ >> 3;
-        uint8_t position_within_byte = bit_counter_ - (byte_address << 3);
-        uint8_t bits_to_take = std::min(static_cast<uint8_t>(8 - position_within_byte),
-                                        static_cast<uint8_t>(bits - bits_taken));
-        uint8_t target_byte = exi_data_[byte_address];
-        uint8_t target_byte_shifted = (target_byte >> (8 - position_within_byte - bits_to_take));
-        uint8_t bit_mask = (1 << bits_to_take) - 1;
-        uint8_t partial_byte = target_byte_shifted & bit_mask;
-
-        // putting the bits to output data
-        uint8_t target_byte_address = bits_placed >> 3;
-        uint8_t bits_left_in_byte = 8-(bits_placed - (target_byte_address << 3));
-
-        if (bits_to_take > bits_left_in_byte) {
-            data[target_byte_address] = (data[target_byte_address] << bits_left_in_byte) +
-                    (partial_byte >> bits_left_in_byte);
-            bit_mask = (1 << (bits_to_take-bits_left_in_byte)) - 1;
-            data[target_byte_address+1] = partial_byte & bit_mask;
-        } else {
-            if (bits_left_in_byte != 8) {
-                data[target_byte_address] = (data[target_byte_address] << bits_left_in_byte) +
-                        partial_byte;
-            } else {
-                data[target_byte_address] = partial_byte;
-            }
+    uint32_t bits_taken = 0;
+    while (bits_taken < bitsrequested) {
+        uint32_t bits_to_take = std::min(bitsrequested, 32u);
+        uint32_t d;
+        switch ((bits_to_take-1)>>3) {
+            case 0:
+                data[bits_taken>>3] = get_max_4bytes(bits_to_take);
+                break;
+            case 1:
+                reinterpret_cast<uint16_t *>(data)[bits_taken>>4] = __builtin_bswap16(get_max_4bytes(bits_to_take));
+                break;
+            case 2:
+                d = get_max_4bytes(bits_to_take);
+                data[(bits_taken>>5)+0] = reinterpret_cast<uint8_t *>(&d)[2];
+                data[(bits_taken>>5)+1] = reinterpret_cast<uint8_t *>(&d)[1];
+                data[(bits_taken>>5)+2] = reinterpret_cast<uint8_t *>(&d)[0];
+                break;
+            default:
+                reinterpret_cast<uint32_t *>(data)[bits_taken>>5] = __builtin_bswap32(get_max_4bytes(bits_to_take));
+                break;
         }
-
-        bits_placed += bits_to_take;
-        bit_counter_ += bits_to_take;
         bits_taken += bits_to_take;
     }
 
     #ifndef NDEBUG
-        std::cout << "getting " << std::dec << static_cast<int>(bits) << "bit(s) from position "
-        << bit_counter_ - bits << " -> 0x";
-        for (uint32_t byte=0; byte <= (bits-1 >> 3); byte++) {
+        std::cout << "getting " << std::dec << static_cast<int>(bitsrequested) << "bit(s) from position "
+                  << bit_counter_ - bitsrequested << " -> 0x";
+        for (uint32_t byte=0; byte <= (bitsrequested - 1 >> 3); byte++) {
             std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
         }
         std::cout << std::endl;
     #endif
 }
 
-void add_n_bits(uint8_t bits, uint8_t * data) {}
+uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
+    uint32_t address_32bit = bit_counter_ >> 5;
+    uint32_t bit_available_for_takeout = 32 - (bit_counter_ - (address_32bit >> 5));
+
+    uint32_t value1 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_)[address_32bit]);
+
+    if (bitsrequested <= bit_available_for_takeout) {
+        // single word access is sufficient
+        bit_counter_ += bitsrequested;
+        uint32_t shift = bit_available_for_takeout-bitsrequested;
+        uint32_t bitmask = (1 << bitsrequested) - 1;
+        if (bitsrequested == 32) {
+            bitmask = 0xFFFFFFFF;
+        }
+        return (value1 >> shift) & bitmask;
+    } else {
+        uint32_t value2 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_)[address_32bit+1]);
+        uint32_t remaining_bits = bitsrequested - bit_available_for_takeout;
+        value1 = value1 & ((1 << bit_available_for_takeout) - 1);
+        value2 = (value2 >> (32-remaining_bits)) & ((1 << remaining_bits) - 1);
+        return (value1 << remaining_bits) + value2;
+    }
+}
+
+void BitStream::add_n_bits(uint8_t bits, uint8_t * data) {}

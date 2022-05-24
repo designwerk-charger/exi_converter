@@ -69,7 +69,7 @@ TEST(BitStreamTest_GetNextNBits, ReturnsTwoConsequtiveBits_When_2BitsRequestedWi
     ASSERT_EQ(output_data2, 0x00);
 }
 
-TEST(BitStreamTest_GetNextNBits, Returns32bit_when_32bitRequested) {
+TEST(BitStreamTest_GetNextNBits, Returns32Bit) {
     uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
     uint32_t output_data = 0;
     BitStream bs(five_byte_input, 5);
@@ -77,6 +77,33 @@ TEST(BitStreamTest_GetNextNBits, Returns32bit_when_32bitRequested) {
     bs.get_next_n_bits(32, reinterpret_cast<uint8_t *>(&output_data));
 
     ASSERT_EQ(output_data, *reinterpret_cast<uint32_t*>(five_byte_input));
+}
+
+TEST(BitStreamTest_GetNextNBits, Returns16bit_when_already1BitRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    uint8_t rubish = 0;
+    uint8_t output_data[2] = {};
+    BitStream bs(five_byte_input, 5);
+
+    bs.get_next_n_bits(1, &rubish);
+    bs.get_next_n_bits(16, output_data);
+
+    ASSERT_EQ(output_data[0], 0xBD);
+    ASSERT_EQ(output_data[1], 0x5B);
+}
+
+TEST(BitStreamTest_GetNextNBits, Returns24bit_when_already1ByteRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    uint8_t rubish = 0;
+    uint8_t output_data[3] = {};
+    BitStream bs(five_byte_input, 5);
+
+    bs.get_next_n_bits(8, &rubish);
+    bs.get_next_n_bits(24, output_data);
+
+    ASSERT_EQ(output_data[0], 0xAD);
+    ASSERT_EQ(output_data[1], 0xBE);
+    ASSERT_EQ(output_data[2], 0xAF);
 }
 
 TEST(BitStreamTest_GetNextNBits, ReturnsBitAndByte_when_OneBitAndOneByteRequested) {
@@ -111,4 +138,95 @@ TEST(BitStreamTest_GetNextNBits, Returns2singleBitsAnd7bits_when_2SingleBitsAnd7
     ASSERT_EQ(output_data1, 0x00);
     ASSERT_EQ(output_data2, 0x01);
     ASSERT_EQ(output_data3, 0b00001010);
+}
+
+
+TEST(BitStreamTest_GetMax4Bytes, ReturnsOneBit) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    BitStream bs(five_byte_input, 5);
+
+    uint32_t output_data = bs.get_max_4bytes(1);
+
+    ASSERT_EQ(output_data, 0x01);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, ReturnsOneByte) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    BitStream bs(five_byte_input, 5);
+
+    uint32_t output_data = bs.get_max_4bytes(8);
+
+    ASSERT_EQ(output_data, 0xDE);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, ReturnsOneByte_when_alreadyOneBitRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    BitStream bs(five_byte_input, 5);
+
+    bs.get_max_4bytes(1);
+    uint32_t output_data = bs.get_max_4bytes(8);
+
+    ASSERT_EQ(output_data, 0xBD);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, ReturnsOneByte_when_alreadyTwoBitRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23};
+    BitStream bs(five_byte_input, 5);
+
+    bs.get_max_4bytes(1);
+    bs.get_max_4bytes(1);
+    uint32_t output_data = bs.get_max_4bytes(8);
+
+    ASSERT_EQ(output_data, 0x7A);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, ReturnsOneByte_when_already3ByteRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23, 0xA2, 0xE1, 0x57, 0x17};
+    BitStream bs(five_byte_input, 9);
+
+    bs.get_max_4bytes(24);
+    uint32_t output_data = bs.get_max_4bytes(8);
+
+    ASSERT_EQ(output_data, 0xAF);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, Returns4Byte) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23, 0xA2, 0xE1, 0x57, 0x17};
+    BitStream bs(five_byte_input, 9);
+
+    uint32_t output_data = bs.get_max_4bytes(32);
+
+    ASSERT_EQ(output_data, 0xDEADBEAF);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, Returns4Byte_when_alreadyOneByteRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23, 0xA2, 0xE1, 0x57, 0x17};
+    BitStream bs(five_byte_input, 9);
+
+    bs.get_max_4bytes(8);
+    uint32_t output_data = bs.get_max_4bytes(32);
+
+    ASSERT_EQ(output_data, 0xADBEAF23);
+}
+
+TEST(BitStreamTest_GetMax4Bytes, Returns4Byte_when_alreadyOneBitRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0xAD, 0xBE, 0xAF, 0x23, 0xA2, 0xE1, 0x57, 0x17};
+    BitStream bs(five_byte_input, 9);
+
+    bs.get_max_4bytes(1);
+    uint32_t output_data = bs.get_max_4bytes(32);
+
+    ASSERT_EQ(output_data, 0xBD5B7D5E);
+}
+
+
+TEST(BitStreamTest_GetMax4Bytes, Returns2Byte_when_alreadyTwoBitRequested) {
+    uint8_t five_byte_input[] = {0xDE, 0x72, 0xBE, 0xAF, 0x23, 0xA2, 0xE1, 0x57, 0x17};
+    BitStream bs(five_byte_input, 9);
+
+    bs.get_max_4bytes(1);
+    bs.get_max_4bytes(1);
+    uint32_t output_data = bs.get_max_4bytes(16);
+
+    ASSERT_EQ(output_data, 0x79CA);
 }
