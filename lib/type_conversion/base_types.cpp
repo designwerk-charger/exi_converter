@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "base_types.h"
 
 BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
@@ -7,7 +9,18 @@ BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
 void BaseTypes::injectHexBin(std::string) { }
 
 std::string BaseTypes::extractHexBin(uint8_t max_length) {
-    return "";
+    uint8_t length_str = extractIntegerNumber(2, true);
+
+    uint8_t* data = new uint8_t[length_str];
+    bit_stream_->get_next_n_bits(length_str*8, data);
+
+    std::ostringstream hexstring;
+    for (uint8_t byte=0; byte < length_str; byte++) {
+        hexstring << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
+    }
+
+    delete [] data;
+    return hexstring.str();
 }
 
 uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
@@ -19,8 +32,7 @@ uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
 void BaseTypes::injectString(std::string value) { }
 
 std::string BaseTypes::extractString() {
-    uint8_t length_str;
-    bit_stream_->get_next_n_bits(8, &length_str);
+    uint8_t length_str = extractIntegerNumber(2, true);
     uint8_t* out_chars = new uint8_t[length_str + 1];
 
     bit_stream_->get_next_n_bits((length_str) * 8, out_chars);
@@ -66,6 +78,19 @@ bool BaseTypes::extractBoolValue() {
 }
 
 void BaseTypes::injectBase64Value(std::string value) { }
+
+void BaseTypes::check_event_code_is_0(std::string current_type_name) {
+    uint8_t event_code;
+    bit_stream_->get_next_n_bits(1, &event_code);
+
+    #ifndef NDEBUG
+    std::cout << "check event code for '" << current_type_name << "' --> " << std::dec << int(event_code) << std::endl;
+    #endif
+
+    if (event_code) {
+        throw std::runtime_error("The event code for'" + current_type_name + "' is not 0!");
+    }
+}
 
 // todo llr: string??
 std::string BaseTypes::extractBase64Value() {

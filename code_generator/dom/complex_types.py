@@ -34,16 +34,20 @@ class ComplexTypes:
         def decode_simple_element(indent) -> str:
             indent_str = "\t" * indent
             return f"{indent_str}// decode simple type\n" \
-                   f"{indent_str}auto {element.element_name} = {element.element_type.decode_function.call()};\n" \
                    f"{indent_str}string_stream_->start_key(\"{element.element_name}\");\n" \
+                   f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
+                   f"{indent_str}auto {element.element_name} = {element.element_type.decode_function.call()};\n" \
                    f"{indent_str}string_stream_->add_value({element.element_name});\n" \
+                   f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n" \
                    f"{indent_str}string_stream_->end_key();\n"
 
         def decode_complex_element(indent) -> str:
             indent_str = "\t" * indent
             return f"{indent_str}// decode complex type\n" \
                    f"{indent_str}string_stream_->start_key(\"{element.element_name}\");\n" \
+                   f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
                    f"{indent_str}{element.element_type.decode_function.call()};\n" \
+                   f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n" \
                    f"{indent_str}string_stream_->end_key();\n"
 
         def decode_element(indent) -> str:

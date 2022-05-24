@@ -1,6 +1,7 @@
 from typing import List
 
 from cpp.cpp_class import CppClass
+from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 
 
@@ -19,6 +20,12 @@ class BaseTypes:
                                        "bit_stream_ = bit_stream;\n")
         for t in self.simple_types.values():
             self.cpp_class.add_functions(t.get_base_type_functions())
+
+        self.cpp_class.add_function(CppFunction(function_name="check_event_code_is_0",
+                                                return_type="void", arguments="std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
 
     def write_base_type_header(self, directory: str):
         self.cpp_class.write_h(directory)

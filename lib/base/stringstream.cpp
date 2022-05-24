@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include "stringstream.h"
 
 
@@ -34,6 +35,10 @@ void StringStream::end_key() {
         output_data_ << "}";
     }
     last_command_ = endkey;
+
+#ifndef NDEBUG
+    std::cout << "end_key added " << output_data_.str() << std::endl;
+#endif
 }
 
 void StringStream::add_value(const std::string & value) {
