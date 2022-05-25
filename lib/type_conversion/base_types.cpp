@@ -16,7 +16,8 @@ std::string BaseTypes::extractHexBin(uint8_t max_length) {
 
     std::ostringstream hexstring;
     for (uint8_t byte=0; byte < length_str; byte++) {
-        hexstring << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
+        hexstring << std::setfill('0') << std::setw(2) <<std::uppercase << std::right << std::hex
+        << static_cast<int>(data[byte]);
     }
 
     delete [] data;

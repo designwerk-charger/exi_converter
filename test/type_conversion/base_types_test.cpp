@@ -59,8 +59,8 @@ TEST(BaseTypeTest, GetStringFromExiStream_When_AskedForString) {
 }
 
 TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
-    uint8_t exi_data[] = {0xDE, 0xAD, 0xBE, 0xAF};
-    BitStream bs(exi_data, 4);
+    uint8_t exi_data[] = {0x04, 0xDE, 0xAD, 0xBE, 0xAF};
+    BitStream bs(exi_data, 5);
     BaseTypes bt(&bs);
     std::string bt_out;
 
