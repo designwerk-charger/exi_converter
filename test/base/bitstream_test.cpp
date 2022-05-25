@@ -8,13 +8,13 @@ TEST(BitStreamTest, ThrowInvalidArgumentException_When_InitializingWithLenghZero
 }
 
 TEST(BitStreamTest_GetNextNBits, ThrowInvalidArgumentException_When_Bits0) {
-    BitStream bs(NULL, 1);
+    BitStream bs;
     uint8_t output_data;
     EXPECT_THROW(bs.get_next_n_bits(0, &output_data), std::invalid_argument);
 }
 
 TEST(BitStreamTest_GetNextNBits, ThrowInvalidArgumentException_When_DataIsNull) {
-    BitStream bs(NULL, 1);
+    BitStream bs;
     EXPECT_THROW(bs.get_next_n_bits(2, NULL), std::invalid_argument);
 }
 

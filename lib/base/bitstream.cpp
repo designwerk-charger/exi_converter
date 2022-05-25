@@ -3,21 +3,24 @@
 #include <iomanip>
 #include <algorithm>
 
-
-BitStream::BitStream(uint8_t * input_data, size_t length)
-    : exi_data_(input_data), length_(length), bit_counter_(0), num_bits_(length << 3) {
-    if (length < 1) {
+BitStream::BitStream(uint8_t * input_data, size_t length_byte)
+    : exi_data_(input_data, input_data+length_byte), bit_counter_(0), num_bits_(length_byte << 3) {
+    if (length_byte < 1) {
         throw std::invalid_argument("Bitstream can not be initialized with size < 1.");
     }
 }
 
 BitStream::BitStream(const std::vector<uint8_t> & input_data)
-        : exi_data_(const_cast<uint8_t *>(input_data.data())), length_(input_data.size()), bit_counter_(0),
+        : exi_data_(input_data), bit_counter_(0),
         num_bits_(input_data.size() << 3) {
     if (input_data.size() < 1) {
         throw std::invalid_argument("Bitstream can not be initialized with size < 1.");
     }
 }
+
+BitStream::BitStream()
+        : exi_data_(), bit_counter_(0),
+          num_bits_(0) { }
 
 // Todo: This function should be replaced by the get_max_4bytes
 void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
@@ -66,7 +69,7 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
     uint32_t address_32bit = bit_counter_ >> 5;
     uint32_t bit_available_for_takeout = 32 - (bit_counter_ - (address_32bit << 5));
 
-    uint32_t value1 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_)[address_32bit]);
+    uint32_t value1 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_.data())[address_32bit]);
 
     if (bitsrequested <= bit_available_for_takeout) {
         // single word access is sufficient
@@ -78,7 +81,7 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
         }
         return (value1 >> shift) & bitmask;
     } else {
-        uint32_t value2 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_)[address_32bit+1]);
+        uint32_t value2 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_.data())[address_32bit+1]);
         uint32_t remaining_bits = bitsrequested - bit_available_for_takeout;
         value1 = value1 & ((1 << bit_available_for_takeout) - 1);
         value2 = (value2 >> (32-remaining_bits)) & ((1 << remaining_bits) - 1);
@@ -87,4 +90,10 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
     }
 }
 
-void BitStream::add_n_bits(uint8_t bits, uint8_t * data) {}
+void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {}
+
+void BitStream::add_bytes(const uint8_t * data, uint8_t num_bytes) {}
+
+std::vector<uint8_t> BitStream::get_exi_data() {
+    return exi_data_;
+}
