@@ -242,3 +242,61 @@ TEST(BitStreamTest_GetMax4Bytes, Returns2Byte_when_alreadyTwoBitRequested) {
 
     ASSERT_EQ(output_data, 0x79CA);
 }
+
+/*
+TEST(BitStreamTest_AddBits, ThrowInvalidArgumentException_When_Bits0) {
+    BitStream bs(NULL, 1);
+    uint8_t input_data;
+    EXPECT_THROW(bs.add_max_8bits(0, &input_data), std::invalid_argument);
+}
+
+TEST(BitStreamTest_AddBits, ThrowInvalidArgumentException_When_DataIsNull) {
+    BitStream bs(NULL, 1);
+    EXPECT_THROW(bs.add_max_8bits(2, NULL), std::invalid_argument);
+}
+*/
+
+TEST(bitStreamTest_Addbits, AddsFirstBit_When_OneBitAdded) {
+    uint8_t input_data = 0x01;
+    std::vector<uint8_t>exi_data;
+    BitStream bs;
+
+    bs.add_max_8bits(input_data, 1);
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data[0], 0x80);
+}
+
+/*
+TEST(bitStreamTest_Addbits, AddsFirst2Bits_When_TwoBitAdded) {
+    uint8_t input_data = 0x02;
+    uint8_t exi_stream[] = {0x00};
+    BitStream bs(exi_stream, 1);
+
+    bs.add_max_8bits(2, &input_data);
+
+    ASSERT_EQ(*exi_stream, 0x80);
+}
+
+TEST(bitStreamTest_Addbits, AddsTwoConsequtive2Bits_When_TwoBitsAddedWithTwoFunctionCalls) {
+    uint8_t input_data_1 = 0x01;
+    uint8_t input_data_2 = 0x01;
+    uint8_t exi_stream[] = {0x00};
+    BitStream bs(exi_stream, 1);
+
+    bs.add_max_8bits(1, &input_data_1);
+    bs.add_max_8bits(1, &input_data_2);
+
+    ASSERT_EQ(*exi_stream, 0xC0);
+}
+
+TEST(bitStreamTest_Addbits, Adds9Bits_When_NineBitsAddedWithoneFunctionCall) {
+    uint8_t input_data[] = {0xDE, 0x80};
+    uint8_t exi_stream[2] = {};
+    BitStream bs(exi_stream, 2);
+
+    bs.add_max_8bits(9, input_data);
+
+    ASSERT_EQ(*exi_stream, *input_data);
+}
+*/

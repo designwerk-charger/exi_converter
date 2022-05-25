@@ -90,7 +90,45 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
     }
 }
 
-void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {}
+void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
+    /*
+    if (data == nullptr)
+        throw std::invalid_argument("Input data argument is NULL!");
+    if (bits_to_add == 0)
+        throw std::invalid_argument("Added number of bits can not be 0!");
+    if (bits_to_add > num_bits_)
+        throw std::range_error("Added number of bits is not available!");
+*/
+
+    uint8_t tmp_byte;
+    uint8_t addr_exi_byte;
+    uint8_t bit_pos_in_byte;
+    uint8_t bits_left_in_byte;
+
+    addr_exi_byte = bit_counter_ >> 3;
+    bit_pos_in_byte = bit_counter_ - (addr_exi_byte << 3);
+    bits_left_in_byte = 8 - bit_pos_in_byte;
+
+    if (bits_left_in_byte >= num_bits) {
+        tmp_byte = data << (8 - num_bits - bit_pos_in_byte);
+        exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
+        bit_counter_ += num_bits;
+    } else {
+        tmp_byte = data >> bit_pos_in_byte;
+        exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
+        tmp_byte = data << (8 - bit_pos_in_byte);
+        exi_data_[addr_exi_byte + 1] = tmp_byte;
+    }
+    /*
+    tmp_byte = 0x00;
+    tmp_byte = data[0] << (8 - bits_to_add - bit_counter_);
+    exi_data_[addr_exi_byte] = exi_data_[0] | tmp_byte;
+    bit_counter_ += bits_to_add;
+
+    exi_data_[0] = 0xDE;
+    exi_data_[1] = 0x80;
+     */
+}
 
 void BitStream::add_bytes(const uint8_t * data, uint8_t num_bytes) {}
 
