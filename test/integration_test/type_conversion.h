@@ -38,4 +38,12 @@ class TestDataContainer {
         this->hex_str = hex_str;
         this->json_str = json_str;
     }
+
+    friend std::ostream & operator << (std::ostream &out, const TestDataContainer &c);
 };
+
+
+std::ostream & operator << (std::ostream &out, const TestDataContainer &c) {
+    out << c.name;
+    return out;
+}
