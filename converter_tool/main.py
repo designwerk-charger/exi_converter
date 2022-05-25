@@ -1,8 +1,9 @@
 #!/usr/bin/python3
-
+import datetime
 import sys
 
-sys.path.append("../cmake-build-debug")
+#sys.path.append("../cmake-build-debug/lib")
+sys.path.append("../cmake-build-release/lib")
 
 import exi_converter
 
@@ -11,5 +12,28 @@ print(f"Exi codec version: {exi_converter.__version__}")
 
 codec = exi_converter.ExiCodec()
 
-print(codec.decode(b'abc', "ns"))
+data = {
+  #  "ServiceDiscoveryReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x91\xb8',
+  #  "PaymentServiceSelectionReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x912\x00\x12\x80',
+  #  "AuthorizationReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x90\x08',
+  #  "ChargeParameterDiscoveryReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x90\x94\xc8\x00\x08\x00\xf0\x000\x80\xfa\x01\x02\n\x18\x07\xc0\x82\x01@\x080l\x1b\x00\x83\x07\x81p-\x05\x00\x00',
+  #  "CableCheckReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x901\x00\x1e\x00',
+  #  "PreChargeReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x91q\x00\x1e\x01\x88\x12\x00`a\x80\x08\x00',
+    "CurrentDemandReq" : b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x90\xd1\x00\x1e\x01\x86\x00!\x00a\x01\xf4\x02\x04\x140\x0f\x80\x000\x81\x90\x06\x10(\x01\x88\x12\x00`',
+    "PowerDeliveryReq" : b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x91P\x00\x02 \x03\xc1@',
+  #  "WeldingDetectionReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x92\x11\x00\x1e\x00'
+    "SessionStopReq": b'\x80\x98\x02\r\xf6\xa6=\xcd\x82$\x0f\x91\xf0\x00'
+}
+
+timedeltas = []
+
+for key, value in data.items():
+    print(f"Decoding '{key}'")
+    tstart = datetime.datetime.now()
+    dec = codec.decode(value, len(value), "ns")
+    timedeltas.append((datetime.datetime.now()-tstart).total_seconds()*1000)
+    print(dec)
+
+print(timedeltas)
+
 print(codec.encode("bla", "ns"))

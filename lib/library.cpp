@@ -1,5 +1,6 @@
 #include "library.h"
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <iostream>
 #include "base/bitstream.h"
@@ -7,9 +8,7 @@
 #include "base_types.h"
 #include "body_message.h"
 
-static std::string getStringCanIf() {
-    return "blabla";
-}
+
 
 // the module name "exi_converter" must be the same as the one in the cmake file
 PYBIND11_MODULE(exi_converter, m) {
@@ -26,11 +25,13 @@ PYBIND11_MODULE(exi_converter, m) {
 #else
     m.attr("__version__") = "dev";
 #endif
-    m.def("getStringCanIf", &getStringCanIf);
+
+    //m.def("pydecode", [](char* c, uint32_t length, std::string ns){py_decode((uint8_t *)c, length, ns);}, "Decode EXI to json");
+    //m.def("pydecode", py_decode, "Decode EXI to json");
 
     pybind11::class_<ExiCodec>(m, "ExiCodec", "Class to encode and decode EXI")
             .def(pybind11::init<>())
-            .def("decode", &ExiCodec::decode, "Decode EXI to json")
+            .def("decode", &ExiCodec::py_decode, "Decode EXI to json")
             .def("encode", &ExiCodec::encode, "Enocode EXI from json");
 }
 
@@ -40,7 +41,11 @@ char* ExiCodec::encode(std::string json_str, std::string ns) {
     return (char*)"RETURN_BYTE_STREAM_OF_ENCODED_EXI";
 }
 
-std::string ExiCodec::decode(std::vector<uint8_t> byte_stream,  std::string ns) {
+std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string ns) {
+    return decode(std::vector<uint8_t>(data, data+length), ns);
+}
+
+std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::string ns) {
     BitStream bitstream(byte_stream);
 
     // checking header byte
@@ -77,6 +82,4 @@ std::string ExiCodec::decode(std::vector<uint8_t> byte_stream,  std::string ns) 
     return stringstream.get_full_stream();
 }
 
-ExiCodec::ExiCodec() {
-
-}
+ExiCodec::ExiCodec() { }
