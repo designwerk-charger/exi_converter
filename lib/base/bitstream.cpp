@@ -91,14 +91,10 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
 }
 
 void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
-    /*
-    if (data == nullptr)
-        throw std::invalid_argument("Input data argument is NULL!");
-    if (bits_to_add == 0)
+    if (num_bits == 0)
         throw std::invalid_argument("Added number of bits can not be 0!");
-    if (bits_to_add > num_bits_)
-        throw std::range_error("Added number of bits is not available!");
-*/
+    if (num_bits > 8)
+        throw std::range_error("Number of bits must be < 8");
 
     uint8_t tmp_byte;
     uint8_t addr_exi_byte;
@@ -109,28 +105,27 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
     bit_pos_in_byte = bit_counter_ - (addr_exi_byte << 3);
     bits_left_in_byte = 8 - bit_pos_in_byte;
 
-    if (bits_left_in_byte >= num_bits) {
-        tmp_byte = data << (8 - num_bits - bit_pos_in_byte);
-        exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
-        bit_counter_ += num_bits;
-    } else {
+    if (bits_left_in_byte < num_bits) {
         tmp_byte = data >> bit_pos_in_byte;
         exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
         tmp_byte = data << (8 - bit_pos_in_byte);
-        exi_data_[addr_exi_byte + 1] = tmp_byte;
+        exi_data_.push_back(tmp_byte);
+    } else {
+        tmp_byte = data << (8 - num_bits - bit_pos_in_byte);
+        if (bit_pos_in_byte == 0) {
+            exi_data_.push_back(0x00);
+        }
+        tmp_byte = tmp_byte | exi_data_.at(addr_exi_byte);
+        exi_data_.at(addr_exi_byte) = tmp_byte;
     }
-    /*
-    tmp_byte = 0x00;
-    tmp_byte = data[0] << (8 - bits_to_add - bit_counter_);
-    exi_data_[addr_exi_byte] = exi_data_[0] | tmp_byte;
-    bit_counter_ += bits_to_add;
-
-    exi_data_[0] = 0xDE;
-    exi_data_[1] = 0x80;
-     */
+    bit_counter_ += num_bits;
 }
 
-void BitStream::add_bytes(const uint8_t * data, uint8_t num_bytes) {}
+void BitStream::add_bytes(const uint8_t * data, uint8_t num_bytes) {
+    for (uint32_t byte=0; byte < (num_bytes); byte++) {
+        add_max_8bits(data[byte], 8);
+    }
+}
 
 std::vector<uint8_t> BitStream::get_exi_data() {
     return exi_data_;
