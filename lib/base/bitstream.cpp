@@ -61,6 +61,9 @@ void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
         for (uint32_t byte=0; byte <= (bitsrequested - 1 >> 3); byte++) {
             std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
         }
+        if (bitsrequested <= 8) {
+            std::cout << std::dec << " (" << static_cast<int>(data[0]) << ")";
+        }
         std::cout << std::endl;
     #endif
 }

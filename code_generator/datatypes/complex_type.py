@@ -6,13 +6,14 @@ from datatypes.element import Element
 
 
 class ComplexType(BaseType):
-    def __init__(self, name, namespace, child_elements: List[Element]):
+    def __init__(self, name, namespace, child_elements: List[Element], base_class: str):
         super().__init__(name, namespace)
         self.is_simple_not_complex = False
         self.child_elements = child_elements
+        self.base_class = base_class
 
     def __str__(self):
-        header_line = f"{self.type_name}; complex; {self.type_namespace}\n"
+        header_line = f"{self.type_name}; complex; {self.base_class}\n"
         child_lines = f""
         for child in self.child_elements:
             child_txt = str(child)

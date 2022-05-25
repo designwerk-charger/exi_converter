@@ -23,9 +23,9 @@ std::string StringStream::get_next_item(void) {
 
 void StringStream::start_key(const std::string & key) {
     if (last_command_ == endkey) {
-        output_data_ << ", \"" << key << "\": ";
+        output_data_ << ",\"" << key << "\":";
     } else {
-        output_data_ << "{\"" << key << "\": ";
+        output_data_ << "{\"" << key << "\":";
     }
     last_command_ = startkey;
 }
@@ -33,6 +33,8 @@ void StringStream::start_key(const std::string & key) {
 void StringStream::end_key() {
     if (last_command_ == endkey) {
         output_data_ << "}";
+    } else if (last_command_ == startkey) {
+        output_data_ << "{}";
     }
     last_command_ = endkey;
 
@@ -43,10 +45,12 @@ void StringStream::end_key() {
 
 void StringStream::add_value(const std::string & value) {
     output_data_ << "\"" << value << "\"";
+    last_command_ = addvalue;
 }
 
 void StringStream::add_value(int32_t value) {
     output_data_ << value;
+    last_command_ = addvalue;
 }
 
 

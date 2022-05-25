@@ -1,10 +1,11 @@
 import collections
-from typing import Dict
+from typing import Dict, List
 
 from xmlschema import XsdElement
 
 from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
+from datatypes.complex_type import ComplexType
 from dom.complex_types import ComplexTypes
 
 
@@ -25,13 +26,28 @@ class BodyMessage:
             numbred_elements[i] = sorted_elements[msg_key]
         return numbred_elements
 
+    @staticmethod
+    def get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema) -> Dict[int, XsdElement]:
+        element_top = {}
+        for elem in schema.elements.target_dict.values():
+            if elem.type.local_name == "BodyBaseType":
+                element_top[elem.local_name] = elem
+            elif elem.type.base_type and elem.type.base_type.local_name == "BodyBaseType":
+                element_top[elem.local_name] = elem
+
+        sorted_elements = collections.OrderedDict(sorted(element_top.items()))
+
+        numbred_elements = {}
+        for i, msg_key in enumerate(sorted_elements.keys()):
+            numbred_elements[i] = sorted_elements[msg_key]
+        return numbred_elements
 
     def __init__(self, schema, complex_types: ComplexTypes):
         self.complex_type_names = []
         for t in complex_types.all_complex_types:
             self.complex_type_names.append(t.type_name)
 
-        relevant_body_elements_numbered = self.get_top_elements_sorted_lexicographically(schema)
+        relevant_body_elements_numbered = self.get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema)
 
         self.cpp_class = CppClass(class_name="BodyMessage", derived_from_class=None,
                                   includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/stringstream.h\"\n")
@@ -44,12 +60,15 @@ class BodyMessage:
 
     def getDecodeFunction(self, elements) -> CppFunction:
         code = f"uint8_t message_type;\n" \
-               f"bit_stream_->get_next_n_bits(7, &message_type);\n" \
-               f"switch(message_type+4) ""{\n"  # Todo MBN: Why do i need to add 4???
+               f"bit_stream_->get_next_n_bits(6, &message_type);\n" \
+               f"uint8_t one_bit;" \
+               f"switch(message_type) ""{\n"
+           #    f"bit_stream_->get_next_n_bits(1, &one_bit);\n" \
+
         for key, value in elements.items():
             if value.type.local_name in self.complex_type_names:
                 code += f"\tcase {key}:\n" \
-                        f"\t\tstring_stream_->start_key(\"{value.type.local_name}\");\n" \
+                        f"\t\tstring_stream_->start_key(\"{value.local_name}\");\n" \
                         f"\t\tcomplex_types_->decode_{value.type.local_name}();\n" \
                         f"\t\tbreak;\n"
             else:

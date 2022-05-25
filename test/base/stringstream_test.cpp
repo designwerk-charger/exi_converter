@@ -23,7 +23,7 @@ TEST(StringStreamTest_createStream, CreateKeyAndValue) {
     ss.add_value("value");
     ss.end_key();
 
-    EXPECT_EQ(ss.get_full_stream(), "{\"key\": \"value\"}");
+    EXPECT_EQ(ss.get_full_stream(), "{\"key\":\"value\"}");
 }
 
 TEST(StringStreamTest_createStream, CreateKeyAndKeyWithValue) {
@@ -35,7 +35,7 @@ TEST(StringStreamTest_createStream, CreateKeyAndKeyWithValue) {
     ss.end_key();
     ss.end_key();
 
-    EXPECT_EQ(ss.get_full_stream(), "{\"key1\": {\"key2\": \"value\"}}");
+    EXPECT_EQ(ss.get_full_stream(), "{\"key1\":{\"key2\":\"value\"}}");
 }
 
 
@@ -49,7 +49,7 @@ TEST(StringStreamTest_createStream, CreateKeyWithTwoValues) {
     ss.add_value("value2");
     ss.end_key();
 
-    EXPECT_EQ(ss.get_full_stream(), "{\"key1\": \"value1\", \"key2\": \"value2\"}");
+    EXPECT_EQ(ss.get_full_stream(), "{\"key1\":\"value1\",\"key2\":\"value2\"}");
 }
 
 TEST(StringStreamTest_createStream, CreatingFullMessageString) {
@@ -78,5 +78,14 @@ TEST(StringStreamTest_createStream, CreatingFullMessageString) {
     ss.end_key();
     ss.end_key();
 
-    EXPECT_EQ(ss.get_full_stream(), "{\"V2G_Message\": {\"Header\": {\"SessionID\": \"F05FBD2A935C8EC5\"}, \"Body\": {\"SessionSetupRes\": {\"ResponseCode\": \"OK_NewSessionEstablished\", \"EVSEID\": \"CH123DW123\", \"EVSETimeStamp\": 277130}}}}");  // NOLINT
+    EXPECT_EQ(ss.get_full_stream(), "{\"V2G_Message\":{\"Header\":{\"SessionID\":\"F05FBD2A935C8EC5\"},\"Body\":{\"SessionSetupRes\":{\"ResponseCode\":\"OK_NewSessionEstablished\",\"EVSEID\":\"CH123DW123\",\"EVSETimeStamp\":277130}}}}");  // NOLINT
+}
+
+TEST(StringStreamTest_createStream, AddsEmptyValue_when_KeyStartedWithoutValue) {
+    StringStream ss("");
+
+    ss.start_key("key1");
+    ss.end_key();
+
+    EXPECT_EQ(ss.get_full_stream(), R"({"key1":{}})");
 }
