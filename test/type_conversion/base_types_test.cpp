@@ -68,3 +68,91 @@ TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
 
     ASSERT_EQ(bt_out, "DEADBEAF");
 }
+
+TEST(BaseTypeTest, BoolWasAddedToExi_When_BoolWasInjected) {
+    BitStream bs;
+    BaseTypes bt(&bs);
+    std::vector<uint8_t>exi_data;
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0x80);
+
+    bt.injectBoolValue(true);
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
+    BitStream bs;
+    BaseTypes bt(&bs);
+    std::vector<uint8_t>exi_data;
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0b10001010);
+    test_vector.push_back(0b11110101);
+    test_vector.push_back(0b00010000);
+
+    bt.injectIntegerNumber(277130, true);
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
+    BitStream bs;
+    BaseTypes bt(&bs);
+    std::vector<uint8_t>exi_data;
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0b01000101);
+    test_vector.push_back(0b01111010);
+    test_vector.push_back(0b10001000);
+    test_vector.push_back(0b0);
+
+    bt.injectIntegerNumber(277130, false);
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
+    BitStream bs;
+    BaseTypes bt(&bs);
+    std::vector<uint8_t>exi_data;
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0b00001100);
+    test_vector.push_back(0b01000011);
+    test_vector.push_back(0b01001000);
+    test_vector.push_back(0b00110001);
+    test_vector.push_back(0b00110010);
+    test_vector.push_back(0b00110011);
+    test_vector.push_back(0b01000100);
+    test_vector.push_back(0b01010111);
+    test_vector.push_back(0b00110001);
+    test_vector.push_back(0b00110010);
+    test_vector.push_back(0b00110011);
+
+    bt.injectString("CH123DW123");
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
+    BitStream bs;
+    BaseTypes bt(&bs);
+    std::vector<uint8_t>exi_data;
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0b00001000);
+    test_vector.push_back(0b11110000);
+    test_vector.push_back(0b01011111);
+    test_vector.push_back(0b10111101);
+    test_vector.push_back(0b00101010);
+    test_vector.push_back(0b10010011);
+    test_vector.push_back(0b01011100);
+    test_vector.push_back(0b10001110);
+    test_vector.push_back(0b11000101);
+
+    bt.injectHexBin("F05FBD2A935C8EC5");
+    exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}

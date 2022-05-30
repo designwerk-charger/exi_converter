@@ -6,7 +6,20 @@
 BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
 
 
-void BaseTypes::injectHexBin(std::string) { }
+void BaseTypes::injectHexBin(std::string hex_string) {
+    uint8_t length_data_array;
+    length_data_array = hex_string.length() >> 1;
+    bit_stream_->add_max_8bits(length_data_array, 8);
+
+    uint8_t* data = new uint8_t[length_data_array];
+
+    for (uint8_t byte=0; byte < length_data_array; byte++) {
+        data[byte] = std::stoul(hex_string.substr(byte * 2, 2), nullptr, 16);
+    }
+
+    bit_stream_->add_bytes(data, length_data_array);
+    delete [] data;
+}
 
 std::string BaseTypes::extractHexBin(uint8_t max_length) {
     uint8_t length_str = extractIntegerNumber(2, true);
@@ -30,7 +43,10 @@ uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
     return output_data;
 }
 
-void BaseTypes::injectString(std::string value) { }
+void BaseTypes::injectString(std::string value) {
+    bit_stream_->add_max_8bits(value.length() + 2, 8);
+    bit_stream_->add_bytes(reinterpret_cast<const uint8_t *>(&value[0]), value.length());
+}
 
 std::string BaseTypes::extractString() {
     uint8_t length_str = extractIntegerNumber(2, true);
@@ -44,13 +60,34 @@ std::string BaseTypes::extractString() {
     return out_string;
 }
 
-void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) { }
+void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) {
+    if (!is_unsigned) {
+        if (number < 0) {
+            injectBoolValue(true);
+        }
+        injectBoolValue(false);
+    }
+    number = abs(number);
+
+    uint8_t pos_highest_set_bit = 0;
+    uint32_t tmp_number;
+    tmp_number = number;
+    while (tmp_number >>= 1) {
+        pos_highest_set_bit++;
+    }
+
+    while (pos_highest_set_bit >= 7) {
+        bit_stream_->add_max_8bits((0x7F & number) | 0x80, 8);
+        number >>= 7;
+        pos_highest_set_bit -= 7;
+    }
+    bit_stream_->add_max_8bits(0x7F & number, 8);
+}
 
 int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     uint32_t output_data = 0;
     int32_t int_number = 0;
     int32_t sign_factor = 1;
-    bool is_negative = false;
     if (!is_unsigned) {
         bit_stream_->get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data));
         if (output_data) {
@@ -70,7 +107,9 @@ int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     return sign_factor * int_number;
 }
 
-void BaseTypes::injectBoolValue(bool) { }
+void BaseTypes::injectBoolValue(bool bool_var) {
+    bit_stream_->add_max_8bits(bool_var, 1);
+}
 
 bool BaseTypes::extractBoolValue() {
     uint32_t output_data = 0;

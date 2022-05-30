@@ -122,6 +122,12 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
         exi_data_.at(addr_exi_byte) = tmp_byte;
     }
     bit_counter_ += num_bits;
+
+    #ifndef NDEBUG
+        std::cout << "\tsetting " << std::dec << static_cast<int>(num_bits) << "bit(s) from position "
+                  << bit_counter_ - num_bits << " -> 0x";
+        std::cout << std::endl;
+    #endif
 }
 
 void BitStream::add_bytes(const uint8_t * data, uint8_t num_bytes) {
