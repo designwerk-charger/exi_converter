@@ -76,6 +76,29 @@ class Base64Type(SimpleType):
                            code="", member_object_name="base_types_")
 
 
+class IgnoredType(SimpleType):
+
+    def __init__(self, type_namespace: str):
+        super().__init__("ignoredtype", type_namespace)
+
+    def get_base_type_functions(self) -> List[CppFunction]:
+        print(f"WARNING: get_base_type_function was called for IgnoredType {self.type_namespace}")
+        return [self.decode_function]
+
+    @property
+    def encode_function(self):
+        print(f"WARNING: encode_function was called for IgnoredType {self.type_namespace}")
+        return []
+
+    @property
+    def decode_function(self):
+        print(f"WARNING: decode_function was called for IgnoredType {self.type_namespace}")
+        return CppFunction(function_name=f"decode_{self.type_name}",
+                           return_type="std::string", arguments=None,
+                           comment="",
+                           code="", member_object_name="base_types_")
+
+
 class EnumType(SimpleType):
 
     def __init__(self, type_name: str, type_namespace: str, enumerations: List[str]):
@@ -132,7 +155,8 @@ class StringType(SimpleType):
 
 
 class DecimalType(SimpleType):
-    TYPE_SIZE = {'long': 8, 'int': 4, 'integer': 4, 'short': 2, 'byte': 1, 'HMACOutputLengthType': 4}
+    TYPE_SIZE = {'long': 8, 'int': 4, 'integer': 4, 'decimal': 4, 'negativeInteger': 4,
+                 'nonPositiveInteger': 4, 'nonNegativeInteger': 4, 'positiveInteger': 4, 'short': 2, 'byte': 1, 'HMACOutputLengthType': 4}
 
     def __init__(self, type_name: str, type_namespace: str, detail_type, min_val, max_val):
         super().__init__(type_name, type_namespace)

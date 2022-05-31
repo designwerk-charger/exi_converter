@@ -6,11 +6,11 @@ from datatypes.element import Element
 
 
 class ComplexType(BaseType):
-    def __init__(self, name, namespace, child_elements: List[Element], base_class: str, is_abstract: bool):
+    def __init__(self, name, namespace, base_class: str, is_abstract: bool):
         super().__init__(name, namespace)
         self.is_simple_not_complex = False
         self.is_abstract = is_abstract
-        self.child_elements = child_elements
+        self.child_elements: List[Element] = []
         self.base_class = base_class
         self.derived_classes = []
 
@@ -18,7 +18,8 @@ class ComplexType(BaseType):
         self.derived_classes.append(derived_class)
 
     def __str__(self):
-        header_line = f"{self.type_name}; complex; {self.base_class}\n"
+        absract_str = "abstract; " if self.is_abstract else " "
+        header_line = f"{self.type_name}; complex;{absract_str}{self.base_class}; {self.type_namespace}\n"
         child_lines = f""
         for child in self.child_elements:
             child_txt = str(child)
@@ -34,6 +35,9 @@ class ComplexType(BaseType):
 
     def get_child_types(self) -> List[BaseType]:
         childs = [self]
+        for derived in self.derived_classes:
+            for derived_child in derived.get_child_types():
+                childs.append(derived_child)
         for child in self.child_elements:
             for child_child in child.element_type.get_child_types():
                 childs.append(child_child)

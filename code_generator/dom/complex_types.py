@@ -12,7 +12,7 @@ from datatypes.simple_type import EnumType
 class ComplexTypes:
 
     def __init__(self, type_tree: List[BaseType]):
-        self.optional_parameter_suffix_cnt = 0
+        self._local_suffix_cnt = 0
         self.all_types = {}
         for item in type_tree:
             if item.type_name == "DC_EVChargeParameterType":
@@ -37,6 +37,11 @@ class ComplexTypes:
             ct_func = self.getDecodeFunction(ct_with_base)
             self.cpp_class.add_function(ct_func)
 
+    @property
+    def local_suffix_cnt(self):
+        self._local_suffix_cnt += 1
+        return self._local_suffix_cnt
+
     def addBaseElementsToCt(self, ct: ComplexType):
         if ct.base_class:
             for t in self.all_types.values():
@@ -45,7 +50,7 @@ class ComplexTypes:
                         new_elements = t.child_elements + ct.child_elements
                         ct.child_elements = new_elements
                     return ct
-            print(f"Error: no baseclass found for {ct}")
+            print(f"Error: no baseclass found for {ct.type_name}")
             #raise RuntimeError(f"no baseclass found for {ct}")
         return ct
 
@@ -83,23 +88,26 @@ class ComplexTypes:
 
     def _decode_complex_element_with_event_code(self, element: Element, indent: int) -> str:
         def get_num_abstract_classes_bits() -> int:
-            return ceil(log2(len(element_type.derived_classes)+1)) # +1 because one optional parameter gets at least 2 bits reading
+            return ceil(log2(len(element.substitutes)+1)) # +1 because one optional parameter gets at least 2 bits reading
+
+        def getTypeWithoutTypePrefix(typename: str):
+            return typename.split("Type")[0]
 
         indent_str = "\t" * indent
 
         if element.element_type.is_abstract:
-            element_type = element.element_type
-            if not isinstance(element_type, ComplexType):
+            if not isinstance(element.element_type, ComplexType):
                 raise NotImplementedError(f"The type of Element {element.element_name} is not ComplexType")
-            if len(element_type.derived_classes) == 0:
-                print(f"WARNING: class {element_type.type_name} has no derived classes")
-            code = f"{indent_str}int classtype{self.optional_parameter_suffix_cnt} = base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\");\n" \
-                   f"{indent_str}switch(classtype{self.optional_parameter_suffix_cnt}) {{\n"
-            for i, type in enumerate(element_type.derived_classes):
-                   code += f"{indent_str}\tcase {i}:\n" \
-                           f"{self._decode_complex_element(element.element_name, type, indent+2)}" \
-                           f"{indent_str}\t\tbreak;\n"
-            code += f"}}\n"
+            if len(element.element_type.derived_classes) == 0:
+                print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
+            if len(element.element_type.derived_classes) != len(element.substitutes):
+                print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
+            code = f"{indent_str}switch(base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\")) {{\n"
+            for i, (element_name, element_type) in enumerate(element.substitutes.items()):
+                code += f"{indent_str}\tcase {i}:\n" \
+                        f"{self._decode_complex_element(element_name, element_type, indent+2)}" \
+                        f"{indent_str}\t\tbreak;\n"
+            code += f"{indent_str}}}\n"
             return code
 
         return f"{indent_str}// decode complex type\n" \
@@ -120,15 +128,16 @@ class ComplexTypes:
 
 
     def decodeElementAsList(self, element: Element, indent: int) -> str:
+        suffix = self.local_suffix_cnt
         code = f"base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n"
 
-        code += f"int further_items{self.optional_parameter_suffix_cnt};\n" \
+        code += f"int further_items{suffix};\n" \
                 f"for(int i=0; i<{element.max_items}; i++) {{;\n" \
                 f"\tif (i!=0) {{\n" \
-                f"\t\tfurther_items{self.optional_parameter_suffix_cnt} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n"
-        code += f"\t\tif (further_items{self.optional_parameter_suffix_cnt} == 1) {{\n" \
+                f"\t\tfurther_items{suffix} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n"
+        code += f"\t\tif (further_items{suffix} == 1) {{\n" \
                 f"\t\t\tbreak;\n" \
-                f"\t\t}} else if (further_items{self.optional_parameter_suffix_cnt} == 0) {{\n"
+                f"\t\t}} else if (further_items{suffix} == 0) {{\n"
         code += f"\t\t}} else {{\n" \
                 f"\t\t\tthrow std::runtime_error(\"Unexpected code while decoding {element.element_name} List!\");\n" \
                 f"\t\t}}\n" \
@@ -144,29 +153,33 @@ class ComplexTypes:
 
         return code
 
-
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], indent: int) -> str:
         def get_num_eventcode_bits(progress=0) -> int:
             return ceil(log2(len(elements)+1-progress)) # +1 because one optional parameter gets at least 2 bits reading
-        self.optional_parameter_suffix_cnt += 1
+        suffix = self.local_suffix_cnt
         indent_str = "\t" * indent
         names = "_".join([e.element_name for e in elements])
-        code = f"{indent_str}uint8_t ec{self.optional_parameter_suffix_cnt} = base_types_->get_event_code_with_n_bits({get_num_eventcode_bits()}, \"Start{names}\");\n"
-        code += f"{indent_str}bool continue_loop{self.optional_parameter_suffix_cnt} = true;\n" \
-                f"{indent_str}while(continue_loop{self.optional_parameter_suffix_cnt}){{\n"
-        code += f"{indent_str}switch(ec{self.optional_parameter_suffix_cnt}) {{\n"
+        code = f"{indent_str}uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({get_num_eventcode_bits()}, \"Start{names}\");\n"
+        code += f"{indent_str}bool continue_loop{suffix} = true;\n" \
+                f"{indent_str}while(continue_loop{suffix}){{\n"
+        code += f"{indent_str}switch(ec{suffix}) {{\n"
         for i, element in enumerate(elements):
             code += f"{indent_str}\tcase {i}:\n"
-            code += f"{indent_str}{self.decode_element_with_event_code(element, indent+2)}"
-            if element.is_optional:
-                code += f"{indent_str}\t\tec{self.optional_parameter_suffix_cnt} = {i+1} + base_types_->get_event_code_with_n_bits({get_num_eventcode_bits(i+1)}, \"Start{names}{i}\");\n"
+            if element.is_list:
+                code += self.decodeElementAsList(element, indent+2)
             else:
-                code += f"{indent_str}\t\t continue_loop{self.optional_parameter_suffix_cnt} = false;\n"
+                code += f"{indent_str}{self.decode_element_with_event_code(element, indent+2)}"
+            if element.is_optional:
+                code += f"{indent_str}\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits({get_num_eventcode_bits(i + 1)}, \"Start{names}{i}\");\n"
+            else:
+                code += f"{indent_str}\t\t continue_loop{suffix} = false;\n"
             code += f"{indent_str}\t\tbreak;\n"
         if elements[-1].is_optional:  # special case for optional messages at the end of a complex type
-            code += f"{indent_str}\tcase {len(elements)}: continue_loop{self.optional_parameter_suffix_cnt} = false; break;\n"
+            code += f"{indent_str}\tcase {len(elements)}:\n" \
+                    f"{indent_str}\t\tcontinue_loop{suffix} = false;\n" \
+                    f"{indent_str}\t\tbreak;\n"
         code += f"{indent_str}\tdefault:\n" \
-                f"{indent_str}\t\tthrow std::runtime_error(\"While parsing event code for '{names}' a unexpected code (\" +  std::to_string(ec{self.optional_parameter_suffix_cnt}) + \") appeared  0!\");\n" \
+                f"{indent_str}\t\tthrow std::runtime_error(\"While parsing event code for '{names}' a unexpected code (\" +  std::to_string(ec{suffix}) + \") appeared  0!\");\n" \
                 f"{indent_str}}}}}"
         return code
 
@@ -175,11 +188,13 @@ class ComplexTypes:
         optional_blob = []
         for element in ct.child_elements:
             if element.element_name in ["Reference", "Transform", "Object"]:
-                print(f"WARNING: object not handled ({element})!")
+                print(f"WARNING: object not handled ({element.element_name})!")
             elif element.is_list:
                 if element.is_optional or len(optional_blob) != 0:
-                    raise NotImplementedError(f"list is not yet implemented for optional types or preciding optional types! ({element})")
-                code += self.decodeElementAsList(element, 0)
+                    print(f"WARNING: list as optional types not yet tested ({element.element_name})")
+                    optional_blob.append(element)
+                else:
+                    code += self.decodeElementAsList(element, 0)
             elif element.is_optional:
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
