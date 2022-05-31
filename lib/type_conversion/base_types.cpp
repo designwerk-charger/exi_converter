@@ -149,3 +149,6 @@ std::string BaseTypes::extractBase64Value() {
     return "";
 }
 
+std::string BaseTypes::decode_ignoredtype() {
+    return "ignored";
+}
