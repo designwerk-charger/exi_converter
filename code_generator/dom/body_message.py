@@ -62,8 +62,8 @@ class BodyMessage:
         code = f"uint8_t message_type;\n" \
                f"bit_stream_->get_next_n_bits(6, &message_type);\n" \
                f"uint8_t one_bit;" \
+               f"bit_stream_->get_next_n_bits(1, &one_bit);\n" \
                f"switch(message_type) ""{\n"
-           #    f"bit_stream_->get_next_n_bits(1, &one_bit);\n" \
 
         for key, value in elements.items():
             if value.type.local_name in self.complex_type_names:

@@ -6,11 +6,16 @@ from datatypes.element import Element
 
 
 class ComplexType(BaseType):
-    def __init__(self, name, namespace, child_elements: List[Element], base_class: str):
+    def __init__(self, name, namespace, child_elements: List[Element], base_class: str, is_abstract: bool):
         super().__init__(name, namespace)
         self.is_simple_not_complex = False
+        self.is_abstract = is_abstract
         self.child_elements = child_elements
         self.base_class = base_class
+        self.derived_classes = []
+
+    def add_derived_class(self, derived_class: BaseType):
+        self.derived_classes.append(derived_class)
 
     def __str__(self):
         header_line = f"{self.type_name}; complex; {self.base_class}\n"

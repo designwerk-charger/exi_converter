@@ -7,7 +7,7 @@ class Element:
         self.element_name = element_name
         self.element_type = element_type
         self.is_optional = is_optional
-        self._max_items = max_items
+        self.max_items = max_items
         self.is_list = max_items != 1
 
     def __str__(self):
@@ -19,6 +19,6 @@ class Element:
         else:
             txt += f"{self.element_name}"
         if self.is_list:
-            txt += f", {self._max_items}]"
+            txt += f", {self.max_items}]"
 
         return f"{txt}: {self.element_type}"

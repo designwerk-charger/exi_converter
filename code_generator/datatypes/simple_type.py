@@ -11,6 +11,7 @@ class SimpleType(BaseType):
     def __init__(self, type_name: str, type_namespace: str):
         super().__init__(type_name, type_namespace)
         self.is_simple_not_complex = True
+        self.is_abstract = False
 
     def __str__(self):
         return f"simple; {self.type_name}; {self.type_namespace}"
