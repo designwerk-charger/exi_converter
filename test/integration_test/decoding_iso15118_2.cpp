@@ -12,7 +12,7 @@ std::string run_decoding(const TestDataContainer & data) {
     try {
         output_data = codec.decode(input_data, "?");
     } catch (const std::exception& ex) {
-        std::cout << "Failed decoding message " << data.name << std::endl;
+        std::cout << "Failed decoding message " << data.name << " (" << ex.what() << ")" << std::endl;
     }
     std::cout << "Result:   " << output_data << std::endl;
     std::cout << "Expected: " << data.json_str << std::endl;

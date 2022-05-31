@@ -124,7 +124,8 @@ void BaseTypes::check_event_code_is_0(std::string current_type_name) {
     bit_stream_->get_next_n_bits(1, &event_code);
 
     #ifndef NDEBUG
-    std::cout << "check event code for '" << current_type_name << "' --> " << std::dec << int(event_code) << std::endl;
+    std::cout << "\tcheck event code for '" << current_type_name << "' --> "
+    << std::dec << int(event_code) << std::endl;
     #endif
 
     if (event_code) {
