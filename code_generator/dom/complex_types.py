@@ -57,24 +57,23 @@ class ComplexTypes:
     @staticmethod
     def _decode_simple_element(element: Element, indent: int) -> str:
         indent_str = "\t" * indent
-        return_str = ""
-        #if isinstance(element.element_type, EnumType):
-        #    return_str += f"{indent_str}base_types_->check_event_code_is_0(\"StartEnumeration\");\n"
+        return_str = f"{indent_str}{{ // decode simple {element.__class__.__name__} type\n"
         if element.element_name in ["NotificationMaxDelay", "EVSENotification"]:
-            return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
+            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return return_str + \
-               f"{indent_str}string_stream_->start_key(\"{element.element_name}\");\n" \
-               f"{indent_str}#ifndef NDEBUG\n" \
-               f"{indent_str}\tstd::cout << \"getting value for '{element.element_name}'\" << std::endl;\n" \
-               f"{indent_str}#endif\n" \
-               f"{indent_str}string_stream_->add_value({element.element_type.decode_function.call()});\n" \
-               f"{indent_str}string_stream_->end_key();\n"
+               f"{indent_str}\tstring_stream_->start_key(\"{element.element_name}\");\n" \
+               f"{indent_str}\tauto var = {element.element_type.decode_function.call()};\n" \
+               f"{indent_str}\tstring_stream_->add_value(var);\n" \
+               f"{indent_str}\t#ifndef NDEBUG\n" \
+               f"{indent_str}\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
+               f"{indent_str}\t#endif\n" \
+               f"{indent_str}\tstring_stream_->end_key();\n" \
+               f"{indent_str}}}\n"
 
     @staticmethod
     def _decode_simple_element_with_event_code(element: Element, indent: int) -> str:
         indent_str = "\t" * indent
-        return f"{indent_str}// decode simple type\n" \
-               f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
+        return f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
                f"{ComplexTypes._decode_simple_element(element, indent)}" \
                f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
 
@@ -102,7 +101,8 @@ class ComplexTypes:
                 print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
             if len(element.element_type.derived_classes) != len(element.substitutes):
                 print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
-            code = f"{indent_str}switch(base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\")) {{\n"
+            code = f"{indent_str}// decode complex abstract {element.__class__.__name__} type\n" \
+                   f"{indent_str}switch(base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\")) {{\n"
             for i, (element_name, element_type) in enumerate(element.substitutes.items()):
                 code += f"{indent_str}\tcase {i}:\n" \
                         f"{self._decode_complex_element(element_name, element_type, indent+2)}" \
@@ -110,16 +110,10 @@ class ComplexTypes:
             code += f"{indent_str}}}\n"
             return code
 
-        return f"{indent_str}// decode complex type\n" \
+        return f"{indent_str}// decode complex {element.__class__.__name__} type\n" \
                f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
                f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}" \
                f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
-
-    @staticmethod
-    def decode_element(element: Element, indent: int) -> str:
-        if element.element_type.is_simple_not_complex:
-            return ComplexTypes._decode_simple_element(element, indent)
-        return ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)
 
     def decode_element_with_event_code(self, element: Element, indent: int) -> str:
         if element.element_type.is_simple_not_complex:
@@ -129,26 +123,38 @@ class ComplexTypes:
 
     def decodeElementAsList(self, element: Element, indent: int) -> str:
         suffix = self.local_suffix_cnt
-        code = f"base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n"
+        code = f"base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n" \
+               f"string_stream_->start_key(\"{element.element_name}\");\n" \
+               f"string_stream_->start_list();\n"
 
         code += f"int further_items{suffix};\n" \
                 f"for(int i=0; i<{element.max_items}; i++) {{;\n" \
                 f"\tif (i!=0) {{\n" \
-                f"\t\tfurther_items{suffix} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n"
-        code += f"\t\tif (further_items{suffix} == 1) {{\n" \
+                f"\t\tfurther_items{suffix} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n" \
+                f"\t\tif (further_items{suffix} == 1) {{\n" \
                 f"\t\t\tbreak;\n" \
-                f"\t\t}} else if (further_items{suffix} == 0) {{\n"
-        code += f"\t\t}} else {{\n" \
+                f"\t\t}} else if (further_items{suffix} == 0) {{\n" \
+                f"\t\t\tstring_stream_->next_item();\n" \
+                f"\t\t}} else {{\n" \
                 f"\t\t\tthrow std::runtime_error(\"Unexpected code while decoding {element.element_name} List!\");\n" \
                 f"\t\t}}\n" \
                 f"\t}}\n"
 
+
         if element.element_type.is_simple_not_complex:
-            code += ComplexTypes._decode_simple_element(element, indent+1)
+            code += f"{{\n" \
+                    f"\tauto var = {element.element_type.decode_function.call()};\n" \
+                    f"\tstring_stream_->add_value(var);\n" \
+                    f"\t#ifndef NDEBUG\n" \
+                    f"\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
+                    f"\t#endif\n" \
+                    f"}}\n"
         else:
-            code += ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent+1)
+            code += f"{element.element_type.decode_function.call()};\n"
 
         code += f"}}\n" \
+                f"string_stream_->end_list();\n" \
+                f"string_stream_->end_key();\n" \
                 f"base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"
 
         return code
@@ -156,10 +162,12 @@ class ComplexTypes:
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], indent: int) -> str:
         def get_num_eventcode_bits(progress=0) -> int:
             return ceil(log2(len(elements)+1-progress)) # +1 because one optional parameter gets at least 2 bits reading
+
         suffix = self.local_suffix_cnt
         indent_str = "\t" * indent
         names = "_".join([e.element_name for e in elements])
-        code = f"{indent_str}uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({get_num_eventcode_bits()}, \"Start{names}\");\n"
+        code = f"{indent_str}// Decoding optional elements: {[en.element_name for en in elements]}\n" \
+               f"{indent_str}uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({max(get_num_eventcode_bits(), 2)}, \"Start{names}\");\n"
         code += f"{indent_str}bool continue_loop{suffix} = true;\n" \
                 f"{indent_str}while(continue_loop{suffix}){{\n"
         code += f"{indent_str}switch(ec{suffix}) {{\n"
