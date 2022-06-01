@@ -12,7 +12,7 @@ class TestCppClassCodeGeneration(unittest.TestCase):
         self.cpp_class = CppClass(class_name="TestClass", derived_from_class=None, includes="")
         self.cpp_class.add_function(CppFunction(function_name="doNothing",
                                                 return_type="void",
-                                                arguments="void",
+                                                arguments=None,
                                                 code=""))
         self.cpp_class.add_function(CppFunction(function_name="returnTrueWhenInput1",
                                                 return_type="bool",

@@ -210,7 +210,7 @@ class ComplexTypes:
 
         return CppFunction(function_name=ct.decode_function.function_name,
                            return_type="void",
-                           arguments="void",
+                           arguments=None,
                            code=code,
                            comment=None)
 

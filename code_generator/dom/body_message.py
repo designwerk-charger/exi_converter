@@ -84,7 +84,7 @@ class BodyMessage:
 
         return CppFunction(function_name="decodeBody",
                            return_type="void",
-                           arguments="void",
+                           arguments=None,
                            code=code,
                            comment=None)
 

@@ -53,6 +53,6 @@ class ComplexType(BaseType):
     @property
     def decode_function(self):
         return CppFunction(function_name=f"decode_{self.type_name}",
-                           return_type="bool", arguments="void",
+                           return_type="bool", arguments=None,
                            comment="",
                            code="")

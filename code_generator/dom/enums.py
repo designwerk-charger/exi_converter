@@ -47,7 +47,7 @@ class Enums:
                 f"return ENUM2STR[enum_num];\n"
         return CppFunction(function_name=f"decode_{enum.type_name}",
                     return_type="std::string",
-                    arguments="void",
+                    arguments=None,
                     code=code,
                     comment=None)
 
