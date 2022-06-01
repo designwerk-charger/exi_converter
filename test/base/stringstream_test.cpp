@@ -16,7 +16,7 @@ TEST(StringStreamTest_getNextItem, ReturnsFirstTwoItems) {
     EXPECT_EQ(ss.get_next_item(), "Header");
 }
 
-TEST(StringStreamTest_createStream, CreateKeyAndValue) {
+TEST(StringStreamTest_getFullStream, CreateKeyAndValue) {
     StringStream ss("");
 
     ss.start_key("key");
@@ -26,7 +26,7 @@ TEST(StringStreamTest_createStream, CreateKeyAndValue) {
     EXPECT_EQ(ss.get_full_stream(), "{\"key\":\"value\"}");
 }
 
-TEST(StringStreamTest_createStream, CreateKeyAndKeyWithValue) {
+TEST(StringStreamTest_getFullStream, CreateKeyAndKeyWithValue) {
     StringStream ss("");
 
     ss.start_key("key1");
@@ -39,7 +39,7 @@ TEST(StringStreamTest_createStream, CreateKeyAndKeyWithValue) {
 }
 
 
-TEST(StringStreamTest_createStream, CreateKeyWithTwoValues) {
+TEST(StringStreamTest_getFullStream, CreateKeyWithTwoValues) {
     StringStream ss("");
 
     ss.start_key("key1");
@@ -52,7 +52,7 @@ TEST(StringStreamTest_createStream, CreateKeyWithTwoValues) {
     EXPECT_EQ(ss.get_full_stream(), "{\"key1\":\"value1\",\"key2\":\"value2\"}");
 }
 
-TEST(StringStreamTest_createStream, CreatingFullMessageString) {
+TEST(StringStreamTest_getFullStream, CreatingFullMessageString) {
     StringStream ss("");
 
     ss.start_key("V2G_Message");
@@ -81,11 +81,61 @@ TEST(StringStreamTest_createStream, CreatingFullMessageString) {
     EXPECT_EQ(ss.get_full_stream(), "{\"V2G_Message\":{\"Header\":{\"SessionID\":\"F05FBD2A935C8EC5\"},\"Body\":{\"SessionSetupRes\":{\"ResponseCode\":\"OK_NewSessionEstablished\",\"EVSEID\":\"CH123DW123\",\"EVSETimeStamp\":277130}}}}");  // NOLINT
 }
 
-TEST(StringStreamTest_createStream, AddsEmptyValue_when_KeyStartedWithoutValue) {
+TEST(StringStreamTest_getFullStream, AddsEmptyValue_when_KeyStartedWithoutValue) {
     StringStream ss("");
 
     ss.start_key("key1");
     ss.end_key();
 
     EXPECT_EQ(ss.get_full_stream(), R"({"key1":{}})");
+}
+
+TEST(StringStreamTest_getFullStream, ListBraketsAreAdded_when_StartEndListCalled) {
+    StringStream ss("");
+
+    ss.start_key("list1");
+    ss.start_list();
+    ss.end_list();
+
+    EXPECT_EQ(ss.get_full_stream(), R"({"list1":[]})");
+}
+
+TEST(StringStreamTest_getFullStream, ListCreatedWithTwoValues) {
+    StringStream ss("");
+
+    ss.start_key("sl");
+    ss.start_list();
+    ss.add_value("v1");
+    ss.next_item();
+    ss.add_value("v2");
+    ss.end_list();
+
+    EXPECT_EQ(ss.get_full_stream(), R"({"sl":["v1","v2"]})");
+}
+
+TEST(StringStreamTest_getFullStream, ListCreatedWithTwoKeyValues) {
+    StringStream ss("");
+
+    ss.start_key("sl");
+    ss.start_list();
+
+    ss.start_key("k");
+    ss.add_value("v1");
+    ss.end_key();
+    ss.next_item();
+    ss.start_key("k");
+    ss.add_value("v2");
+    ss.end_key();
+
+    ss.end_list();
+
+    EXPECT_EQ(ss.get_full_stream(), R"({"sl":[{"k":"v1"},{"k":"v2"}]})");
+}
+
+
+
+TEST(StringStreamTest_startList, ThrowException_when_StartListNotAfterStartKey) {
+    StringStream ss("");
+
+    EXPECT_THROW(ss.start_list(), std::runtime_error);
 }

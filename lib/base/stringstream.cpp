@@ -17,7 +17,7 @@ StringStream::StringStream(const std::string & input_data) :
     }
 }
 
-std::string StringStream::get_next_item(void) {
+std::string StringStream::get_next_item() {
     return input_items_.at(item_cnt_++);
 }
 
@@ -53,6 +53,30 @@ void StringStream::add_value(int32_t value) {
     last_command_ = addvalue;
 }
 
+void StringStream::start_list() {
+    if (last_command_ != startkey) {
+        throw std::runtime_error("Start list requires preceding start key! (" + get_full_stream() + ")");
+    }
+    output_data_ << "[";
+    last_command_ = startlist;
+}
+
+void StringStream::next_item() {
+    if (last_command_ == endkey) {
+        output_data_ << "},";
+    } else if (last_command_ == addvalue) {
+        output_data_ << ",";
+    }
+    last_command_ = nextitem;
+}
+
+void StringStream::end_list() {
+    if (last_command_ == endkey) {
+        output_data_ << "}";
+    }
+    output_data_ << "]";
+    last_command_ = endlist;
+}
 
 std::string StringStream::get_full_stream() {
     return output_data_.str() + "}";
