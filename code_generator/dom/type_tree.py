@@ -7,7 +7,7 @@ from xmlschema import XsdElement, XsdAttribute, XsdType, XsdComponent
 
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
-from datatypes.element import Element
+from datatypes.element import Element, Attribute
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
     IgnoredType
 from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
@@ -130,7 +130,7 @@ class TypeTree:
                                               is_optional=is_optional, max_items=c.max_occurs, substitutes=substitutes))
                 if isinstance(c, XsdAttribute):
                     optional = True if c.use == "optional" else False
-                    components.append(Element(c.local_name,
+                    components.append(Attribute(c.local_name,
                                               TypeTree.diveIntoType(TypeTree.extractComponentType(c), all_types),
                                               is_optional=optional))
             refered_item.child_elements = components
