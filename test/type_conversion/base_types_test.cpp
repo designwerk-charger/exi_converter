@@ -48,7 +48,7 @@ TEST(BaseTypeTest, GetIntegerFromExiStream_When_AskedForNegativeSignedInteger) {
 }
 
 TEST(BaseTypeTest, GetStringFromExiStream_When_AskedForString) {
-    uint8_t str_data[]  = {0x05, 'H', 'E', 'L', 'L', 'O'};
+    uint8_t str_data[]  = {0x07, 'H', 'E', 'L', 'L', 'O'};
     BitStream bs(str_data, 6);
     BaseTypes bt(&bs);
     std::string bt_out;
@@ -56,6 +56,15 @@ TEST(BaseTypeTest, GetStringFromExiStream_When_AskedForString) {
     bt_out = bt.extractString();
 
     ASSERT_EQ(bt_out, "HELLO");
+}
+
+TEST(BaseTypeTest, GetStringFromExiStreamThrowsRuntimeException_When_StringLengthSmaller2) {
+    uint8_t str_data[]  = {0x01, 'H', 'E', 'L', 'L', 'O'};
+    BitStream bs(str_data, 6);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    ASSERT_THROW(bt.extractString(), std::runtime_error);
 }
 
 TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {

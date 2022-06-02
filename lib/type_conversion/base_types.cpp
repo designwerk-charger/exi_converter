@@ -50,7 +50,13 @@ void BaseTypes::injectString(std::string value) {
 
 std::string BaseTypes::extractString() {
     uint8_t length_str = extractIntegerNumber(2, true);
-    uint8_t* out_chars = new uint8_t[length_str + 1];
+    if (length_str < 2) {
+        throw std::runtime_error("The length of the string is smaller than 2("
+        + std::to_string(length_str) + ")");
+    }
+
+    length_str -= 2;
+    auto out_chars = new uint8_t[length_str + 1];
 
     bit_stream_->get_next_n_bits((length_str) * 8, out_chars);
     out_chars[length_str] = 0;
