@@ -130,9 +130,18 @@ class TypeTree:
                                               is_optional=is_optional, max_items=c.max_occurs, substitutes=substitutes))
                 if isinstance(c, XsdAttribute):
                     optional = True if c.use == "optional" else False
-                    components.append(Attribute(c.local_name,
-                                              TypeTree.diveIntoType(TypeTree.extractComponentType(c), all_types),
-                                              is_optional=optional))
+                    attr_type = TypeTree.diveIntoType(TypeTree.extractComponentType(c), all_types)
+                    if not isinstance(attr_type, SimpleType):
+                        raise TypeError(f"Attributes can only be simple types! got type '{attr_type.type_name}' for "
+                                        f"component '{c.local_name}' in '{t.local_name}'")
+                    if len(components) > 0 and not isinstance(components[-1], Attribute):
+                        raise RuntimeError(f"Attributes are not allowed after Elements! "
+                                           f"component '{c.local_name}' in '{t.local_name}'")
+                    if len(components) > 0 and components[-1].element_name > c.local_name:
+                        raise RuntimeError(f"Attributes are not lexicographical ordered! "
+                                           f"new component '{c.local_name}' vs. "
+                                           f"existing component '{components[-1].element_name}' in '{t.local_name}'")
+                    components.append(Attribute(c.local_name, attr_type, is_optional=optional))
             refered_item.child_elements = components
             return refered_item
         raise RuntimeError(f"the Type {t.local_name} is neither simple nor complex!")
