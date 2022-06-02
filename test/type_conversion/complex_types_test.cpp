@@ -65,3 +65,21 @@ TEST_F(ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_Selec
 
     ASSERT_EQ(string_stream->get_full_stream(), R"({"SelectedService":[{"ServiceID":1}]})");
 }
+
+TEST_F(ComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
+    /* Data extracted from OpenV2G
+     * DecodeServiceDiscoveryReq -> Start
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceScope), START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceCategory), END_ELEMENT]
+     *     getting 2bit(s) from position 100 --> 0x0002
+     * DecodeServiceDiscoveryReq -> Done
+     */
+
+    std::vector<uint8_t> raw_data({0b10000000});
+    setupWithRawData(raw_data);
+    string_stream->start_key("ServiceDiscoveryReq");
+
+    complex_types->decode_ServiceDiscoveryReqType();
+
+    string_stream->end_key();
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"ServiceDiscoveryReq":{}})");
+}

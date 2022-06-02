@@ -39,7 +39,7 @@ void StringStream::end_key() {
     last_command_ = endkey;
 
 #ifndef NDEBUG
-    std::cout << "end_key added " << output_data_.str() << std::endl;
+    std::cout << "->end_key added " << output_data_.str() << std::endl;
 #endif
 }
 

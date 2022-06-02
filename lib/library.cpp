@@ -70,7 +70,7 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
     stringstream.start_key("Header");
     base_types.check_event_code_is_0("StartHeader");
     complex_types.decode_MessageHeaderType();
-    //base_types.check_event_code_is_0("EndHeader");
+    // base_types.check_event_code_is_0("EndHeader");
     stringstream.end_key(); // header
 
     stringstream.start_key("Body");

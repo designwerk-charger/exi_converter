@@ -67,10 +67,6 @@ INSTANTIATE_TEST_CASE_P(
                         "8098020df6a63dcd82240f90e00000002040c40e601030c0042220310360100618560101050e80700c554b3132334531323334000400", // NOLINT
                         R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"CurrentDemandRes":{"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"},"EVSEPresentVoltage":{"Multiplier":0,"Unit":"V","Value":230},"EVSEPresentCurrent":{"Multiplier":0,"Unit":"A","Value":1},"EVSECurrentLimitAchieved":true,"EVSEVoltageLimitAchieved":true,"EVSEPowerLimitAchieved":true,"EVSEMaximumVoltageLimit":{"Multiplier":0,"Unit":"V","Value":600},"EVSEMaximumCurrentLimit":{"Multiplier":0,"Unit":"A","Value":300},"EVSEMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":1000},"EVSEID":"UK123E1234","SAScheduleTupleID":1,"ReceiptRequired":false}}}})"),
                 TestDataContainer(
-                        "PowerDeliveryRes",
-                        "8098020df6a63dcd82240f91600400001020",
-                        R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"PowerDeliveryRes":{"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"}}}}})"),
-                TestDataContainer(
                         "WeldingDetectionRes",
                         "8098020df6a63dcd82240f92200000002040c40e601000",
                         R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"WeldingDetectionRes":{"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"},"EVSEPresentVoltage":{"Multiplier":0,"Unit":"V","Value":230}}}}})"),

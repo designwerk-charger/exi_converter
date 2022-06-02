@@ -1,11 +1,10 @@
 import collections
-from typing import Dict, List
+from typing import Dict
 
 from xmlschema import XsdElement
 
 from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
-from datatypes.complex_type import ComplexType
 from dom.complex_types import ComplexTypes
 
 
@@ -68,6 +67,9 @@ class BodyMessage:
         for key, value in elements.items():
             if value.type.local_name in self.complex_type_names:
                 code += f"\tcase {key}:\n" \
+                        f"\t\t#ifndef NDEBUG\n" \
+                        f"\t\tstd::cout << \"decoding body as type '{value.type.local_name}' -> {key}\" << std::endl;\n" \
+                        f"\t\t#endif\n" \
                         f"\t\tstring_stream_->start_key(\"{value.local_name}\");\n" \
                         f"\t\tcomplex_types_->decode_{value.type.local_name}();\n" \
                         f"\t\tbreak;\n"

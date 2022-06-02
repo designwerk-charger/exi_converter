@@ -6,7 +6,6 @@ from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
 from datatypes.element import Element
-from datatypes.simple_type import EnumType
 
 
 class ComplexTypes:
@@ -15,8 +14,6 @@ class ComplexTypes:
         self._local_suffix_cnt = 0
         self.all_types = {}
         for item in type_tree:
-            if item.type_name == "DC_EVChargeParameterType":
-                print("adfsadf")
             for type in item.get_child_types():
                 self.all_types[type.type_name] = type
 
@@ -33,7 +30,7 @@ class ComplexTypes:
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\nstring_stream_ = string_stream;\n")
 
         for ct in self.all_complex_types:
-            ct_with_base = self.addBaseElementsToCt(ct)
+            ct_with_base = self.addBaseElementsToCt(ct)  # Todo: is this still necessary?
             ct_func = self.getDecodeFunction(ct_with_base)
             self.cpp_class.add_function(ct_func)
 
@@ -51,13 +48,12 @@ class ComplexTypes:
                         ct.child_elements = new_elements
                     return ct
             print(f"Error: no baseclass found for {ct.type_name}")
-            #raise RuntimeError(f"no baseclass found for {ct}")
         return ct
 
     @staticmethod
     def _decode_simple_element(element: Element, indent: int) -> str:
         indent_str = "\t" * indent
-        return_str = f"{indent_str}{{ // decode simple {element.__class__.__name__} type\n"
+        return_str = f"{indent_str}{{  // decode simple {element.__class__.__name__} type\n"
         if element.element_name in ["NotificationMaxDelay", "EVSENotification"]:
             return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return return_str + \
@@ -88,9 +84,6 @@ class ComplexTypes:
     def _decode_complex_element_with_event_code(self, element: Element, indent: int) -> str:
         def get_num_abstract_classes_bits() -> int:
             return ceil(log2(len(element.substitutes)+1)) # +1 because one optional parameter gets at least 2 bits reading
-
-        def getTypeWithoutTypePrefix(typename: str):
-            return typename.split("Type")[0]
 
         indent_str = "\t" * indent
 
