@@ -60,8 +60,6 @@ class BodyMessage:
     def getDecodeFunction(self, elements) -> CppFunction:
         code = f"uint8_t message_type;\n" \
                f"bit_stream_->get_next_n_bits(6, &message_type);\n" \
-               f"uint8_t one_bit;" \
-               f"bit_stream_->get_next_n_bits(1, &one_bit);\n" \
                f"switch(message_type) ""{\n"
 
         for key, value in elements.items():

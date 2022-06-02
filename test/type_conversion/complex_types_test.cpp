@@ -27,14 +27,45 @@ class ComplexTypesTest : public ::testing::Test {
 };
 
 TEST_F(ComplexTypesTest, DecodeElementsWithSubstitutes_PowerDeliveryResType) {
-    std::vector<uint8_t> raw_data({0b00000000, 0b10000000, 0b00000000, 0b00000010, 0b00000100});
+    /* Data extracted from OpenV2G
+     *   DecodePowerDeliveryResType -> Start
+     *   getting 1bit(s) from position 100 --> 0x0000 1
+     *   getting 1bit(s) from position 101 --> 0x0000
+     *   getting value for 'ResponseCode'
+     *   getting 5bit(s) from position 102 --> 0x0000
+     *   getting 1bit(s) from position 107 --> 0x0000
+     *   getting 2bit(s) from position 108 --> 0x0001 2
+     *   getting 1bit(s) from position 110 --> 0x0000
+     *   getting 1bit(s) from position 111 --> 0x0000
+     *   getting value for 'NotificationMaxDelay'
+     *   getting 8bit(s) from position 112 --> 0x0000
+     *   getting 1bit(s) from position 120 --> 0x0000
+     *   getting 1bit(s) from position 121 --> 0x0000
+     *   getting 1bit(s) from position 122 --> 0x0000
+     *   getting value for 'EVSENotification'
+     *   getting 2bit(s) from position 123 --> 0x0000
+     *   getting 1bit(s) from position 125 --> 0x0000
+     *   getting 2bit(s) from position 126 --> 0x0000
+     *   getting 1bit(s) from position 128 --> 0x0000
+     *   getting value for 'EVSEIsolationStatus'
+     *   getting 3bit(s) from position 129 --> 0x0001
+     *   getting 1bit(s) from position 132 --> 0x0000
+     *   getting 1bit(s) from position 133 --> 0x0000
+     *   getting 1bit(s) from position 134 --> 0x0000
+     *   getting value for 'EVSEStatusCode'
+     *   getting 4bit(s) from position 135 --> 0x0001
+     *   getting 1bit(s) from position 139 --> 0x0000
+     *   getting 1bit(s) from position 140 --> 0x0000
+     *   getting 1bit(s) from position 141 --> 0x0000
+     *   DecodePowerDeliveryResType -> Done
+     */
+    std::vector<uint8_t> raw_data({0b00000000, 0b01000000, 0b00000000, 0b00000001, 0b00000010, 0x00});
     setupWithRawData(raw_data);
 
     complex_types->decode_PowerDeliveryResType();
 
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"}})");
 }
-
 
 TEST_F(ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_SelectedServiceList) {
     /* Data extracted from OpenV2G
@@ -58,7 +89,7 @@ TEST_F(ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_Selec
      *   Element[END_ELEMENT]
      */
 
-    std::vector<uint8_t> raw_data({0b00000000, 0b01001010, 0x00});  // Shifted by 1 to right (x2)
+    std::vector<uint8_t> raw_data({0b00000000, 0b00100101, 0x00});
     setupWithRawData(raw_data);
 
     complex_types->decode_SelectedServiceListType();

@@ -5,7 +5,7 @@ from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
-from datatypes.element import Element
+from datatypes.element import Element, Attribute
 
 
 class ComplexTypes:
@@ -51,26 +51,30 @@ class ComplexTypes:
         return ct
 
     @staticmethod
-    def _decode_simple_element(element: Element, indent: int) -> str:
+    def _decode_simple_element(element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
-        return_str = f"{indent_str}{{  // decode simple {element.__class__.__name__} type\n"
-        if element.element_name in ["NotificationMaxDelay", "EVSENotification"]:
+        optional_str = "optional " if element.is_optional else ""
+        return_str = f"{indent_str}{{  // decode {optional_str}simple {element.__class__.__name__} type\n"
+        if isinstance(element, Element) and not from_optional:
             return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return return_str + \
                f"{indent_str}\tstring_stream_->start_key(\"{element.element_name}\");\n" \
                f"{indent_str}\tauto var = {element.element_type.decode_function.call()};\n" \
                f"{indent_str}\tstring_stream_->add_value(var);\n" \
                f"{indent_str}\t#ifndef NDEBUG\n" \
-               f"{indent_str}\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
+               f"{indent_str}\t\tstd::cout << \"getting value for {optional_str}{element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
                f"{indent_str}\t#endif\n" \
                f"{indent_str}\tstring_stream_->end_key();\n" \
                f"{indent_str}}}\n"
 
     @staticmethod
-    def _decode_simple_element_with_event_code(element: Element, indent: int) -> str:
+    def _decode_simple_element_with_event_code(element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
+        if isinstance(element, Attribute):
+            if element.is_optional:
+                return f"{ComplexTypes._decode_simple_element(element, indent)}"
         return f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
-               f"{ComplexTypes._decode_simple_element(element, indent)}" \
+               f"{ComplexTypes._decode_simple_element(element, indent, from_optional)}" \
                f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
 
     @staticmethod
@@ -108,9 +112,9 @@ class ComplexTypes:
                f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}" \
                f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
 
-    def decode_element_with_event_code(self, element: Element, indent: int) -> str:
+    def decode_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
-            return ComplexTypes._decode_simple_element_with_event_code(element, indent)
+            return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
         return self._decode_complex_element_with_event_code(element, indent)
 
 
@@ -169,12 +173,13 @@ class ComplexTypes:
             if element.is_list:
                 code += self.decodeElementAsList(element, indent+2)
             else:
-                code += f"{indent_str}{self.decode_element_with_event_code(element, indent+2)}"
+                code += f"{indent_str}{self.decode_element_with_event_code(element, indent+2, from_optional=True)}"
             if element.is_optional:
-                code += f"{indent_str}\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits({get_num_eventcode_bits(i + 1)}, \"Start{names}{i}\");\n"
+                code += f"{indent_str}\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits({max(1,get_num_eventcode_bits(i + 1))}, \"Start{names}{i}\");\n"
             else:
                 code += f"{indent_str}\t\t continue_loop{suffix} = false;\n"
             code += f"{indent_str}\t\tbreak;\n"
+
         if elements[-1].is_optional:  # special case for optional messages at the end of a complex type
             code += f"{indent_str}\tcase {len(elements)}:\n" \
                     f"{indent_str}\t\tcontinue_loop{suffix} = false;\n" \
