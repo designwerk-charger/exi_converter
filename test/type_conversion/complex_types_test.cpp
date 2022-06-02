@@ -137,3 +137,63 @@ TEST_F(ComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when_emp
     string_stream->end_key();
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ServiceDiscoveryReq":{}})");
 }
+
+TEST_F(ComplexTypesTest, DecodeComplexCombination_ServiceDiscoveryRes_ChargeServiceType) {
+    /* Data extracted from OpenV2G
+     * ChargeServiceType --> Start
+     *   FirstStartTag[START_ELEMENT(ServiceID)]
+     *     getting 1bit(s) from position 116 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 117 --> 0x0000 -> 0
+     *     getting 8bit(s) from position 118 --> 0x0001 -> 00000001
+     *     getting 1bit(s) from position 126 --> 0x0000 -> 0
+     *   Element[START_ELEMENT(ServiceName), START_ELEMENT(ServiceCategory)]
+     *     getting 2bit(s) from position 127 --> 0x0000 -> 00
+     *     getting 1bit(s) from position 129 --> 0x0000 -> 0
+     *     getting 8bit(s) from position 130 --> 0x0010 -> 00010000
+     *     getting 8bit(s) from position 138 --> 0x0041 -> 01000001
+     *     getting 8bit(s) from position 146 --> 0x0043 -> 01000011
+     *     getting 8bit(s) from position 154 --> 0x005f -> 01011111
+     *     getting 8bit(s) from position 162 --> 0x0044 -> 01000100
+     *     getting 8bit(s) from position 170 --> 0x0043 -> 01000011
+     *     getting 8bit(s) from position 178 --> 0x005f -> 01011111
+     *     getting 8bit(s) from position 186 --> 0x0043 -> 01000011
+     *     getting 8bit(s) from position 194 --> 0x0068 -> 01101000
+     *     getting 8bit(s) from position 202 --> 0x0061 -> 01100001
+     *     getting 8bit(s) from position 210 --> 0x0072 -> 01110010
+     *     getting 8bit(s) from position 218 --> 0x0067 -> 01100111
+     *     getting 8bit(s) from position 226 --> 0x0069 -> 01101001
+     *     getting 8bit(s) from position 234 --> 0x006e -> 01101110
+     *     getting 8bit(s) from position 242 --> 0x0067 -> 01100111
+     *     getting 1bit(s) from position 250 --> 0x0000 -> 0
+     *   Element[START_ELEMENT(ServiceCategory)]
+     *     getting 1bit(s) from position 251 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 252 --> 0x0000 -> 0
+     *     getting 2bit(s) from position 253 --> 0x0000 -> 00
+     *     getting 1bit(s) from position 255 --> 0x0000 -> 0
+     *   Element[START_ELEMENT(ServiceScope), START_ELEMENT(FreeService)]
+     *     getting 2bit(s) from position 256 --> 0x0001 -> 01
+     *     getting 1bit(s) from position 258 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 259 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 260 --> 0x0000 -> 0
+     *   Element[START_ELEMENT(SupportedEnergyTransferMode)]
+     *     getting 1bit(s) from position 261 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 262 --> 0x0000 -> 0
+     *     getting 1bit(s) from position 263 --> 0x0000 -> 0
+     *     getting 3bit(s) from position 264 --> 0x0003 -> 011
+     *     getting 1bit(s) from position 267 --> 0x0000 -> 0
+     *     getting 2bit(s) from position 268 --> 0x0001 -> 01
+     *     getting 1bit(s) from position 270 --> 0x0000 -> 0
+     * ChargeServiceType --> End
+     */
+
+    std::vector<uint8_t> raw_data({0b00000000, 0b01000000, 0b01000001, 0b00000101, 0b00001101, 0b01111101,
+                                   0b00010001, 0b00001101, 0b01111101, 0b00001101, 0b10100001, 0b10000101,
+                                   0b11001001, 0b10011101, 0b10100101, 0b10111001, 0b10011100, 0b00000100,
+                                   0b00000110, 0b01000000});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_ChargeServiceType();
+
+    string_stream->end_key();
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"ServiceID":1,"ServiceName":"AC_DC_Charging","ServiceCategory":"EVCharging","FreeService":false,"SupportedEnergyTransferMode":{"EnergyTransferMode":["DC_extended"]}}})");
+}
