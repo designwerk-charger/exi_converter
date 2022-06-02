@@ -20,7 +20,7 @@ TEST(StringStreamTest_getFullStream, CreateKeyAndValue) {
     StringStream ss("");
 
     ss.start_key("key");
-    ss.add_value("value");
+    ss.add_value(static_cast<std::string>("value"));
     ss.end_key();
 
     EXPECT_EQ(ss.get_full_stream(), "{\"key\":\"value\"}");
@@ -31,7 +31,7 @@ TEST(StringStreamTest_getFullStream, CreateKeyAndKeyWithValue) {
 
     ss.start_key("key1");
     ss.start_key("key2");
-    ss.add_value("value");
+    ss.add_value(static_cast<std::string>("value"));
     ss.end_key();
     ss.end_key();
 
@@ -43,10 +43,10 @@ TEST(StringStreamTest_getFullStream, CreateKeyWithTwoValues) {
     StringStream ss("");
 
     ss.start_key("key1");
-    ss.add_value("value1");
+    ss.add_value(static_cast<std::string>("value1"));
     ss.end_key();
     ss.start_key("key2");
-    ss.add_value("value2");
+    ss.add_value(static_cast<std::string>("value2"));
     ss.end_key();
 
     EXPECT_EQ(ss.get_full_stream(), "{\"key1\":\"value1\",\"key2\":\"value2\"}");
@@ -58,17 +58,17 @@ TEST(StringStreamTest_getFullStream, CreatingFullMessageString) {
     ss.start_key("V2G_Message");
     ss.start_key("Header");
     ss.start_key("SessionID");
-    ss.add_value("F05FBD2A935C8EC5");
+    ss.add_value(static_cast<std::string>("F05FBD2A935C8EC5"));
     ss.end_key();
     ss.end_key();
     ss.start_key("Body");
     ss.start_key("SessionSetupRes");
 
     ss.start_key("ResponseCode");
-    ss.add_value("OK_NewSessionEstablished");
+    ss.add_value(static_cast<std::string>("OK_NewSessionEstablished"));
     ss.end_key();
     ss.start_key("EVSEID");
-    ss.add_value("CH123DW123");
+    ss.add_value(static_cast<std::string>("CH123DW123"));
     ss.end_key();
     ss.start_key("EVSETimeStamp");
     ss.add_value(277130);
@@ -105,9 +105,9 @@ TEST(StringStreamTest_getFullStream, ListCreatedWithTwoValues) {
 
     ss.start_key("sl");
     ss.start_list();
-    ss.add_value("v1");
+    ss.add_value(static_cast<std::string>("v1"));
     ss.next_item();
-    ss.add_value("v2");
+    ss.add_value(static_cast<std::string>("v2"));
     ss.end_list();
 
     EXPECT_EQ(ss.get_full_stream(), R"({"sl":["v1","v2"]})");
@@ -120,11 +120,11 @@ TEST(StringStreamTest_getFullStream, ListCreatedWithTwoKeyValues) {
     ss.start_list();
 
     ss.start_key("k");
-    ss.add_value("v1");
+    ss.add_value(static_cast<std::string>("v1"));
     ss.end_key();
     ss.next_item();
     ss.start_key("k");
-    ss.add_value("v2");
+    ss.add_value(static_cast<std::string>("v2"));
     ss.end_key();
 
     ss.end_list();

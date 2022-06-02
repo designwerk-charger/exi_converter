@@ -53,6 +53,11 @@ void StringStream::add_value(int32_t value) {
     last_command_ = addvalue;
 }
 
+void StringStream::add_value(bool value) {
+    output_data_ << ((value == 0) ? "false" : "true");
+    last_command_ = addvalue;
+}
+
 void StringStream::start_list() {
     if (last_command_ != startkey) {
         throw std::runtime_error("Start list requires preceding start key! (" + get_full_stream() + ")");
