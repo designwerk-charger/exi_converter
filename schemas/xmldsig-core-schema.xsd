@@ -101,8 +101,8 @@
     <element ref="ds:DigestValue"/> 
   </sequence>
   <attribute name="Id" type="ID" use="optional"/> 
-  <attribute name="URI" type="anyURI" use="optional"/> 
-  <attribute name="Type" type="anyURI" use="optional"/> 
+  <attribute name="Type" type="anyURI" use="optional"/>
+  <attribute name="URI" type="anyURI" use="optional"/>
 </complexType>
 
   <element name="Transforms" type="ds:TransformsType"/>
@@ -174,8 +174,8 @@
     <sequence>
       <element ref="ds:Transforms" minOccurs="0"/> 
     </sequence>  
-    <attribute name="URI" type="anyURI"/>
     <attribute name="Type" type="anyURI" use="optional"/>
+    <attribute name="URI" type="anyURI"/>
   </complexType>
 
 <!-- Start X509Data -->
@@ -245,9 +245,9 @@
   <sequence minOccurs="0" maxOccurs="unbounded">
     <any namespace="##any" processContents="lax"/>
   </sequence>
-  <attribute name="Id" type="ID" use="optional"/> 
+  <attribute name="Encoding" type="anyURI" use="optional"/>
+  <attribute name="Id" type="ID" use="optional"/>
   <attribute name="MimeType" type="string" use="optional"/> <!-- add a grep facet -->
-  <attribute name="Encoding" type="anyURI" use="optional"/> 
 </complexType>
 
 <element name="Manifest" type="ds:ManifestType"/> 
