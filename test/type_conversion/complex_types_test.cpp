@@ -97,6 +97,29 @@ TEST_F(ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_Selec
     ASSERT_EQ(string_stream->get_full_stream(), R"({"SelectedService":[{"ServiceID":1}]})");
 }
 
+TEST_F(ComplexTypesTest, DecodeElementsList_ServiceDiscoveryRes_PaymentOptionList) {
+    /* Data extracted from OpenV2G
+     * PaymentOptionList --> Start
+     *   PaymentOption 1
+     *     getting 1bit(s) from position 109 --> 0x0000
+     *     getting 1bit(s) from position 110 --> 0x0000
+     *   PaymentOptionType (Enum)
+     *     getting 1bit(s) from position 111 --> 0x0001
+     *     getting 1bit(s) from position 112 --> 0x0000
+     *   PaymentOption 2
+     *     getting 2bit(s) from position 113 --> 0x0001
+     * PaymentOptionList --> Done
+     * -->  0b00100100
+     */
+
+    std::vector<uint8_t> raw_data({0b00100100});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_PaymentOptionListType();
+
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"PaymentOption":["ExternalPayment"]})");
+}
+
 TEST_F(ComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
     /* Data extracted from OpenV2G
      * DecodeServiceDiscoveryReq -> Start

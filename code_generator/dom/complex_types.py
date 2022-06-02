@@ -137,15 +137,16 @@ class ComplexTypes:
                 f"\t\t}}\n" \
                 f"\t}}\n"
 
-
         if element.element_type.is_simple_not_complex:
-            code += f"{{\n" \
-                    f"\tauto var = {element.element_type.decode_function.call()};\n" \
-                    f"\tstring_stream_->add_value(var);\n" \
-                    f"\t#ifndef NDEBUG\n" \
-                    f"\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
-                    f"\t#endif\n" \
-                    f"}}\n"
+            code += f"\t{{\n" \
+                    f"\t\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
+                    f"\t\tauto var = {element.element_type.decode_function.call()};\n" \
+                    f"\t\tstring_stream_->add_value(var);\n" \
+                    f"\t\t#ifndef NDEBUG\n" \
+                    f"\t\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
+                    f"\t\t#endif\n" \
+                    f"\t\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n" \
+                    f"\t}}\n"
         else:
             code += f"{element.element_type.decode_function.call()};\n"
 
