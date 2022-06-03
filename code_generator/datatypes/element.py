@@ -10,6 +10,9 @@ class Element:
         self.element_type = element_type
         self.is_optional = is_optional
         self.max_items = max_items
+        if not isinstance(max_items, int):
+            print(f"the max item ({max_items}) for element {self.element_name} of type {self.element_type.type_name} is not a number. Assuming 40 as maximum!")
+            self.max_items = 40
         self.is_list = max_items != 1
         self.substitutes = substitutes
 
