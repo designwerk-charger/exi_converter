@@ -121,6 +121,13 @@ int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     return sign_factor * int_number;
 }
 
+void BaseTypes::injectNBitNumber(int32_t number, uint8_t bits, int32_t offset) { }
+
+int32_t BaseTypes::extractNBitNumber(uint8_t bits, int32_t offset) {
+    uint32_t output_data = bit_stream_->get_max_4bytes(bits);
+    return static_cast<int32_t>(output_data) + offset;
+}
+
 void BaseTypes::injectBoolValue(bool bool_var) {
     bit_stream_->add_max_8bits(bool_var, 1);
 }

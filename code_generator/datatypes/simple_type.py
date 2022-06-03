@@ -178,18 +178,17 @@ class UriType(SimpleType):
 
 
 class DecimalType(SimpleType):
-    TYPE_SIZE = {'long': 8, 'int': 4, 'integer': 4, 'decimal': 4, 'negativeInteger': 4,
-                 'nonPositiveInteger': 4, 'nonNegativeInteger': 4, 'positiveInteger': 4, 'short': 2, 'byte': 1, 'HMACOutputLengthType': 4}
+    TYPE_SIZE = {'long': 8, 'unsignedLong': 8,
+                 'int': 4, 'integer': 4, 'unsignedInt': 4, 'decimal': 4, 'negativeInteger': 4,
+                 'nonPositiveInteger': 4, 'nonNegativeInteger': 4, 'positiveInteger': 4,
+                 'short': 2, 'unsignedShort': 2, 'byte': 1, 'unsignedByte': 1, 'HMACOutputLengthType': 4, "serviceIDType": 2}
 
     def __init__(self, type_name: str, type_namespace: str, detail_type, min_val, max_val):
         super().__init__(type_name, type_namespace)
         self.detail_type = detail_type
         self.min_val = min_val
         self.max_val = max_val
-        try:
-            self.num_bytes = self.TYPE_SIZE[self.detail_type]
-        except KeyError:
-            self.num_bytes = ceil(log2(max_val)/8)
+        self.num_bytes = self.TYPE_SIZE[self.detail_type]
         self.is_unsigned = min_val == 0
 
     def __str__(self):
@@ -211,6 +210,36 @@ class DecimalType(SimpleType):
                            return_type="int32_t", arguments="uint8_t n_bytes, bool is_unsigned",
                            comment="",
                            code="", member_object_name="base_types_", call_args=f"{self.num_bytes}, {str(self.is_unsigned).lower()}")
+
+
+class NBitDecimalType(SimpleType):
+
+    def __init__(self, type_name: str, type_namespace: str, detail_type, min_val, max_val):
+        super().__init__(type_name, type_namespace)
+        self.detail_type = detail_type
+        self.min_val = min_val
+        self.max_val = max_val
+        self.num_bits = ceil(log2(max_val-min_val+1))
+
+    def __str__(self):
+        return f"NBitDecimalType; {self.type_namespace}; [{self.min_val};{self.max_val}]"
+
+    def get_base_type_functions(self) -> List[CppFunction]:
+        return [self.encode_function, self.decode_function]
+
+    @property
+    def encode_function(self):
+        return CppFunction(function_name="injectNBitNumber",
+                           return_type="void", arguments="int32_t number, uint8_t bits, int32_t offset",
+                           comment="",
+                           code="")
+
+    @property
+    def decode_function(self):
+        return CppFunction(function_name="extractNBitNumber",
+                           return_type="int32_t", arguments="uint8_t bits, int32_t offset",
+                           comment="",
+                           code="", member_object_name="base_types_", call_args=f"{self.num_bits}, {self.min_val}")
 
 
 class HexBinType(SimpleType):

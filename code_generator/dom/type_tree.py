@@ -9,7 +9,7 @@ from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
 from datatypes.element import Element, Attribute
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
-    IgnoredType, UriType
+    IgnoredType, UriType, NBitDecimalType
 from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
 
 
@@ -91,7 +91,11 @@ class TypeTree:
             else:
                 return StringType("string", type_namespace=t.qualified_name)
         elif t.sequence_type == "xs:decimal":
-            return DecimalType("decimal", type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
+            try:
+                return DecimalType("decimal", type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
+            except Exception:
+                print(f"INFO: {t.local_name} could not be interpreted as pure decimal!")
+                return NBitDecimalType("nbitdecimal", type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
         elif t.sequence_type == "xs:boolean":
             return BoolType("bool", type_namespace=t.qualified_name)
         elif t.sequence_type == "xs:hexBinary":
