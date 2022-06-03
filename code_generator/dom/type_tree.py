@@ -9,12 +9,12 @@ from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
 from datatypes.element import Element, Attribute
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
-    IgnoredType
+    IgnoredType, UriType
 from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
 
 
 class TypeTree:
-    IGNORED_TYPES = ["xs:anyURI", "xs:fullDerivationSet", "xs:simpleDerivationSet", 'xs:derivationSet', 'xs:allNNI', 'xs:blockSet',
+    IGNORED_TYPES = ["xs:fullDerivationSet", "xs:simpleDerivationSet", 'xs:derivationSet', 'xs:allNNI', 'xs:blockSet',
                      'xs:namespaceList', 'xs:float', 'xs:double', 'xs:duration', 'xs:time', 'xs:date', 'xs:dateTime',
                      'xs:gYearMonth', 'xs:gYear', 'xs:gMonth', 'xs:gDay', 'xs:gMonthDay', 'xs:QName', 'xs:NOTATION',
                      'xs:string+', 'xs:anySimpleType']
@@ -98,6 +98,8 @@ class TypeTree:
             return HexBinType("hexBin", type_namespace=t.qualified_name, max_length=t.max_length)
         elif t.sequence_type == "xs:base64Binary":
             return Base64Type("base64", type_namespace=t.qualified_name)
+        elif t.sequence_type == "xs:anyURI":
+            return UriType("uri", type_namespace=t.qualified_name)
         elif t.sequence_type in TypeTree.IGNORED_TYPES:
             return IgnoredType(type_namespace=t.qualified_name)
         else:

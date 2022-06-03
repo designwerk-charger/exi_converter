@@ -66,6 +66,14 @@ std::string BaseTypes::extractString() {
     return out_string;
 }
 
+void BaseTypes::injectUri(std::string value) {
+    injectString(value);
+}
+
+std::string BaseTypes::extractUri() {
+    return extractString();
+}
+
 void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) {
     if (!is_unsigned) {
         if (number < 0) {
@@ -123,8 +131,6 @@ bool BaseTypes::extractBoolValue() {
     return output_data;
 }
 
-void BaseTypes::injectBase64Value(std::string value) { }
-
 void BaseTypes::check_event_code_is_0(std::string current_type_name) {
     uint8_t event_code;
     bit_stream_->get_next_n_bits(1, &event_code);
@@ -135,7 +141,7 @@ void BaseTypes::check_event_code_is_0(std::string current_type_name) {
     #endif
 
     if (event_code) {
-        throw std::runtime_error("The event code for'" + current_type_name + "' is not 0!");
+        throw std::runtime_error("The event code for '" + current_type_name + "' is not 0!");
     }
 }
 
@@ -150,11 +156,9 @@ uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current
     return event_code;
 }
 
+void BaseTypes::injectBase64Value(std::string value) { }
+
 // todo llr: string??
 std::string BaseTypes::extractBase64Value() {
     return "";
-}
-
-std::string BaseTypes::decode_ignoredtype() {
-    return "ignored";
 }

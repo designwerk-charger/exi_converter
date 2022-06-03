@@ -79,7 +79,7 @@ class Base64Type(SimpleType):
 class IgnoredType(SimpleType):
 
     def __init__(self, type_namespace: str):
-        super().__init__("ignoredtype", type_namespace)
+        super().__init__("IgnoredType", type_namespace)
 
     def get_base_type_functions(self) -> List[CppFunction]:
         print(f"WARNING: get_base_type_function was called for IgnoredType {self.type_namespace}")
@@ -149,6 +149,29 @@ class StringType(SimpleType):
     @property
     def decode_function(self):
         return CppFunction(function_name="extractString",
+                           return_type="std::string", arguments=None,
+                           comment="",
+                           code="", member_object_name="base_types_")
+
+
+class UriType(SimpleType):
+
+    def __str__(self):
+        return f"UriType; {self.type_namespace}"
+
+    def get_base_type_functions(self) -> List[CppFunction]:
+        return [self.encode_function, self.decode_function]
+
+    @property
+    def encode_function(self):
+        return CppFunction(function_name="injectUri",
+                           return_type="void", arguments="std::string value",
+                           comment="",
+                           code="")
+
+    @property
+    def decode_function(self):
+        return CppFunction(function_name="extractUri",
                            return_type="std::string", arguments=None,
                            comment="",
                            code="", member_object_name="base_types_")
