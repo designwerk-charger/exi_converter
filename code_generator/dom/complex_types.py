@@ -72,7 +72,7 @@ class ComplexTypes:
                f"{indent_str}{element_type.decode_function.call()};\n" \
                f"{indent_str}string_stream_->end_key();\n"
 
-    def _decode_complex_element_with_event_code(self, element: Element, indent: int) -> str:
+    def _decode_complex_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
         def get_num_abstract_classes_bits() -> int:
             return ceil(log2(len(element.substitutes)+1)) # +1 because one optional parameter gets at least 2 bits reading
 
@@ -94,15 +94,17 @@ class ComplexTypes:
             code += f"{indent_str}}}\n"
             return code
 
-        return f"{indent_str}// decode complex {element.__class__.__name__} type\n" \
-               f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
-               f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}" \
-               f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
+        return_str = f"{indent_str}// decode complex {element.__class__.__name__} type\n"
+        if not from_optional:
+            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
+        return_str += f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}" \
+                      f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
+        return return_str
 
     def decode_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
             return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
-        return self._decode_complex_element_with_event_code(element, indent)
+        return self._decode_complex_element_with_event_code(element, indent, from_optional)
 
     def decodeElementAsList(self, element: Element, indent: int) -> str:
         suffix = self.local_suffix_cnt
@@ -139,7 +141,7 @@ class ComplexTypes:
         code += f"}}\n" \
                 f"string_stream_->end_list();\n" \
                 f"string_stream_->end_key();\n" \
-                f"base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"
+                f"base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"  # Todo: check if the end element is needed
 
         return code
 
@@ -180,7 +182,7 @@ class ComplexTypes:
         code = ""
         optional_blob = []
         for element in ct.child_elements:
-            if element.element_name in ["Reference", "Transform", "Object"]:
+            if element.element_name in []:
                 print(f"WARNING: object not handled ({element.element_name})!")
             elif element.is_list:
                 if element.is_optional or len(optional_blob) != 0:
