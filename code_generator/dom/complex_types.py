@@ -59,8 +59,7 @@ class ComplexTypes:
     def _decode_simple_element_with_event_code(element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
         if isinstance(element, Attribute):
-            if element.is_optional:
-                return f"{ComplexTypes._decode_simple_element(element, indent)}"
+            return f"{ComplexTypes._decode_simple_element(element, indent, from_optional)}"
         return f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
                f"{ComplexTypes._decode_simple_element(element, indent, from_optional)}" \
                f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
