@@ -6,7 +6,7 @@ class BaseType(metaclass=abc.ABCMeta):
     def __init__(self, type_name: str, type_namespace: str):
         self.is_simple_not_complex = None
         self.is_abstract = False
-        self.base_class = ""
+        self.base_class_name = ""
         self.type_name = type_name
         self.type_namespace = type_namespace
 

@@ -30,25 +30,13 @@ class ComplexTypes:
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\nstring_stream_ = string_stream;\n")
 
         for ct in self.all_complex_types:
-            ct_with_base = self.addBaseElementsToCt(ct)  # Todo: is this still necessary?
-            ct_func = self.getDecodeFunction(ct_with_base)
+            ct_func = self.getDecodeFunction(ct)
             self.cpp_class.add_function(ct_func)
 
     @property
     def local_suffix_cnt(self):
         self._local_suffix_cnt += 1
         return self._local_suffix_cnt
-
-    def addBaseElementsToCt(self, ct: ComplexType):
-        if ct.base_class:
-            for t in self.all_types.values():
-                if t.type_name == ct.base_class:
-                    if isinstance(t, ComplexType):
-                        new_elements = t.child_elements + ct.child_elements
-                        ct.child_elements = new_elements
-                    return ct
-            print(f"Error: no baseclass found for {ct.type_name}")
-        return ct
 
     @staticmethod
     def _decode_simple_element(element: Element, indent: int, from_optional=False) -> str:
@@ -84,7 +72,6 @@ class ComplexTypes:
                f"{indent_str}{element_type.decode_function.call()};\n" \
                f"{indent_str}string_stream_->end_key();\n"
 
-
     def _decode_complex_element_with_event_code(self, element: Element, indent: int) -> str:
         def get_num_abstract_classes_bits() -> int:
             return ceil(log2(len(element.substitutes)+1)) # +1 because one optional parameter gets at least 2 bits reading
@@ -116,7 +103,6 @@ class ComplexTypes:
         if element.element_type.is_simple_not_complex:
             return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
         return self._decode_complex_element_with_event_code(element, indent)
-
 
     def decodeElementAsList(self, element: Element, indent: int) -> str:
         suffix = self.local_suffix_cnt

@@ -47,14 +47,15 @@ class TypeTree:
 
     @staticmethod
     def update_derivations(all_types: List[BaseType]):
-        for abstract_type in all_types:
-            if abstract_type.is_abstract:
-                if not isinstance(abstract_type, ComplexType):
-                    raise RuntimeError(f"The type {abstract_type} is abstract but not complex!")
-                for t in all_types:
-                    if abstract_type.type_name == t.base_class:
-                        abstract_type.derived_classes.append(t)
-
+        for type in all_types:
+            if type.is_abstract and not isinstance(type, ComplexType):
+                raise RuntimeError(f"The type ({type}) is abstract but not complex!")
+            for type2 in all_types:
+                if type.type_name == type2.base_class_name:
+                    if not isinstance(type2, ComplexType):
+                        raise RuntimeError(f"The type ({type2}) is not complex!")
+                    type2.add_base_class(type)
+                    type.derived_classes.append(type2)
 
     @property
     def schema(self):
@@ -142,6 +143,6 @@ class TypeTree:
                                            f"new component '{c.local_name}' vs. "
                                            f"existing component '{components[-1].element_name}' in '{t.local_name}'")
                     components.append(Attribute(c.local_name, attr_type, is_optional=optional))
-            refered_item.child_elements = components
+            refered_item.add_child_elements(components)
             return refered_item
         raise RuntimeError(f"the Type {t.local_name} is neither simple nor complex!")

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
@@ -6,22 +6,40 @@ from datatypes.element import Element
 
 
 class ComplexType(BaseType):
-    def __init__(self, name, namespace, base_class: str, is_abstract: bool):
+    def __init__(self, name, namespace, base_class_name: str, is_abstract: bool):
         super().__init__(name, namespace)
         self.is_simple_not_complex = False
         self.is_abstract = is_abstract
-        self.child_elements: List[Element] = []
-        self.base_class = base_class
+        self._child_elements: List[Element] = []
+        self.base_class_name = base_class_name
+        self.base_class : Optional[BaseType] = None
         self.derived_classes = []
+
+    @property
+    def child_elements(self):
+        if self.base_class:
+            return self.base_class.child_elements + self._child_elements
+        return self._child_elements
+
+    def add_child_elements(self, elements: List[Element]):
+        self._child_elements = elements
 
     def add_derived_class(self, derived_class: BaseType):
         self.derived_classes.append(derived_class)
 
+    def add_base_class(self, base_class: BaseType):
+        if base_class is None:
+            raise RuntimeError(f"Base class can only be set once! type: {self.type_name}, "
+                               f"old base: {self.base_class.type_name}, new base: {base_class.type_name}")
+        self.base_class = base_class
+        if not isinstance(base_class, ComplexType):
+            print(f"WARNING: the base class {base_class} added to {self.type_name} is not complex!")
+
     def __str__(self):
         absract_str = "abstract; " if self.is_abstract else " "
-        header_line = f"{self.type_name}; complex;{absract_str}{self.base_class}; {self.type_namespace}\n"
+        header_line = f"{self.type_name}; complex;{absract_str}{self.base_class_name}; {self.type_namespace}\n"
         child_lines = f""
-        for child in self.child_elements:
+        for child in self._child_elements:
             child_txt = str(child)
             for line in child_txt.splitlines():
                 child_lines += f"\t{line}\n"
