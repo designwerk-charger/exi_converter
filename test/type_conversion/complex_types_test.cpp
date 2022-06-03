@@ -197,3 +197,44 @@ TEST_F(ComplexTypesTest, DecodeComplexCombination_ServiceDiscoveryRes_ChargeServ
     string_stream->end_key();
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ServiceID":1,"ServiceName":"AC_DC_Charging","ServiceCategory":"EVCharging","FreeService":false,"SupportedEnergyTransferMode":{"EnergyTransferMode":["DC_extended"]}}})");
 }
+
+
+TEST_F(ComplexTypesTest, DecodeComplexCombination_WeldingDetectionRes_EVSEPresentVoltage_PhysicalValueType) {
+    /* Data extracted from OpenV2G
+     * PhysicalValueType -> Start
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 141 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 142 --> 0x0000
+     *     getting 3bit(s) from position 143 --> 0x0003
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 146 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 147 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 148 --> 0x0000
+     *     getting 3bit(s) from position 149 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 152 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 153 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 154 --> 0x0000
+     *     getting 1bit(s) from position 155 --> 0x0000
+     *     getting 8bit(s) from position 156 --> 0x00e6
+     *     getting 8bit(s) from position 164 --> 0x0001
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 172 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 173 --> 0x0000
+     * PhysicalValueType -> Done
+	 * -> 0b00011000, 0b10000001, 0b11001100, 0b00000010
+     */
+
+    std::vector<uint8_t> raw_data({0b00011000, 0b10000001, 0b11001100, 0b00000010, 0x00});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_PhysicalValueType();
+
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"Multiplier":0,"Unit":"V","Value":230})");
+}
