@@ -58,7 +58,10 @@ std::string BaseTypes::extractString() {
     length_str -= 2;
     auto out_chars = new uint8_t[length_str + 1];
 
-    bit_stream_->get_next_n_bits((length_str) * 8, out_chars);
+    for (int i=0; i < length_str; i++) {
+        out_chars[i] = bit_stream_->get_max_4bytes(8);
+    }
+
     out_chars[length_str] = 0;
 
     std::string out_string(reinterpret_cast<const char *>(out_chars));

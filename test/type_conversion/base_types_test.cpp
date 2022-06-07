@@ -47,6 +47,20 @@ TEST(BaseTypeTest, GetIntegerFromExiStream_When_AskedForNegativeSignedInteger) {
     ASSERT_EQ(277130, int_output);
 }
 
+TEST(BaseTypeTest, GetUri) {
+    uint8_t str_data[]  = { ')', 'h', 't', 't', 'p', ':', '/', '/', 'w', 'w', 'w', '.', 'w',
+                           '3', '.', 'o', 'r', 'g', '/', '2', '0', '0', '1', '/', '0', '4', '/',
+                           'x', 'm', 'l', 'e', 'n', 'c', '#', 's', 'h', 'a', '2', '5', '6', 'B',
+                           '\\', 0x01};
+    BitStream bs(str_data, 43);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractUri();
+
+    ASSERT_EQ(bt_out, "http://www.w3.org/2001/04/xmlenc#sha256");
+}
+
 TEST(BaseTypeTest, GetStringFromExiStream_When_AskedForString) {
     uint8_t str_data[]  = {0x07, 'H', 'E', 'L', 'L', 'O'};
     BitStream bs(str_data, 6);
