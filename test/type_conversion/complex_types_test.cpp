@@ -809,3 +809,61 @@ TEST_F(ComplexTypesTest, DecodeOptionalElements_DC_EVChargeParameterType) {
 
     ASSERT_EQ(string_stream->get_full_stream(), R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})");
 }
+
+
+TEST_F(ComplexTypesTest, DecodeOptionalDerivation_PowerDeliveryReq) {
+    /* Data extracted from OpenV2G
+     * DecodePowerDeliveryReqType -> Start
+     *     getting 1bit(s) from position 100 --> 0x0000
+     *     getting 1bit(s) from position 101 --> 0x0000
+     *     getting 2bit(s) from position 102 --> 0x0000
+     *     getting 1bit(s) from position 104 --> 0x0000
+     *     getting 1bit(s) from position 105 --> 0x0000
+     *     getting 1bit(s) from position 106 --> 0x0000
+     *     getting 8bit(s) from position 107 --> 0x0000
+     *     getting 1bit(s) from position 115 --> 0x0000
+     *   Element[START_ELEMENT(ChargingProfile), START_ELEMENT(DC_EVPowerDeliveryParameter), START_ELEMENT(EVPowerDeliveryParameter), END_ELEMENT]
+     *     getting 3bit(s) from position 116 --> 0x0001
+     *   DC_EVPowerDeliveryParameterType -> Start1
+     *   FirstStartTag[START_ELEMENT(DC_EVStatus)]
+     *     getting 1bit(s) from position 119 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(EVReady)]
+     *     getting 1bit(s) from position 120 --> 0x0000
+     *     getting 1bit(s) from position 121 --> 0x0000
+     *     getting 1bit(s) from position 122 --> 0x0001
+     *   END_ELEMENT(EVReady)
+     *     getting 1bit(s) from position 123 --> 0x0000
+     *   Element[START_ELEMENT(EVErrorCode)]
+     *     getting 1bit(s) from position 124 --> 0x0000
+     *     getting 1bit(s) from position 125 --> 0x0000
+     *     getting 4bit(s) from position 126 --> 0x0000
+     *   END_ELEMENT(EVErrorCode)
+     *     getting 1bit(s) from position 130 --> 0x0000
+     *   Element[START_ELEMENT(EVRESSSOC)]
+     *     getting 1bit(s) from position 131 --> 0x0000
+     *     getting 1bit(s) from position 132 --> 0x0000
+     *     getting 7bit(s) from position 133 --> 0x003c
+     *   END_ELEMENT(EVRESSSOC)
+     *     getting 1bit(s) from position 140 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 141 --> 0x0000
+     *   Element[START_ELEMENT(BulkChargingComplete), START_ELEMENT(ChargingComplete)]
+     *     getting 2bit(s) from position 142 --> 0x0001
+     *     getting 1bit(s) from position 144 --> 0x0000
+     *     getting 1bit(s) from position 145 --> 0x0001
+     *     getting 1bit(s) from position 146 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 147 --> 0x0000
+     *   DC_EVPowerDeliveryParameterType -> Done1
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 148 --> 0x0000
+     * DecodePowerDeliveryReqType -> Done
+     */
+
+    std::vector<uint8_t> raw_data({0b00000000, 0b00000000, 0b00100010, 0b00000000, 0b00111100, 0b00010100, 0x00});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_PowerDeliveryReqType();
+
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"ChargeProgress":"Start","SAScheduleTupleID":1,"DC_EVPowerDeliveryParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"ChargingComplete":true}})");
+}

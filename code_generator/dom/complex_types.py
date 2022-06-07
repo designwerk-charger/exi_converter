@@ -194,6 +194,10 @@ class ComplexTypes:
         code = ""
         optional_blob = []
         for element in ct.child_elements:
+            if len(optional_blob) > 0 and optional_blob[-1].element_type.is_abstract:
+                if len(element.substitutes) > 0:
+                    raise RuntimeError(f"Abstract type after abstract typ in optional blob!")
+
             if element.element_name in []:
                 print(f"WARNING: object not handled ({element.element_name})!")
             elif element.is_list:
@@ -202,7 +206,13 @@ class ComplexTypes:
                     optional_blob.append(element)
                 else:
                     code += self.decodeElementAsList(element, 0)
-            elif element.is_optional:
+            elif element.is_optional and not element.element_type.is_abstract:
+                optional_blob.append(element)
+            elif element.element_type.is_abstract and len(optional_blob) != 0:
+                # optional list already started --> add abstract elements
+                self._do_abstract_element_checks(element)
+                for i, (element_name, element_type) in enumerate(element.substitutes.items()):
+                    optional_blob.append(Element(element_name, element_type, is_optional=False, max_items=1, substitutes={}))
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
                 optional_blob.append(element)
