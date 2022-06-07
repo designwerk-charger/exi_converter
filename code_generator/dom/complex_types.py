@@ -146,7 +146,13 @@ class ComplexTypes:
 
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], indent: int) -> str:
         def get_num_eventcode_bits(progress=0) -> int:
-            return ceil(log2(len(elements)+1-progress)) # +1 because one optional parameter gets at least 2 bits reading
+            if progress == 0:
+                return max(2, ceil(log2(len(elements)+1)))
+            cnt = len(elements) - progress + 1  # +1 because one optional parameter gets at least 2 bits reading
+
+            if elements[-1].is_optional:  # Special handling if the optional blob ends with a optional element instead of a required one
+                cnt += 1
+            return ceil(log2(cnt))
 
         suffix = self.local_suffix_cnt
         indent_str = "\t" * indent
@@ -163,7 +169,8 @@ class ComplexTypes:
             else:
                 code += f"{indent_str}{self.decode_element_with_event_code(element, indent+2, from_optional=True)}"
             if element.is_optional:
-                code += f"{indent_str}\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits({max(1,get_num_eventcode_bits(i + 1))}, \"Start{names}{i}\");\n"
+                code += f"{indent_str}\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits(" \
+                        f"{max(1, get_num_eventcode_bits(i+1))}, \"Start{names}{i}\");\n"
             else:
                 code += f"{indent_str}\t\t continue_loop{suffix} = false;\n"
             code += f"{indent_str}\t\tbreak;\n"
