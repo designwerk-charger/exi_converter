@@ -152,8 +152,6 @@ class ComplexTypes:
 
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], indent: int) -> str:
         def get_num_eventcode_bits(progress=0) -> int:
-            if progress == 0:
-                return max(2, ceil(log2(len(elements)+1)))
             cnt = len(elements) - progress + 1  # +1 because one optional parameter gets at least 2 bits reading
 
             if elements[-1].is_optional:  # Special handling if the optional blob ends with a optional element instead of a required one
