@@ -71,19 +71,25 @@ class ComplexTypes:
                f"{indent_str}{element_type.decode_function.call()};\n" \
                f"{indent_str}string_stream_->end_key();\n"
 
+    @staticmethod
+    def _do_abstract_element_checks(element: Element):
+        if not isinstance(element.element_type, ComplexType):
+            raise NotImplementedError(f"The type of Element {element.element_name} is not ComplexType")
+        if len(element.element_type.derived_classes) == 0:
+            print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
+        if len(element.element_type.derived_classes) != len(element.substitutes):
+            print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
+        if element.is_optional:
+            print(f"WARNING: element {element.element_name} with abstract class {element.element_type.type_name} is optional!")
+
     def _decode_complex_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
         def get_num_abstract_classes_bits() -> int:
             return ceil(log2(len(element.substitutes)+1)) # +1 because one optional parameter gets at least 2 bits reading
 
         indent_str = "\t" * indent
 
-        if element.element_type.is_abstract:
-            if not isinstance(element.element_type, ComplexType):
-                raise NotImplementedError(f"The type of Element {element.element_name} is not ComplexType")
-            if len(element.element_type.derived_classes) == 0:
-                print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
-            if len(element.element_type.derived_classes) != len(element.substitutes):
-                print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
+        if element.element_type.is_abstract and not from_optional:
+            self._do_abstract_element_checks(element)
             code = f"{indent_str}// decode complex abstract {element.__class__.__name__} type\n" \
                    f"{indent_str}switch(base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\")) {{\n"
             for i, (element_name, element_type) in enumerate(element.substitutes.items()):
