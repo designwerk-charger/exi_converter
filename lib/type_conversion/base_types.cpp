@@ -168,7 +168,39 @@ uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current
 
 void BaseTypes::injectBase64Value(std::string value) { }
 
-// todo llr: string??
+
 std::string BaseTypes::extractBase64Value() {
-    return "";
+    static const char base64_chars[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz"
+            "0123456789+/";
+
+    uint8_t num_bytes = extractIntegerNumber(2, true);
+    std::ostringstream out_str;
+    uint32_t num_bits = num_bytes * 8;
+
+    #ifndef NDEBUG
+        std::cout << "Extract Base64 " << int(num_bytes) << "bytes (" << num_bits << "), "
+                  << num_bits / 6 << "charreads & " << num_bits % 6 << "bits compensation" << std::endl;
+    #endif
+
+    while (num_bits >= 6) {
+        auto v = bit_stream_->get_max_4bytes(6);
+        out_str << base64_chars[v];
+        num_bits -= 6;
+    }
+
+    if (num_bits > 0) {
+        auto v = bit_stream_->get_max_4bytes(num_bits);
+        out_str << base64_chars[v << (6-num_bits)];
+        out_str << '=';
+    }
+
+    // Ensure there are a multiple of 4 characters
+    uint32_t num_chars = out_str.str().length();
+    if (num_chars - ((num_chars >> 2) << 2)) {
+        out_str << '=';
+    }
+
+    return out_str.str();
 }

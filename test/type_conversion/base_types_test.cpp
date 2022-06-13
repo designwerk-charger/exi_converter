@@ -179,3 +179,49 @@ TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
 
     ASSERT_EQ(exi_data, test_vector);
 }
+
+TEST(BaseTypeTest, ExtractBase64_fromChargeParameterDiscoveryRes) {
+    std::vector<uint8_t> raw_data({0x20, 0x14, 0xe3, 0xd8, 0x7a, 0xe2, 0x42, 0x4b, 0x6c, 0x30, 0x5f, 0xd5, 0xf1,
+                                    0x8a, 0x24, 0xFE, 0x2F, 0x2F, 0x68, 0x7C, 0xd6, 0x58, 0xd5, 0x9b, 0xbe, 0x51,
+                                    0xa7, 0xCE, 0x3F, 0x5C, 0xF0, 0x86, 0xF0, 0x00});
+    BitStream bs(raw_data);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractBase64Value();
+
+    ASSERT_EQ(bt_out, "FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA=");
+}
+
+TEST(BaseTypeTest, ExtractBase64_TestData1) {
+    std::vector<uint8_t> raw_data({0x01, 'f'});
+    BitStream bs(raw_data);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractBase64Value();
+
+    ASSERT_EQ(bt_out, "Zg==");
+}
+
+TEST(BaseTypeTest, ExtractBase64_TestData2) {
+    std::vector<uint8_t> raw_data({0x02, 'f', 'o'});
+    BitStream bs(raw_data);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractBase64Value();
+
+    ASSERT_EQ(bt_out, "Zm8=");
+}
+
+TEST(BaseTypeTest, ExtractBase64_TestData3) {
+    std::vector<uint8_t> raw_data({0x03, 'f', 'o', 'o'});
+    BitStream bs(raw_data);
+    BaseTypes bt(&bs);
+    std::string bt_out;
+
+    bt_out = bt.extractBase64Value();
+
+    ASSERT_EQ(bt_out, "Zm9v");
+}
