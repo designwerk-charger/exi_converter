@@ -16,8 +16,12 @@ class ComplexType(BaseType):
         self.derived_classes = []
 
     @property
+    def base_type_name(self):
+        return self.type_name
+
+    @property
     def child_elements(self):
-        if self.base_class:
+        if self.base_class and isinstance(self.base_class, ComplexType):
             return self.base_class.child_elements + self._child_elements
         return self._child_elements
 
@@ -32,8 +36,6 @@ class ComplexType(BaseType):
             raise RuntimeError(f"Base class can only be set once! type: {self.type_name}, "
                                f"old base: {self.base_class.type_name}, new base: {base_class.type_name}")
         self.base_class = base_class
-        if not isinstance(base_class, ComplexType):
-            print(f"WARNING: the base class {base_class} added to {self.type_name} is not complex!")
 
     def __str__(self):
         absract_str = "abstract; " if self.is_abstract else " "

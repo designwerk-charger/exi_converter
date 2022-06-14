@@ -58,6 +58,10 @@ class Base64Type(SimpleType):
     def __str__(self):
         return f"Base64Type; {self.type_namespace}"
 
+    @property
+    def base_type_name(self):
+        return "base64Binary"
+
     def get_base_type_functions(self) -> List[CppFunction]:
         return [self.encode_function, self.decode_function]
 

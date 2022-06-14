@@ -5,7 +5,7 @@ from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
-from datatypes.element import Element, Attribute
+from datatypes.element import Element, Attribute, AnyElement
 
 
 class ComplexTypes:
@@ -15,7 +15,7 @@ class ComplexTypes:
         self.all_types = {}
         for item in type_tree:
             for type in item.get_child_types():
-                self.all_types[type.type_name] = type
+                self.all_types[type.base_type_name] = type
 
         self.all_complex_types = []
         for t in self.all_types.values():
@@ -101,9 +101,15 @@ class ComplexTypes:
 
         return_str = f"{indent_str}// decode complex {element.__class__.__name__} type\n"
         if not from_optional:
-            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
-        return_str += f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}" \
-                      f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
+            return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
+        return_str += f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}"
+        if len(element.element_type.child_elements) == 0 or not element.element_type.child_elements[-1].is_list:
+            if not from_optional:
+                return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
+            else:
+                return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
+        else:
+            return_str += f"{indent_str}// Skipping check_event_code_is_0 for End{element.element_name} because of list\n"
         return return_str
 
     def decode_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
@@ -146,13 +152,35 @@ class ComplexTypes:
         code += f"}}\n" \
                 f"string_stream_->end_list();\n" \
                 f"string_stream_->end_key();\n" \
-                f"base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"  # Todo: check if the end element is needed
+                f"// base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"  # Todo: check if the end element is needed
 
         return code
 
+    def sortOptionalBlobElements(self, elements: List[Element]) -> str:
+        anyE = []
+        E = []
+        A = []
+        for e in elements:
+            if isinstance(e, AnyElement):
+                anyE.append(e)
+            elif isinstance(e, Attribute):
+                A.append(e)
+            elif isinstance(e, Element):
+                E.append(e)
+            else:
+                raise RuntimeError("Unexpected type")
+        return A + E + anyE
+
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], indent: int) -> str:
+        def get_num_AnyElements() -> int:
+            cnt = 0
+            for e in elements:
+                if isinstance(e, AnyElement):
+                    cnt += 1
+            return cnt
+
         def get_num_eventcode_bits(progress=0) -> int:
-            cnt = len(elements) - progress + 1  # +1 because one optional parameter gets at least 2 bits reading
+            cnt = len(elements) - progress + 1 + get_num_AnyElements()  # +1 because one optional parameter gets at least 2 bits reading
 
             if elements[-1].is_optional:  # Special handling if the optional blob ends with a optional element instead of a required one
                 cnt += 1
@@ -191,6 +219,7 @@ class ComplexTypes:
     def getDecodeFunction(self, ct: ComplexType):
         code = ""
         optional_blob = []
+        was_normal_complex = True
         for element in ct.child_elements:
             if len(optional_blob) > 0 and optional_blob[-1].element_type.is_abstract:
                 if len(element.substitutes) > 0:
@@ -204,6 +233,7 @@ class ComplexTypes:
                     optional_blob.append(element)
                 else:
                     code += self.decodeElementAsList(element, 0)
+                    was_normal_complex = False
             elif element.is_optional and not element.element_type.is_abstract:
                 optional_blob.append(element)
             elif element.element_type.is_abstract and len(optional_blob) != 0:
@@ -212,16 +242,25 @@ class ComplexTypes:
                 for i, (element_name, element_type) in enumerate(element.substitutes.items()):
                     optional_blob.append(Element(element_name, element_type, is_optional=False, max_items=1, substitutes={}))
                 optional_blob.append(element)
+                was_normal_complex = False
             elif len(optional_blob) != 0:
                 optional_blob.append(element)
-                code += self.getDecodeCodeForOptionalBlob(optional_blob, 0)
+                sorted_blob = self.sortOptionalBlobElements(optional_blob)
+                code += self.getDecodeCodeForOptionalBlob(sorted_blob, 0)
                 code += "\n"
                 optional_blob = []
+                was_normal_complex = not sorted_blob[-1].is_optional
             else:
                 code += self.decode_element_with_event_code(element, 0)
                 code += "\n"
+                was_normal_complex = True
         if len(optional_blob) != 0:
-            code += self.getDecodeCodeForOptionalBlob(optional_blob, 0)
+            sorted_blob = self.sortOptionalBlobElements(optional_blob)
+            code += self.getDecodeCodeForOptionalBlob(sorted_blob, 0)
+            was_normal_complex = not sorted_blob[-1].is_optional
+
+        if was_normal_complex:
+            code += f"base_types_->check_event_code_is_0(\"Finish{ct.type_name}\");\n"
 
         return CppFunction(function_name=ct.decode_function.function_name,
                            return_type="void",

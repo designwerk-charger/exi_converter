@@ -3,11 +3,11 @@ from typing import List
 
 import xmlschema
 from xmlschema import XsdElement, XsdAttribute, XsdType, XsdComponent
-
+from xmlschema.validators import XsdAnyElement
 
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
-from datatypes.element import Element, Attribute
+from datatypes.element import Element, Attribute, AnyElement
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
     IgnoredType, UriType, NBitDecimalType
 from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
@@ -54,8 +54,12 @@ class TypeTree:
                 if type.type_name == type2.base_class_name:
                     if not isinstance(type2, ComplexType):
                         raise RuntimeError(f"The type ({type2}) is not complex!")
-                    type2.add_base_class(type)
-                    type.derived_classes.append(type2)
+                    if not type.is_simple_not_complex:
+                        type2.add_base_class(type)
+                        type.derived_classes.append(type2)
+                    else:
+                        print(f"INFO: Found simple BaseClass {type.type_namespace} for complex type {type2.type_name} --> adding as baseclass")
+                        type2.add_base_class(type)
 
     @property
     def schema(self):
@@ -77,6 +81,10 @@ class TypeTree:
     def extractComponentType(c: XsdComponent):
         if c.type.qualified_name in c.schema.types.target_dict.keys():
             return c.schema.types.target_dict[c.type.qualified_name]
+        if c.type.base_type and c.type.base_type.qualified_name in c.schema.types.target_dict.keys():
+            return c.schema.types.target_dict[c.type.base_type.qualified_name]
+        if c.type.primitive_type.qualified_name in c.schema.types.target_dict.keys():
+            return c.schema.types.target_dict[c.type.primitive_type.qualified_name]
         else:
             raise KeyError(f"The type ({c.type.qualified_name}) for {c.name} does not exist.")
 
@@ -89,21 +97,21 @@ class TypeTree:
             if t.enumeration:
                 return EnumType(t.prefixed_name, type_namespace=t.qualified_name, enumerations=t.enumeration)
             else:
-                return StringType("string", type_namespace=t.qualified_name)
+                return StringType(t.local_name, type_namespace=t.qualified_name)
         elif t.sequence_type == "xs:decimal":
             try:
-                return DecimalType("decimal", type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
+               return DecimalType(t.local_name, type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
             except Exception:
                 print(f"INFO: {t.local_name} could not be interpreted as pure decimal!")
-                return NBitDecimalType("nbitdecimal", type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
+                return NBitDecimalType(t.local_name, type_namespace=t.qualified_name, detail_type=t.local_name, min_val=t.min_value, max_val=t.max_value)
         elif t.sequence_type == "xs:boolean":
-            return BoolType("bool", type_namespace=t.qualified_name)
+            return BoolType(t.local_name, type_namespace=t.qualified_name)
         elif t.sequence_type == "xs:hexBinary":
-            return HexBinType("hexBin", type_namespace=t.qualified_name, max_length=t.max_length)
+            return HexBinType(t.local_name, type_namespace=t.qualified_name, max_length=t.max_length)
         elif t.sequence_type == "xs:base64Binary":
-            return Base64Type("base64", type_namespace=t.qualified_name)
+            return Base64Type(t.local_name, type_namespace=t.qualified_name)
         elif t.sequence_type == "xs:anyURI":
-            return UriType("uri", type_namespace=t.qualified_name)
+            return UriType(t.local_name, type_namespace=t.qualified_name)
         elif t.sequence_type in TypeTree.IGNORED_TYPES:
             return IgnoredType(type_namespace=t.qualified_name)
         else:
@@ -126,6 +134,10 @@ class TypeTree:
         if t.is_simple():
             return refered_item
         elif isinstance(refered_item, ComplexType):
+            if refered_item.base_class_name:
+                # dive into base types to update their components
+                TypeTree.diveIntoType(t.base_type, all_types)
+
             components = []
             for c in t.iter_components():
                 if isinstance(c, XsdElement):
@@ -135,7 +147,14 @@ class TypeTree:
                     components.append(Element(c.local_name,
                                               TypeTree.diveIntoType(xsd_type, all_types),
                                               is_optional=is_optional, max_items=c.max_occurs, substitutes=substitutes))
-                if isinstance(c, XsdAttribute):
+                elif isinstance(c, XsdAnyElement):
+                    is_optional = True if c.min_occurs == 0 else False
+                    if not is_optional:
+                        print(f"WARNING: any element {c} in {t.local_name} is not optional!")
+                    components.append(AnyElement("genericname",
+                                                 StringType(type_name="anyname", type_namespace=c.namespace[0]),
+                                                 is_optional=True))
+                elif isinstance(c, XsdAttribute):
                     optional = True if c.use == "optional" else False
                     attr_type = TypeTree.diveIntoType(TypeTree.extractComponentType(c), all_types)
                     if not isinstance(attr_type, SimpleType):
@@ -149,6 +168,13 @@ class TypeTree:
                                            f"new component '{c.local_name}' vs. "
                                            f"existing component '{components[-1].element_name}' in '{t.local_name}'")
                     components.append(Attribute(c.local_name, attr_type, is_optional=optional))
+            if refered_item.base_class and isinstance(refered_item.base_class, SimpleType):
+                components.append(Attribute(element_name="value", element_type=refered_item.base_class,
+                                          is_optional=False))
+            if len(components) == 0:
+                print(f"WARNING: Complex Element without components {refered_item.type_name}")
+            elif isinstance(components[-1], Attribute):
+                print(f"Attribute only component in Type {refered_item.type_name}")
             refered_item.add_child_elements(components)
             return refered_item
         raise RuntimeError(f"the Type {t.local_name} is neither simple nor complex!")

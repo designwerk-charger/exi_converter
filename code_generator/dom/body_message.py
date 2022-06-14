@@ -44,7 +44,7 @@ class BodyMessage:
     def __init__(self, schema, complex_types: ComplexTypes):
         self.complex_type_names = []
         for t in complex_types.all_complex_types:
-            self.complex_type_names.append(t.type_name)
+            self.complex_type_names.append(t.base_type_name)
 
         relevant_body_elements_numbered = self.get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema)
 

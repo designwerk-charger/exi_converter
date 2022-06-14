@@ -10,6 +10,10 @@ class BaseType(metaclass=abc.ABCMeta):
         self.type_name = type_name
         self.type_namespace = type_namespace
 
+    @property
+    def base_type_name(self):
+        return self.__class__.__name__
+
     def __eq__(self, other):
         if isinstance(other, str):
             return self.type_namespace == other
