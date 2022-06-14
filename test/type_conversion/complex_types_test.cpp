@@ -610,7 +610,7 @@ TEST_F(ComplexTypesTest, DecodeComplexCombination_MessageHeaderType) {
 
     complex_types->decode_MessageHeaderType();
 
-    ASSERT_EQ(string_stream->get_full_stream(), R"({"SessionID":"37DA98F73608903E","Signature":{"SignedInfo":{"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]},"SignatureValue":{"value":"MEQCIFaigJ89UjolNzIp5Wz1tUt2jYPyIUNecNcmdM/FRyiZAiAceQzd9o8DXKASULzF9sKf+MjbYyOBP4DO26oguXLYCw=="}})");
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"SessionID":"37DA98F73608903E","Signature":{"SignedInfo":{"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]},"SignatureValue":{"value":"MEQCIFaigJ89UjolNzIp5Wz1tUt2jYPyIUNecNcmdM/FRyiZAiAceQzd9o8DXKASULzF9sKf+MjbYyOBP4DO26oguXLYCw=="}}})");
 }
 
 
