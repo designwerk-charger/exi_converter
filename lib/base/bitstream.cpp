@@ -54,21 +54,10 @@ void BitStream::get_next_n_bits(uint32_t bitsrequested, uint8_t * data) {
         }
         bits_taken += bits_to_take;
     }
-
-    #ifndef NDEBUG
-        std::cout << "\tgetting " << std::dec << static_cast<int>(bitsrequested) << "bit(s) from position "
-                  << bit_counter_ - bitsrequested << " -> 0x";
-        for (uint32_t byte=0; byte <= (bitsrequested - 1 >> 3); byte++) {
-            std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data[byte]);
-        }
-        if (bitsrequested <= 8) {
-            std::cout << std::dec << " (" << static_cast<int>(data[0]) << ")";
-        }
-        std::cout << "↴" << std::endl;
-    #endif
 }
 
 uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
+    uint32_t return_value;
     uint32_t address_32bit = bit_counter_ >> 5;
     uint32_t bit_available_for_takeout = 32 - (bit_counter_ - (address_32bit << 5));
 
@@ -82,15 +71,29 @@ uint32_t BitStream::get_max_4bytes(uint8_t bitsrequested) {
         if (bitsrequested == 32) {
             bitmask = 0xFFFFFFFF;
         }
-        return (value1 >> shift) & bitmask;
+        return_value = (value1 >> shift) & bitmask;
     } else {
         uint32_t value2 = __builtin_bswap32(reinterpret_cast<uint32_t *>(exi_data_.data())[address_32bit+1]);
         uint32_t remaining_bits = bitsrequested - bit_available_for_takeout;
         value1 = value1 & ((1 << bit_available_for_takeout) - 1);
         value2 = (value2 >> (32-remaining_bits)) & ((1 << remaining_bits) - 1);
         bit_counter_ += bitsrequested;
-        return (value1 << remaining_bits) + value2;
+        return_value = (value1 << remaining_bits) + value2;
     }
+
+#ifndef NDEBUG
+    std::cout << "\tgetting " << std::dec << static_cast<int>(bitsrequested) << "bit(s) from position "
+              << bit_counter_ - bitsrequested << " -> 0x";
+    for (uint32_t byte=0; byte <= (bitsrequested - 1 >> 3); byte++) {
+        std::cout << std::setfill('0') << std::setw(2) << std::right << std::hex
+        << static_cast<int>(reinterpret_cast<uint8_t *>(&return_value)[byte]);
+    }
+    if (bitsrequested <= 8) {
+        std::cout << std::dec << " (" << static_cast<int>(reinterpret_cast<uint8_t *>(&return_value)[0]) << ")";
+    }
+    std::cout << "↴" << std::endl;
+#endif
+    return return_value;
 }
 
 void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
