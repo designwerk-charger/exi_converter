@@ -20,10 +20,14 @@ PYBIND11_MODULE(exi_converter, m) {
     )pbdoc";
 
     // VERSION_INFO provided by setup.py installation script
+    std::string str_dbg = "";
+    #ifndef NDEBUG
+    str_dbg = "-debug";
+    #endif
 #ifdef VERSION_INFO
-    m.attr("__version__") = VERSION_INFO;
+    m.attr("__version__") = VERSION_INFO + str_dbg;
 #else
-    m.attr("__version__") = "dev";
+    m.attr("__version__") = "dev" + str_dbg;
 #endif
 
     //m.def("pydecode", [](char* c, uint32_t length, std::string ns){py_decode((uint8_t *)c, length, ns);}, "Decode EXI to json");
