@@ -1,7 +1,9 @@
 *~
 *.pyc
+*.bin
 build/
-cmake-build-debug/
+cmake-build-*/
 test-coverage
 test-reports
+testout
 version.py
