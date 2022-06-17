@@ -867,3 +867,71 @@ TEST_F(ComplexTypesTest, DecodeOptionalDerivation_PowerDeliveryReq) {
 
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ChargeProgress":"Start","SAScheduleTupleID":1,"DC_EVPowerDeliveryParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"ChargingComplete":true}})");
 }
+
+
+TEST_F(ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_PMaxScheduleEntry) {
+    /* Data extracted from OpenV2G
+     * PMaxScheduleType Start
+     *   FirstStartTag[START_ELEMENT(PMaxScheduleEntry)]
+     *     getting 1bit(s) from position 2355 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(RelativeTimeInterval), START_ELEMENT(TimeInterval)]
+     *     getting 2bit(s) from position 2356 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2358 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2359 --> 0x0000
+     *     getting 8bit(s) from position 2360 --> 0x0000
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2368 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2369 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2371 --> 0x0000
+     *     getting 8bit(s) from position 2372 --> 0x0090
+     *     getting 8bit(s) from position 2380 --> 0x001c
+     *   END_ELEMENT(duration)
+     *     getting 1bit(s) from position 2388 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2389 --> 0x0000
+     *   Element[START_ELEMENT(PMax)]
+     *     getting 1bit(s) from position 2390 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 2391 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2392 --> 0x0000
+     *     getting 3bit(s) from position 2393 --> 0x0003
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 2396 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 2397 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 2398 --> 0x0000
+     *     getting 3bit(s) from position 2399 --> 0x0005
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 2402 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 2403 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 2404 --> 0x0000
+     *     getting 1bit(s) from position 2405 --> 0x0000
+     *     getting 8bit(s) from position 2406 --> 0x00f8
+     *     getting 8bit(s) from position 2414 --> 0x0055
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 2422 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2423 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2424 --> 0x0000
+     *   Element[START_ELEMENT(PMaxScheduleEntry)]
+     *     getting 2bit(s) from position 2425 --> 0x0001
+     * PMaxScheduleType Done
+     */
+
+    std::vector<uint8_t> raw_data({0b00000000, 0b00000000, 0b01001000, 0b00001110, 0b00000001, 0b10001010, 0b00011111,
+                                   0b00001010, 0b10100001, 0x00});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_PMaxScheduleType();
+
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"PMaxScheduleEntry":[{"RelativeTimeInterval":{"start":0,"duration":3600},"PMax":{"Multiplier":0,"Unit":"W","Value":11000}}]})");
+}

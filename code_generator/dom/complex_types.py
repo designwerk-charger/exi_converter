@@ -89,13 +89,23 @@ class ComplexTypes:
         indent_str = "\t" * indent
 
         if element.element_type.is_abstract and not from_optional:
+            code = f"{indent_str}{{"
+            indent_str += "\t"
             self._do_abstract_element_checks(element)
-            code = f"{indent_str}// decode complex abstract {element.__class__.__name__} type\n" \
-                   f"{indent_str}switch(base_types_->get_event_code_with_n_bits({get_num_abstract_classes_bits()}, \"Start{element.element_name}\")) {{\n"
+            num_bits = get_num_abstract_classes_bits()
+            code += f"{indent_str}// decode complex abstract {element.__class__.__name__} type\n" \
+                    f"{indent_str}auto var = base_types_->get_event_code_with_n_bits({num_bits}, \"Start{element.element_name}\");\n" \
+                    f"{indent_str}switch(var) {{\n"
             for i, (element_name, element_type) in enumerate(element.substitutes.items()):
                 code += f"{indent_str}\tcase {i}:\n" \
-                        f"{self._decode_complex_element(element_name, element_type, indent+2)}" \
+                        f"{self._decode_complex_element(element_name, element_type, indent+3)}" \
                         f"{indent_str}\t\tbreak;\n"
+
+            code += f"{indent_str}\tdefault:\n" \
+                    f"{indent_str}\t\tthrow std::runtime_error(\"While parsing event code for abstract element " \
+                    f"'{element.element_name}' a unexpected code (\" +  std::to_string(var) + \") appeared!\");\n" \
+                    f"{indent_str}}}\n"
+            indent_str = "\t" * indent
             code += f"{indent_str}}}\n"
             return code
 
@@ -225,9 +235,7 @@ class ComplexTypes:
                 if len(element.substitutes) > 0:
                     raise RuntimeError(f"Abstract type after abstract typ in optional blob!")
 
-            if element.element_name in []:
-                print(f"WARNING: object not handled ({element.element_name})!")
-            elif element.is_list:
+            if element.is_list:
                 if element.is_optional or len(optional_blob) != 0:
                     print(f"WARNING: list as optional types not yet tested ({element.element_name})")
                     optional_blob.append(element)

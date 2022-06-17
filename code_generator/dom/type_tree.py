@@ -122,6 +122,9 @@ class TypeTree:
         stt = {}
         for s in element.iter_substitutes():
             stt[s.local_name] = TypeTree.diveIntoType(s.type, all_types)
+        if len(stt) > 0:
+            # if substitutes available, the base class needs to be added to.
+            stt[element.local_name] = TypeTree.diveIntoType(element.type, all_types)
         return collections.OrderedDict(sorted(stt.items()))
 
     @staticmethod
