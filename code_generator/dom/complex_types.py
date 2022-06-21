@@ -158,6 +158,34 @@ class ComplexTypes:
         return A + E + anyE
 
     def getDecodeCodeForOptionalBlob(self, elements: List[Element], is_last: bool) -> str:
+        bases_handled = []
+
+        def get_all_elements_flat():
+            all_elements_flat = []
+            for e in elements:
+                if e.element_type.is_abstract:
+                    for (element_name, element_type) in e.substitutes.items():
+                        all_elements_flat.append(Element(element_name=element_name, element_type=element_type, is_optional=e.is_optional, max_items=1, substitutes={}))
+                else:
+                    all_elements_flat.append(e)
+            return all_elements_flat
+
+        def get_num_abstract_elements_per_base(elem: Element):
+            if elem.element_type.is_abstract:
+                if elem.element_type.type_name in bases_handled:
+                    return 0
+                bases_handled.append(elem.element_type.type_name)
+                return len(elem.derived_classes) + 1
+            else:
+                if elem.element_type.is_simple_not_complex or elem.element_type.base_class is None:
+                    return 1
+                elif elem.element_type.base_class_name in bases_handled:
+                    return 0
+                else:
+                    bases_handled.append(elem.element_type.base_class_name)
+                    return len(elem.element_type.base_class.derived_classes) + 1
+            raise RuntimeError(f"BaseClass not found of abstract type {elem.element_type.type_name}")
+
         def get_num_AnyElements() -> int:
             cnt = 0
             for e in elements:
@@ -177,35 +205,39 @@ class ComplexTypes:
             return False
 
         def get_num_eventcode_bits(progress=0) -> int:
-            cnt = len(elements) - progress + 1 + get_num_AnyElements()  # +1 because one optional parameter gets at least 2 bits reading
+            cnt = len(get_all_elements_flat()) - progress + 1 + get_num_AnyElements()  # +1 because one optional parameter gets at least 2 bits reading
 
             if needs_endelement():
                 cnt += 1
             return ceil(log2(cnt))
 
         suffix = self.local_suffix_cnt
-        names = "_".join([e.element_name for e in elements])
+        while_loop_offset = 0
+        all_elements_flat = get_all_elements_flat()
+        names = "_".join([e.element_name for e in all_elements_flat])
         end_str = " + END_ELEMENT" if needs_endelement() else ""
-        code = f"// Decoding optional elements: {[en.element_name for en in elements]}{end_str}\n" \
+        code = f"// Decoding optional elements: {[en.element_name for en in all_elements_flat]}{end_str}\n" \
                f"uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({max(get_num_eventcode_bits(), 2)}, \"Start{names}\");\n"
         code += f"bool continue_loop{suffix} = true;\n" \
-                f"while(continue_loop{suffix}){{\n"
-        code += f"switch(ec{suffix}) {{\n"
-        for i, element in enumerate(elements):
+                f"while(continue_loop{suffix}){{\n" \
+                f"switch(ec{suffix}) {{\n"
+
+        for i, element in enumerate(all_elements_flat):
             code += f"\tcase {i}:\n"
             if element.is_list:
                 code += self.decodeElementAsList(element, 2)
             else:
                 code += f"{self.decode_element_with_event_code(element, 2, from_optional=True)}"
             if element.is_optional:
-                code += f"\t\tec{suffix} = {i + 1} + base_types_->get_event_code_with_n_bits(" \
-                        f"{max(1, get_num_eventcode_bits(i+1))}, \"Start{names}{i}\");\n"
+                while_loop_offset += get_num_abstract_elements_per_base(element)
+                code += f"\t\tec{suffix} = {while_loop_offset} + base_types_->get_event_code_with_n_bits(" \
+                        f"{max(1, get_num_eventcode_bits(while_loop_offset))}, \"Start{names}{i}\");\n"
             else:
                 code += f"\t\t continue_loop{suffix} = false;\n"
             code += f"\t\tbreak;\n"
 
-        if elements[-1].is_optional:  # special case for optional messages at the end of a complex type
-            code += f"\tcase {len(elements)}:\n" \
+        if all_elements_flat[-1].is_optional:  # special case for optional messages at the end of a complex type
+            code += f"\tcase {len(all_elements_flat)}:\n" \
                     f"\t\tcontinue_loop{suffix} = false;\n" \
                     f"\t\tbreak;\n"
         code += f"\tdefault:\n" \
@@ -227,8 +259,7 @@ class ComplexTypes:
                     was_normal_complex = False
             elif element.element_type.is_abstract:
                 self._do_abstract_element_checks(element)
-                for (element_name, element_type) in element.substitutes.items():
-                    optional_blob.append(Element(element_name, element_type, is_optional=False, max_items=1, substitutes={}))
+                optional_blob.append(element)
             elif element.is_optional:
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
