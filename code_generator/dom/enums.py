@@ -3,7 +3,6 @@ from math import log2, ceil
 from typing import List
 
 from cpp.cpp_class import CppClass
-from cpp.cpp_enum import CppEnum
 from cpp.cpp_function import CppFunction
 from datatypes.base_type import BaseType
 from datatypes.simple_type import EnumType
@@ -11,7 +10,7 @@ from datatypes.simple_type import EnumType
 
 class Enums:
 
-    def __init__(self, type_tree: List[BaseType]):
+    def __init__(self, type_tree: List[BaseType], namespace=None):
         all_types = {}
         for item in type_tree:
             for type in item.get_child_types():
@@ -24,7 +23,7 @@ class Enums:
 
         self.cpp_class = CppClass(class_name="EnumTypes", derived_from_class=None,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"base_types.h\"\n")
+                                           "#include \"base_types.h\"\n", namespace=namespace)
         self.cpp_class.add_member("BaseTypes * base_types;")
         self.cpp_class.add_constructor("BaseTypes * base_types", "this->base_types = base_types;\n")
 
@@ -50,19 +49,6 @@ class Enums:
                     arguments=None,
                     code=code,
                     comment=None)
-
-    def write_enum_type_header(self, directory: str):
-        enums = []
-        for t in self.all_enum_types:
-            enum = CppEnum(enum_name=t.type_name)
-            for item in t.enumerations:
-                enum.add_items(item)
-            enums.append(enum)
-
-        with open(os.path.join(directory, "emums.h"), "w") as f:
-            for enum in enums:
-                f.write(enum.get_definition())
-                f.write("\n\n")
 
     def write_enum_conversion_header(self, directory: str):
         self.cpp_class.write_h(directory)

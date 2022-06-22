@@ -26,7 +26,7 @@ file(GLOB_RECURSE XSD_FILES ${PROJECT_SOURCE_DIR}/schemas/*.xsd)
 file(GLOB_RECURSE GENERATOR_FILES ${PROJECT_SOURCE_DIR}/code_generator/*.py)
 add_custom_command(
         OUTPUT ${GENERATED_SOURCES} ${GENERATED_HEADERS}
-        COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --output_path=${GENERATED_FILES_DIR} --schema_path=${PROJECT_SOURCE_DIR}/schemas
+        COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --namespace=iso15118_2 --output_path=${GENERATED_FILES_DIR} --schema_path=${PROJECT_SOURCE_DIR}/schemas
         DEPENDS ${XSD_FILES} ${GENERATOR_FILES}
 )
 

@@ -8,7 +8,7 @@ from cpp.helper import CamelCase2snake_case
 
 class CppClass:
 
-    def __init__(self, class_name: str, derived_from_class: Optional[str], includes: str, virtual=False):
+    def __init__(self, class_name: str, derived_from_class: Optional[str], includes: str, virtual=False, namespace=None):
         self.class_name = class_name
         self.derived_from_class = derived_from_class
         self.includes = includes

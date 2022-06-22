@@ -41,7 +41,7 @@ class BodyMessage:
             numbred_elements[i] = sorted_elements[msg_key]
         return numbred_elements
 
-    def __init__(self, schema, complex_types: ComplexTypes):
+    def __init__(self, schema, complex_types: ComplexTypes, namespace=None):
         self.complex_type_names = []
         for t in complex_types.all_complex_types:
             self.complex_type_names.append(t.base_type_name)
@@ -49,7 +49,8 @@ class BodyMessage:
         relevant_body_elements_numbered = self.get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema)
 
         self.cpp_class = CppClass(class_name="BodyMessage", derived_from_class=None,
-                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/stringstream.h\"\n")
+                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/stringstream.h\"\n",
+                                  namespace=namespace)
         self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n\tStringStream * string_stream_;")
         self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, StringStream * string_stream",
                                        "complex_types_ = complex_types;\n\tbit_stream_ = bit_stream;\n\tstring_stream_ = string_stream;\n")

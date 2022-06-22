@@ -27,6 +27,9 @@ class CmdLineParser:
         parser.add_argument('--schema_path', required=True,
                             help='Directory where the schema files are located.')
 
+        parser.add_argument('--namespace', required=True,
+                            help='Cpp Namespace for generated classes')
+
         return parser
 
     def get_args(self):
@@ -43,15 +46,15 @@ if __name__ == '__main__':
     basic_types.write_base_type_header(args.output_path)
 
     # generate classes for encoding and decoding all enumerations used
-    enums = Enums(tt.type_tree)
+    enums = Enums(tt.type_tree, namespace=args.namespace)
     enums.write_enum_conversion_header(args.output_path)
     enums.write_enum_conversion_source(args.output_path)
 
     # generate classes for encoding and decoding complex types
-    ct = ComplexTypes(tt.type_tree)
+    ct = ComplexTypes(tt.type_tree, namespace=args.namespace)
     ct.write_complex_type_conversion_header(args.output_path)
     ct.write_complex_type_conversion_source(args.output_path)
 
-    bm = BodyMessage(tt.schema, ct)
+    bm = BodyMessage(tt.schema, ct, namespace=args.namespace)
     bm.write_body_conversion_header(args.output_path)
     bm.write_body_conversion_source(args.output_path)
