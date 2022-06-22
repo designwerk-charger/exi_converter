@@ -16,7 +16,7 @@ TEST(EnumTypesTest, decode_responseCodeType) {
     uint8_t data;
     BitStream bs(&data, 1);
     MockBaseTypes mock(&bs);
-    EnumTypes et(&mock);
+    iso15118_2::EnumTypes et(&mock);
     ON_CALL(mock, extractNBitsForEnum).WillByDefault(::testing::Return(10));
 
     std::string result = et.decode_responseCodeType();

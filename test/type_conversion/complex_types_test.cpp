@@ -9,8 +9,8 @@ class ComplexTypesTest : public ::testing::Test {
     std::shared_ptr<StringStream> string_stream;
     std::shared_ptr<BitStream> bit_stream;
     std::shared_ptr<BaseTypes> base_types;
-    std::shared_ptr<EnumTypes> enum_types;
-    std::shared_ptr<ComplexTypes> complex_types;
+    std::shared_ptr<iso15118_2::EnumTypes> enum_types;
+    std::shared_ptr<iso15118_2::ComplexTypes> complex_types;
 
  protected:
     void SetUp() override {
@@ -21,8 +21,9 @@ class ComplexTypesTest : public ::testing::Test {
         string_stream = std::make_shared<StringStream>("");
         bit_stream = std::make_shared<BitStream>(raw_data);
         base_types = std::make_shared<BaseTypes>(bit_stream.get());
-        enum_types = std::make_shared<EnumTypes>(base_types.get());
-        complex_types = std::make_shared<ComplexTypes>(base_types.get(), enum_types.get(), string_stream.get());
+        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get());
+        complex_types = std::make_shared<iso15118_2::ComplexTypes>(base_types.get(),
+                                                                   enum_types.get(), string_stream.get());
     }
 };
 

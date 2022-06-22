@@ -38,6 +38,8 @@ class CmdLineParser:
 
 if __name__ == '__main__':
     args = CmdLineParser().get_args()
+    if len(args.namespace) < 3:
+        raise RuntimeError(f"Namespace not correctly set: {args.namespace}")
 
     tt = TypeTree(schema_file=os.path.join(args.schema_path, 'iso15118_2/V2G_CI_MsgDef.xsd'))
 
@@ -58,3 +60,5 @@ if __name__ == '__main__':
     bm = BodyMessage(tt.schema, ct, namespace=args.namespace)
     bm.write_body_conversion_header(args.output_path)
     bm.write_body_conversion_source(args.output_path)
+
+    print(f"Code generated from {args.schema_path} to {args.output_path} with namespace {args.namespace}")

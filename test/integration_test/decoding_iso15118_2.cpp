@@ -10,7 +10,7 @@ std::string run_decoding(const TestDataContainer & data) {
     std::string output_data;
 
     try {
-        output_data = codec.decode(input_data, "?");
+        output_data = codec.decode(input_data, "urn:iso:15118:2:2013:MsgDef");
     } catch (const std::exception& ex) {
         std::cout << "Failed decoding message " << data.name << " (" << ex.what() << ")" << std::endl;
     }

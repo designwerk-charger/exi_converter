@@ -49,25 +49,13 @@ std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string 
     return decode(std::vector<uint8_t>(data, data+length), ns);
 }
 
-std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::string ns) {
-    BitStream bitstream(byte_stream);
 
-    // checking header byte
-    uint8_t exi_options;
-    bitstream.get_next_n_bits(8, &exi_options);
-    std::cout << "decoding message " << ns << " with options 0x" << std::hex << int(exi_options) << std::endl;
-
-    uint8_t message_id;
-    bitstream.get_next_n_bits(7, &message_id);
-    if (message_id != 76) {
-        std::cerr << "V2G_Message with ID 76 was expected! Instead got ID " << int(message_id) << std::endl;
-    }
-
-    BaseTypes base_types(&bitstream);
-    EnumTypes enums(&base_types);
+std::string decode_iso15118_2(BitStream *bitstream) {
+    BaseTypes base_types(bitstream);
+    iso15118_2::EnumTypes enums(&base_types);
     StringStream stringstream("");
-    ComplexTypes complex_types(&base_types, &enums, &stringstream);
-    BodyMessage body_message(&complex_types, &bitstream, &stringstream);
+    iso15118_2::ComplexTypes complex_types(&base_types, &enums, &stringstream);
+    iso15118_2::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
     stringstream.start_key("V2G_Message");
     base_types.check_event_code_is_0("StartV2G_Message");
@@ -83,6 +71,27 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
 
     stringstream.end_key();
     return stringstream.get_full_stream();
+}
+
+
+std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::string ns) {
+    BitStream bitstream(byte_stream);
+
+    // checking header byte
+    uint8_t exi_options;
+    bitstream.get_next_n_bits(8, &exi_options);
+    std::cout << "decoding message " << ns << " with options 0x" << std::hex << int(exi_options) << std::endl;
+
+    uint8_t message_id;
+    bitstream.get_next_n_bits(7, &message_id);
+    if (message_id != 76) {
+        std::cerr << "V2G_Message with ID 76 was expected! Instead got ID " << int(message_id) << std::endl;
+    }
+
+    if (ns == "urn:iso:15118:2:2013:MsgDef") {
+        return decode_iso15118_2(&bitstream);
+    }
+
 }
 
 ExiCodec::ExiCodec() { }
