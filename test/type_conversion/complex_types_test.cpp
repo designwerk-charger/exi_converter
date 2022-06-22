@@ -935,3 +935,85 @@ TEST_F(ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_PMaxScheduleEntr
 
     ASSERT_EQ(string_stream->get_full_stream(), R"({"PMaxScheduleEntry":[{"RelativeTimeInterval":{"start":0,"duration":3600},"PMax":{"Multiplier":0,"Unit":"W","Value":11000}}]})");
 }
+
+
+TEST_F(ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_SalesTariff) {
+    /* Data extracted from OpenV2G
+     * SalesTariffType Start
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), START_ELEMENT(SalesTariffID)]
+     *     getting 2bit(s) from position 2429 --> 0x0000
+     *   Id
+     *     getting 8bit(s) from position 2431 --> 0x0005
+     *     getting 8bit(s) from position 2439 --> 0x0069
+     *     getting 8bit(s) from position 2447 --> 0x0064
+     *     getting 8bit(s) from position 2455 --> 0x0031
+     *   StartTag[START_ELEMENT(SalesTariffID)]
+     *     getting 1bit(s) from position 2463 --> 0x0000
+     *     getting 1bit(s) from position 2464 --> 0x0000
+     *     getting 8bit(s) from position 2465 --> 0x0009
+     *     getting 1bit(s) from position 2473 --> 0x0000
+     *   Element[START_ELEMENT(SalesTariffDescription), START_ELEMENT(NumEPriceLevels), START_ELEMENT(SalesTariffEntry)]
+     *     getting 2bit(s) from position 2474 --> 0x0001
+     *   START_ELEMENT(NumEPriceLevels)
+     *     getting 1bit(s) from position 2476 --> 0x0000
+     *     getting 8bit(s) from position 2477 --> 0x0002
+     *     getting 1bit(s) from position 2485 --> 0x0000
+     *   Element[START_ELEMENT(SalesTariffEntry)]
+     *     getting 1bit(s) from position 2486 --> 0x0000
+     *   START_ELEMENT(SalesTariffEntry)
+     *     getting 2bit(s) from position 2487 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2489 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2490 --> 0x0000
+     *     getting 8bit(s) from position 2491 --> 0x0000
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2499 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2500 --> 0x0001
+     *     getting 2bit(s) from position 2502 --> 0x0000
+     *     getting 1bit(s) from position 2504 --> 0x0000
+     *     getting 8bit(s) from position 2505 --> 0x0001
+     *     getting 1bit(s) from position 2513 --> 0x0000
+     *     getting 2bit(s) from position 2514 --> 0x0001
+     *   Element[START_ELEMENT(SalesTariffEntry), END_ELEMENT]
+     *     getting 2bit(s) from position 2516 --> 0x0000
+     *     getting 2bit(s) from position 2518 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2520 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2521 --> 0x0000
+     *     getting 8bit(s) from position 2522 --> 0x0089
+     *     getting 8bit(s) from position 2530 --> 0x000e
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2538 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2539 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2541 --> 0x0000
+     *     getting 8bit(s) from position 2542 --> 0x0087
+     *     getting 8bit(s) from position 2550 --> 0x000e
+     *   END_ELEMENT(duration)
+     *     getting 1bit(s) from position 2558 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2559 --> 0x0000
+     *     getting 2bit(s) from position 2560 --> 0x0000
+     *     getting 1bit(s) from position 2562 --> 0x0000
+     *     getting 8bit(s) from position 2563 --> 0x0002
+     *     getting 1bit(s) from position 2571 --> 0x0000
+     *     getting 2bit(s) from position 2572 --> 0x0001
+     *   Element[START_ELEMENT(SalesTariffEntry), END_ELEMENT]
+     *     getting 2bit(s) from position 2574 --> 0x0001
+     * SalesTariffType Done
+     */
+
+    std::vector<uint8_t> raw_data({0b00000001, 0b01011010, 0b01011001, 0b00001100, 0b01000000, 0b10010010,
+                                   0b00000010, 0b00000000, 0b00000000, 0b10000000, 0b00010010, 0b00000100,
+                                   0b01001000, 0b01110000, 0b01000011, 0b10000111, 0b00000000, 0b00001000,
+                                   0b10100000});
+    setupWithRawData(raw_data);
+
+    complex_types->decode_SalesTariffType();
+
+    ASSERT_EQ(string_stream->get_full_stream(), R"({"Id":"id1","SalesTariffID":10,"NumEPriceLevels":2,"SalesTariffEntry":[{"RelativeTimeInterval":{"start":0},"EPriceLevel":1},{"RelativeTimeInterval":{"start":1801,"duration":1799},"EPriceLevel":2}]})");
+}

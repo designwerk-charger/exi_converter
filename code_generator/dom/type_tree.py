@@ -3,7 +3,7 @@ from typing import List
 
 import xmlschema
 from xmlschema import XsdElement, XsdAttribute, XsdType, XsdComponent
-from xmlschema.validators import XsdAnyElement
+from xmlschema.validators import XsdAnyElement, XsdGroup
 
 from datatypes.base_type import BaseType
 from datatypes.complex_type import ComplexType
@@ -133,7 +133,6 @@ class TypeTree:
             raise RuntimeError(f"The type {t.qualified_name} is not available in available types")
 
         refered_item = all_types[all_types.index(t.qualified_name)]
-
         if t.is_simple():
             return refered_item
         elif isinstance(refered_item, ComplexType):
@@ -141,17 +140,24 @@ class TypeTree:
                 # dive into base types to update their components
                 TypeTree.diveIntoType(t.base_type, all_types)
 
+            if t.local_name == "SalesTariffType":
+                print("sdvb")
+
             components = []
+            optional_group = False
             for c in t.iter_components():
+                if isinstance(c, XsdGroup):
+                    if c.model == "choice":
+                        optional_group = c.min_occurs == 0
                 if isinstance(c, XsdElement):
-                    is_optional = True if c.min_occurs == 0 else False
+                    is_optional = True if c.min_occurs == 0 else optional_group
                     xsd_type = TypeTree.extractComponentType(c)
                     substitutes = TypeTree.get_substitutes(c, all_types)
                     components.append(Element(c.local_name,
                                               TypeTree.diveIntoType(xsd_type, all_types),
                                               is_optional=is_optional, max_items=c.max_occurs, substitutes=substitutes))
                 elif isinstance(c, XsdAnyElement):
-                    is_optional = True if c.min_occurs == 0 else False
+                    is_optional = True if c.min_occurs == 0 else optional_group
                     if not is_optional:
                         print(f"WARNING: any element {c} in {t.local_name} is not optional!")
                     components.append(AnyElement("genericname",
