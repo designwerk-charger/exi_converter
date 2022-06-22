@@ -256,8 +256,6 @@ class ComplexTypes:
         return code
 
     def getDecodeFunction(self, ct: ComplexType):
-        if ct.type_name == "SalesTariffType":
-            print("afdg")
         code = ""
         optional_blob = []
         was_normal_complex = True
@@ -277,9 +275,14 @@ class ComplexTypes:
                 else:
                     code += self.decodeElementAsList(element, 0)
                     was_normal_complex = False
-            elif element.element_type.is_abstract:
+            elif element.element_type.is_abstract and not element.is_optional:
                 self._do_abstract_element_checks(element)
                 optional_blob.append(element)
+                # # finish optional list with abstract types
+                sorted_blob = self.sortOptionalBlobElements(optional_blob)
+                code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=False)
+                code += "\n"
+                optional_blob = []
             elif element.is_optional:
                 if len(optional_blob) != 0 and optional_blob[-1].element_type.is_abstract:
                     # finish optional list with abstract types

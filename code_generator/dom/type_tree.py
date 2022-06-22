@@ -140,9 +140,6 @@ class TypeTree:
                 # dive into base types to update their components
                 TypeTree.diveIntoType(t.base_type, all_types)
 
-            if t.local_name == "SalesTariffType":
-                print("sdvb")
-
             components = []
             optional_group = False
             for c in t.iter_components():
