@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="main (code generator)" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="main app_protocol (code generator)" type="PythonConfigurationType" factoryName="Python">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -13,7 +13,7 @@
     <module name="" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/code_generator/main.py" />
-    <option name="PARAMETERS" value="--schema_path=schemas/ --output_path=code_generator/testout/" />
+    <option name="PARAMETERS" value="--schema_file=schemas/V2G_CI_AppProtocol.xsd --namespace=app_protocol --output_path=code_generator/testout/app_protot" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
