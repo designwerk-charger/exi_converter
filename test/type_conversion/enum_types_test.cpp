@@ -1,5 +1,5 @@
-#include "base_types.h"
-#include "enum_types.h"
+#include "type_conversion/base_types.h"
+#include "iso15118_2/enum_types.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"

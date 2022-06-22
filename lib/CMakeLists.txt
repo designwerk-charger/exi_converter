@@ -11,29 +11,29 @@ set(GENERATED_SOURCES)
 file(GLOB_RECURSE XSD_FILES ${PROJECT_SOURCE_DIR}/schemas/*.xsd)
 file(GLOB_RECURSE GENERATOR_FILES ${PROJECT_SOURCE_DIR}/code_generator/*.py)
 
-macro(add_code_generator PROTOCOL_NAME GEN_TARGET_NAME)
+macro(add_code_generator PROTOCOL_NAME SCHEMA_FILE)
 
     set(GENERATED_SOURCES_${PROTOCOL_NAME}
-            ${GENERATED_FILES_DIR}/enum_types.cpp
-            ${GENERATED_FILES_DIR}/complex_types.cpp
-            ${GENERATED_FILES_DIR}/body_message.cpp
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/enum_types.cpp
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/complex_types.cpp
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/body_message.cpp
     )
 
     set(GENERATED_HEADERS_${PROTOCOL_NAME}
-            ${GENERATED_FILES_DIR}/enum_types.h
-            ${GENERATED_FILES_DIR}/base_types.h
-            ${GENERATED_FILES_DIR}/complex_types.h
-            ${GENERATED_FILES_DIR}/body_message.h
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/enum_types.h
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/base_types.h
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/complex_types.h
+            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/body_message.h
     )
 
     add_custom_command(
             OUTPUT ${GENERATED_SOURCES_${PROTOCOL_NAME}} ${GENERATED_HEADERS_${PROTOCOL_NAME}}
-            COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --namespace=${PROTOCOL_NAME} --output_path=${GENERATED_FILES_DIR} --schema_path=${PROJECT_SOURCE_DIR}/schemas
+            COMMAND python3 ARGS ${PROJECT_SOURCE_DIR}/code_generator/main.py --namespace=${PROTOCOL_NAME} --output_path=${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/ --schema_file=${PROJECT_SOURCE_DIR}/schemas/${SCHEMA_FILE}
             DEPENDS ${XSD_FILES} ${GENERATOR_FILES}
     )
 
     add_custom_target (
-            ${GEN_TARGET_NAME} DEPENDS
+            generated_files_for_${PROTOCOL_NAME} DEPENDS
             ${GENERATED_SOURCES_${PROTOCOL_NAME}}
             ${GENERATED_HEADERS_${PROTOCOL_NAME}}
     )
@@ -44,7 +44,7 @@ macro(add_code_generator PROTOCOL_NAME GEN_TARGET_NAME)
 endmacro()
 
 
-add_code_generator(iso15118_2 generated_files_for_iso15118_2)
+add_code_generator(iso15118_2 iso15118_2/V2G_CI_MsgDef.xsd)
 
 ########################################################################
 # Add souces and configure include

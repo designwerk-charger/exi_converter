@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import os
+import sys
 
 from dom.base_types import BaseTypes
 from dom.body_message import BodyMessage
@@ -24,8 +25,8 @@ class CmdLineParser:
         parser.add_argument('--output_path', required=True,
                             help='Directory path to where the generated files will be placed.')
 
-        parser.add_argument('--schema_path', required=True,
-                            help='Directory where the schema files are located.')
+        parser.add_argument('--schema_file', required=True,
+                            help='File from where the code is generated (might use additional files)')
 
         parser.add_argument('--namespace', required=True,
                             help='Cpp Namespace for generated classes')
@@ -41,7 +42,11 @@ if __name__ == '__main__':
     if len(args.namespace) < 3:
         raise RuntimeError(f"Namespace not correctly set: {args.namespace}")
 
-    tt = TypeTree(schema_file=os.path.join(args.schema_path, 'iso15118_2/V2G_CI_MsgDef.xsd'))
+    if not os.path.exists(args.output_path):
+        print(f"creating directory {args.output_path}")
+        os.mkdir(args.output_path)
+
+    tt = TypeTree(schema_file=os.path.join(args.schema_file))
 
     # write a header file describing basic types which are used by generated code
     basic_types = BaseTypes(tt.type_tree)
@@ -61,4 +66,4 @@ if __name__ == '__main__':
     bm.write_body_conversion_header(args.output_path)
     bm.write_body_conversion_source(args.output_path)
 
-    print(f"Code generated from {args.schema_path} to {args.output_path} with namespace {args.namespace}")
+    print(f"Code generated from {args.schema_file} to {args.output_path} with namespace {args.namespace}")
