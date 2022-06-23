@@ -21,7 +21,6 @@ macro(add_code_generator PROTOCOL_NAME SCHEMA_FILE)
 
     set(GENERATED_HEADERS_${PROTOCOL_NAME}
             ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/enum_types.h
-            ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/base_types.h
             ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/complex_types.h
             ${GENERATED_FILES_DIR}/${PROTOCOL_NAME}/body_message.h
     )
@@ -45,6 +44,7 @@ endmacro()
 
 
 add_code_generator(iso15118_2 iso15118_2/V2G_CI_MsgDef.xsd)
+add_code_generator(app_protocol V2G_CI_AppProtocol.xsd)
 
 ########################################################################
 # Add souces and configure include
@@ -62,7 +62,9 @@ include_directories(${GENERATED_FILES_DIR})
 add_definitions(-DPYBIND)
 
 add_library(exi_converter SHARED ${LIB_SRCS} ${GENERATED_SOURCES} library.cpp)
-add_dependencies(exi_converter generated_files_for_iso15118_2)
+add_dependencies(exi_converter
+        generated_files_for_app_protocol
+        generated_files_for_iso15118_2)
 
 # Remove the "lib" prefix of the .so library
 set_target_properties(exi_converter PROPERTIES PREFIX "")

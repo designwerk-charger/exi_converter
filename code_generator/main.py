@@ -31,6 +31,9 @@ class CmdLineParser:
         parser.add_argument('--namespace', required=True,
                             help='Cpp Namespace for generated classes')
 
+        parser.add_argument('--create_base_types', type=bool, default=False,
+                            help='Cpp Namespace for generated classes')
+
         return parser
 
     def get_args(self):
@@ -46,11 +49,12 @@ if __name__ == '__main__':
         print(f"creating directory {args.output_path}")
         os.mkdir(args.output_path)
 
-    tt = TypeTree(schema_file=os.path.join(args.schema_file))
+    tt = TypeTree(schema_file=os.path.join(args.schema_file), namespace=args.namespace)
 
-    # write a header file describing basic types which are used by generated code
-    basic_types = BaseTypes(tt.type_tree)
-    basic_types.write_base_type_header(args.output_path)
+    if args.create_base_types:
+        # write a header file describing basic types which are used by generated code
+        basic_types = BaseTypes(tt.type_tree)
+        basic_types.write_base_type_header(args.output_path)
 
     # generate classes for encoding and decoding all enumerations used
     enums = Enums(tt.type_tree, namespace=args.namespace)

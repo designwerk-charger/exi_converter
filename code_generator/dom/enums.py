@@ -23,7 +23,7 @@ class Enums:
 
         self.cpp_class = CppClass(class_name="EnumTypes", derived_from_class=None,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"base_types.h\"\n", namespace=namespace)
+                                           "#include \"type_conversion/base_types.h\"\n", namespace=namespace)
         self.cpp_class.add_member("BaseTypes * base_types;")
         self.cpp_class.add_constructor("BaseTypes * base_types", "this->base_types = base_types;\n")
 

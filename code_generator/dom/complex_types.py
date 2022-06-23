@@ -24,7 +24,7 @@ class ComplexTypes:
 
         self.cpp_class = CppClass(class_name="ComplexTypes", derived_from_class=None,
                                   includes="#include <iostream>\n#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"base_types.h\"\n#include \"enum_types.h\"\n#include \"base/stringstream.h\"\n",
+                                           "#include \"type_conversion/base_types.h\"\n#include \"enum_types.h\"\n#include \"base/stringstream.h\"\n",
                                   namespace=namespace)
         self.cpp_class.add_member("BaseTypes * base_types_;\n\tEnumTypes * enum_types_;\n\tStringStream * string_stream_;")
         self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, StringStream * string_stream",

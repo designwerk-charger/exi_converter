@@ -8,6 +8,8 @@
 
 #include "iso15118_2/complex_types.h"
 #include "iso15118_2/body_message.h"
+#include "app_protocol/complex_types.h"
+#include "app_protocol/body_message.h"
 
 
 
@@ -75,6 +77,22 @@ std::string decode_iso15118_2(BitStream *bitstream) {
 }
 
 
+std::string decode_app_protocol(BitStream *bitstream) {
+    BaseTypes base_types(bitstream);
+    app_protocol::EnumTypes enums(&base_types);
+    StringStream stringstream("");
+    app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
+    app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
+
+    stringstream.start_key("Body");
+    base_types.check_event_code_is_0("Body");
+    body_message.decodeBody();
+    stringstream.end_key(); // body
+
+    stringstream.end_key();
+    return stringstream.get_full_stream();
+}
+
 std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::string ns) {
     BitStream bitstream(byte_stream);
 
@@ -91,6 +109,8 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
         return decode_iso15118_2(&bitstream);
+    } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
+        return decode_app_protocol(&bitstream);
     }
 
 }

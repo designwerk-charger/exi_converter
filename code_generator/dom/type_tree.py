@@ -10,7 +10,8 @@ from datatypes.complex_type import ComplexType
 from datatypes.element import Element, Attribute, AnyElement
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
     IgnoredType, UriType, NBitDecimalType
-from dom.ccs_messages import ISO15118_2_MSGS, ISO15118_2_MAIN_TYPES
+
+from dom.ccs_messages import MESSAGE_TYPES, ADDITIONAL_TYPES
 
 
 class TypeTree:
@@ -19,14 +20,14 @@ class TypeTree:
                      'xs:gYearMonth', 'xs:gYear', 'xs:gMonth', 'xs:gDay', 'xs:gMonthDay', 'xs:QName', 'xs:NOTATION',
                      'xs:string+', 'xs:anySimpleType']
 
-    def __init__(self, schema_file:str):
+    def __init__(self, schema_file: str, namespace: str):
         self._schema = xmlschema.XMLSchema(source=schema_file)
 
         self._all_types = TypeTree.extract_all_types(self._schema.types.target_dict.values())
         TypeTree.update_derivations(self._all_types)
 
         self._type_tree = []
-        top_level_msgs = self.get_full_list_of_message_types(ISO15118_2_MSGS) + ISO15118_2_MAIN_TYPES
+        top_level_msgs = self.get_full_list_of_message_types(MESSAGE_TYPES[namespace]) + ADDITIONAL_TYPES[namespace]
         top_level_msgs.append("V2G_Message")
         for name, types in self._schema.types.target_dict.items():
             if types.local_name in top_level_msgs:

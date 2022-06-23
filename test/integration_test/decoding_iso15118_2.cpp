@@ -3,27 +3,11 @@
 #include "library.h"
 
 
-std::string run_decoding(const TestDataContainer & data) {
-    ExiCodec codec;
-
-    auto input_data = hex2bin(data.hex_str);
-    std::string output_data;
-
-    try {
-        output_data = codec.decode(input_data, "urn:iso:15118:2:2013:MsgDef");
-    } catch (const std::exception& ex) {
-        std::cout << "Failed decoding message " << data.name << " (" << ex.what() << ")" << std::endl;
-    }
-    std::cout << "Result:   " << output_data << std::endl;
-    std::cout << "Expected: " << data.json_str << std::endl;
-    return output_data;
-}
-
 class DecodingISO15118_2 :public ::testing::TestWithParam<TestDataContainer> { };
 
 TEST_P(DecodingISO15118_2, WithExiDecoder) {
     TestDataContainer test_data = GetParam();
-    ASSERT_EQ(run_decoding(test_data), test_data.json_str);
+    ASSERT_EQ(run_decoding(test_data, "urn:iso:15118:2:2013:MsgDef"), test_data.json_str);
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -131,5 +115,5 @@ TEST(DecodingISO15118_2, SpecificMessageDecoding) {
             "SessionStopReq",
             "8098020df6a63dcd82240f91f000",
             R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"SessionStopReq":{"ChargingSession":"Terminate"}}}})");
-    ASSERT_EQ(run_decoding(ISO_MSG), ISO_MSG.json_str);
+    ASSERT_EQ(run_decoding(ISO_MSG, "urn:iso:15118:2:2013:MsgDef"), ISO_MSG.json_str);
 }
