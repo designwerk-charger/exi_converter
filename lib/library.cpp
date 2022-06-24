@@ -8,6 +8,8 @@
 
 #include "iso15118_2/complex_types.h"
 #include "iso15118_2/body_message.h"
+#include "din_spec/complex_types.h"
+#include "din_spec/body_message.h"
 #include "app_protocol/complex_types.h"
 #include "app_protocol/body_message.h"
 
@@ -54,6 +56,12 @@ std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string 
 
 
 std::string decode_iso15118_2(BitStream *bitstream) {
+    uint8_t message_id;
+    bitstream->get_next_n_bits(7, &message_id);
+    if (message_id != 76) {
+        throw std::runtime_error("V2G_Message with ID 76 was expected! Instead got ID " + std::to_string(message_id));
+    }
+
     BaseTypes base_types(bitstream);
     iso15118_2::EnumTypes enums(&base_types);
     StringStream stringstream("");
@@ -77,6 +85,35 @@ std::string decode_iso15118_2(BitStream *bitstream) {
 }
 
 
+std::string decode_din_spec(BitStream *bitstream) {
+    uint8_t message_id;
+    bitstream->get_next_n_bits(7, &message_id);
+    if (message_id != 77) {
+        throw std::runtime_error("V2G_Message with ID 77 was expected! Instead got ID " + std::to_string(message_id));
+    }
+
+    BaseTypes base_types(bitstream);
+    din_spec::EnumTypes enums(&base_types);
+    StringStream stringstream("");
+    din_spec::ComplexTypes complex_types(&base_types, &enums, &stringstream);
+    din_spec::BodyMessage body_message(&complex_types, bitstream, &stringstream);
+
+    stringstream.start_key("V2G_Message");
+    base_types.check_event_code_is_0("StartV2G_Message");
+    stringstream.start_key("Header");
+    complex_types.decode_MessageHeaderType();
+    // base_types.check_event_code_is_0("EndHeader");
+    stringstream.end_key(); // header
+
+    stringstream.start_key("Body");
+    base_types.check_event_code_is_0("Body");
+    body_message.decodeBody();
+    stringstream.end_key(); // body
+
+    stringstream.end_key();
+    return stringstream.get_full_stream();
+}
+
 std::string decode_app_protocol(BitStream *bitstream) {
     BaseTypes base_types(bitstream);
     app_protocol::EnumTypes enums(&base_types);
@@ -84,11 +121,17 @@ std::string decode_app_protocol(BitStream *bitstream) {
     app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
-    stringstream.start_key("Body");
-    base_types.check_event_code_is_0("Body");
-    body_message.decodeBody();
-    stringstream.end_key(); // body
-
+    uint8_t message_id;
+    bitstream->get_next_n_bits(2, &message_id);
+    if (message_id == 0) {
+        stringstream.start_key("supportedAppProtocolReq");
+        complex_types.decode_supportedAppProtocolReqType();
+    } else if (message_id == 1) {
+        stringstream.start_key("supportedAppProtocolRes");
+        complex_types.decode_supportedAppProtocolResType();
+    } else {
+        throw std::runtime_error("The event code for AppProtocolSelection is unknown (" + std::to_string(message_id) + ")!");
+    }
     stringstream.end_key();
     return stringstream.get_full_stream();
 }
@@ -101,18 +144,15 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
     bitstream.get_next_n_bits(8, &exi_options);
     std::cout << "decoding message " << ns << " with options 0x" << std::hex << int(exi_options) << std::endl;
 
-    uint8_t message_id;
-    bitstream.get_next_n_bits(7, &message_id);
-    if (message_id != 76) {
-        std::cerr << "V2G_Message with ID 76 was expected! Instead got ID " << int(message_id) << std::endl;
-    }
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
         return decode_iso15118_2(&bitstream);
+    } else if (ns == "urn:din:70121:2012:MsgDef") {
+        return decode_din_spec(&bitstream);
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
         return decode_app_protocol(&bitstream);
     }
-
+    throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }
 
 ExiCodec::ExiCodec() { }

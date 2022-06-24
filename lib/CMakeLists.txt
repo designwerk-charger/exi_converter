@@ -43,6 +43,7 @@ macro(add_code_generator PROTOCOL_NAME SCHEMA_FILE)
 endmacro()
 
 
+add_code_generator(din_spec din_spec/V2G_CI_MsgDef.xsd)
 add_code_generator(iso15118_2 iso15118_2/V2G_CI_MsgDef.xsd)
 add_code_generator(app_protocol V2G_CI_AppProtocol.xsd)
 
@@ -64,7 +65,8 @@ add_definitions(-DPYBIND)
 add_library(exi_converter SHARED ${LIB_SRCS} ${GENERATED_SOURCES} library.cpp)
 add_dependencies(exi_converter
         generated_files_for_app_protocol
-        generated_files_for_iso15118_2)
+        generated_files_for_iso15118_2
+        generated_files_for_din_spec)
 
 # Remove the "lib" prefix of the .so library
 set_target_properties(exi_converter PROPERTIES PREFIX "")
