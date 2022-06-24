@@ -271,8 +271,8 @@ elementFormDefault="qualified" attributeFormDefault="unqualified">
   <!-- -->
   <!-- SessionStop -->
   <!-- -->
-  <xs:element name="SessionStopReq" type="SessionStopType" substitutionGroup="v2gci_d:BodyElement"/>
-  <xs:complexType name="SessionStopType">
+  <xs:element name="SessionStopReq" type="SessionStopReqType" substitutionGroup="v2gci_d:BodyElement"/>
+  <xs:complexType name="SessionStopReqType">
     <xs:complexContent>
       <xs:extension base="v2gci_d:BodyBaseType">
         <xs:sequence/>
