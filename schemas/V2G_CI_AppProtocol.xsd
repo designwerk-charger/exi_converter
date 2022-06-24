@@ -2,21 +2,17 @@
 	xmlns="urn:iso:15118:2:2010:AppProtocol" 
 	targetNamespace="urn:iso:15118:2:2010:AppProtocol">
 	
-	<xs:element name="supportedAppProtocolReq">
-		<xs:complexType>
+	<xs:complexType name="supportedAppProtocolReqType">
 			<xs:sequence>
 				<xs:element name="AppProtocol" type="AppProtocolType" maxOccurs="20"/>
 			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-	<xs:element name="supportedAppProtocolRes">
-		<xs:complexType>
+	</xs:complexType>
+	<xs:complexType name="supportedAppProtocolResType">
 			<xs:sequence>
 				<xs:element name="ResponseCode" type="responseCodeType"/>
 				<xs:element name="SchemaID" type="idType" minOccurs="0"/>
 			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
+	</xs:complexType>
 	<xs:complexType name="AppProtocolType">
 		<xs:sequence>
 			<xs:element name="ProtocolNamespace" type="protocolNamespaceType"/>
