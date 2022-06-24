@@ -12,7 +12,7 @@ class MockBaseTypes : public BaseTypes {
     MOCK_METHOD(uint32_t , extractNBitsForEnum, (uint32_t), (override));
 };
 
-TEST(EnumTypesTest, decode_responseCodeType) {
+TEST(Iso2EnumTypesTest, decode_responseCodeType) {
     uint8_t data;
     BitStream bs(&data, 1);
     MockBaseTypes mock(&bs);
