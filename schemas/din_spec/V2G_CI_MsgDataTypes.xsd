@@ -155,14 +155,14 @@ attributeFormDefault="unqualified">
 </xs:complexType>
 <xs:complexType name="SAScheduleTupleType">
   <xs:sequence>
-    <xs:element name="SAScheduleTupleID" type="SAIDType"/>
+    <xs:element name="SAScheduleTupleID" type="xs:short"/>
     <xs:element name="PMaxSchedule" type="PMaxScheduleType"/>
     <xs:element name="SalesTariff" type="SalesTariffType" minOccurs="0"/>
   </xs:sequence>
 </xs:complexType>
 <xs:complexType name="SalesTariffType">
   <xs:sequence>
-    <xs:element name="SalesTariffID" type="SAIDType"/>
+    <xs:element name="SalesTariffID" type="xs:short"/>
     <xs:element name="SalesTariffDescription" type="tariffDescriptionType" minOccurs="0"/>
     <xs:element name="NumEPriceLevels" type="xs:unsignedByte"/>
     <xs:element ref="SalesTariffEntry" maxOccurs="unbounded"/>
@@ -171,7 +171,7 @@ attributeFormDefault="unqualified">
 </xs:complexType>
 <xs:complexType name="PMaxScheduleType">
   <xs:sequence>
-    <xs:element name="PMaxScheduleID" type="SAIDType"/>
+    <xs:element name="PMaxScheduleID" type="xs:short"/>
     <xs:element ref="PMaxScheduleEntry" maxOccurs="unbounded"/>
   </xs:sequence>
 </xs:complexType>
@@ -197,7 +197,7 @@ attributeFormDefault="unqualified">
   <xs:complexContent>
     <xs:extension base="EntryType">
       <xs:sequence>
-        <xs:element name="PMax" type="PMaxType"/>
+        <xs:element name="PMax" type="xs:short"/>
       </xs:sequence>
     </xs:extension>
   </xs:complexContent>
@@ -366,14 +366,14 @@ attributeFormDefault="unqualified">
 <!-- -->
 <xs:complexType name="ChargingProfileType">
   <xs:sequence>
-    <xs:element name="SAScheduleTupleID" type="SAIDType"/>
+    <xs:element name="SAScheduleTupleID" type="xs:short"/>
     <xs:element name="ProfileEntry" type="ProfileEntryType" maxOccurs="unbounded"/>
   </xs:sequence>
 </xs:complexType>
 <xs:complexType name="ProfileEntryType">
   <xs:sequence>
     <xs:element name="ChargingProfileEntryStart" type="xs:unsignedInt"/>
-    <xs:element name="ChargingProfileEntryMaxPower" type="PMaxType"/>
+    <xs:element name="ChargingProfileEntryMaxPower" type="xs:short"/>
   </xs:sequence>
 </xs:complexType>
 <!-- =================== -->
