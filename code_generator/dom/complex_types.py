@@ -180,8 +180,7 @@ class ComplexTypes:
             if elem.element_type.is_abstract:
                 if elem.element_type.type_name in bases_handled:
                     return 0
-                bases_handled.append(elem.element_type.type_name)
-                return len(elem.derived_classes) + 1
+                raise RuntimeError(f"Unhandled Abstract type of element {elem}")
             else:
                 if elem.element_type.is_simple_not_complex or elem.element_type.base_class is None:
                     return 1
@@ -190,7 +189,6 @@ class ComplexTypes:
                 else:
                     bases_handled.append(elem.element_type.base_class_name)
                     return len(elem.element_type.base_class.derived_classes) + 1
-            raise RuntimeError(f"BaseClass not found of abstract type {elem.element_type.type_name}")
 
         def get_num_AnyElements() -> int:
             cnt = 0
@@ -216,8 +214,6 @@ class ComplexTypes:
 
             if needs_endelement():
                 cnt += 1
-            if cnt == 0:
-                return 1
             return ceil(log2(cnt))
 
         suffix = self.local_suffix_cnt
@@ -285,12 +281,6 @@ class ComplexTypes:
                 code += "\n"
                 optional_blob = []
             elif element.is_optional:
-                if len(optional_blob) != 0 and optional_blob[-1].element_type.is_abstract:
-                    # finish optional list with abstract types
-                    sorted_blob = self.sortOptionalBlobElements(optional_blob)
-                    code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=True)
-                    code += "\n"
-                    optional_blob = []
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
                 # finish optional list and add new element

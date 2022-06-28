@@ -11,21 +11,6 @@ from dom.complex_types import ComplexTypes
 class BodyMessage:
 
     @staticmethod
-    def get_top_elements_sorted_lexicographically(schema) -> Dict[int, XsdElement]:
-        element_top = {}
-        for name, element in schema.elements.target_dict.items():
-            # Extract all relevant schema entries for vehicle communication
-            if element.target_namespace != "http://www.w3.org/2001/XMLSchema":
-                element_top[element.local_name] = element
-
-        sorted_elements = collections.OrderedDict(sorted(element_top.items()))
-
-        numbred_elements = {}
-        for i, msg_key in enumerate(sorted_elements.keys()):
-            numbred_elements[i] = sorted_elements[msg_key]
-        return numbred_elements
-
-    @staticmethod
     def get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema) -> Dict[int, XsdElement]:
         element_top = {}
         for elem in schema.elements.target_dict.values():
