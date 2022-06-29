@@ -253,7 +253,7 @@ TEST(BitStreamTest_AddBits, ThrowInvalidArgumentException_When_DataIsNull) {
     EXPECT_THROW(bs.add_max_8bits(0xAB, 9), std::range_error);
 }
 
-TEST(bitStreamTest_Addbits, AddsFirstBit_When_OneBitAdded) {
+TEST(BitStreamTest_AddBits, AddsFirstBit_When_OneBitAdded) {
     uint8_t input_data = 0x01;
     std::vector<uint8_t>exi_data;
     BitStream bs;
@@ -264,7 +264,7 @@ TEST(bitStreamTest_Addbits, AddsFirstBit_When_OneBitAdded) {
     ASSERT_EQ(exi_data[0], 0x80);
 }
 
-TEST(bitStreamTest_Addbits, AddsFirst2Bits_When_TwoBitAdded) {
+TEST(BitStreamTest_AddBits, AddsFirst2Bits_When_TwoBitAdded) {
     uint8_t input_data = 0x02;
     std::vector<uint8_t>exi_data;
     BitStream bs;
@@ -275,7 +275,7 @@ TEST(bitStreamTest_Addbits, AddsFirst2Bits_When_TwoBitAdded) {
     ASSERT_EQ(exi_data[0], 0x80);
 }
 
-TEST(bitStreamTest_Addbits, AddsTwoConsequtive2Bits_When_TwoBitsAddedWithTwoFunctionCalls) {
+TEST(BitStreamTest_AddBits, AddsTwoConsequtive2Bits_When_TwoBitsAddedWithTwoFunctionCalls) {
     uint8_t input_data_1 = 0x01;
     uint8_t input_data_2 = 0x01;
     std::vector<uint8_t>exi_data;
@@ -288,7 +288,7 @@ TEST(bitStreamTest_Addbits, AddsTwoConsequtive2Bits_When_TwoBitsAddedWithTwoFunc
     ASSERT_EQ(exi_data[0], 0xC0);
 }
 
-TEST(bitStreamTest_Addbits, Adds1Byte_When_OneByteAdded) {
+TEST(BitStreamTest_AddBits, Adds1Byte_When_OneByteAdded) {
     uint8_t input_data = 0xDE;
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>test_vector;
@@ -301,7 +301,7 @@ TEST(bitStreamTest_Addbits, Adds1Byte_When_OneByteAdded) {
     ASSERT_EQ(exi_data, test_vector);
 }
 
-TEST(bitStreamTest_Addbits, Adds1BitAnd1Byte_When_1BitAnd1ByteAddedIn2FunctionCalls) {
+TEST(BitStreamTest_AddBits, Adds1BitAnd1Byte_When_1BitAnd1ByteAddedIn2FunctionCalls) {
     uint8_t input_data_1 = 0x01;
     uint8_t input_data_2 = 0x01;
     std::vector<uint8_t>test_vector;
@@ -317,7 +317,7 @@ TEST(bitStreamTest_Addbits, Adds1BitAnd1Byte_When_1BitAnd1ByteAddedIn2FunctionCa
     ASSERT_EQ(exi_data, test_vector);
 }
 
-TEST(bitStreamTest_Addbits, Adds2Bytes_When_2BytesAdded) {
+TEST(BitStreamTest_AddBits, Adds2Bytes_When_2BytesAdded) {
     uint8_t input_data[] = {0xDE, 0xAD};
     std::vector<uint8_t>test_vector;
     test_vector.push_back(input_data[0]);
@@ -331,7 +331,7 @@ TEST(bitStreamTest_Addbits, Adds2Bytes_When_2BytesAdded) {
     ASSERT_EQ(exi_data, test_vector);
 }
 
-TEST(bitStreamTest_Addbits, Adds2ByteAnd1Bit_When_2ByteAnd1BitAdded) {
+TEST(BitStreamTest_AddBits, Adds2ByteAnd1Bit_When_2ByteAnd1BitAdded) {
     uint8_t input_data[] = {0xAD, 0xEE, 0x01};
     std::vector<uint8_t>test_vector;
     test_vector.push_back(input_data[0]);
