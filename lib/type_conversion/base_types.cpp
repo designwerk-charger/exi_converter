@@ -43,6 +43,10 @@ uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
     return output_data;
 }
 
+void BaseTypes::injectNBitsForEnum(uint8_t value, uint8_t n_bits) {
+    bit_stream_->add_max_8bits(value, n_bits);
+}
+
 void BaseTypes::injectString(std::string value) {
     bit_stream_->add_max_8bits(value.length() + 2, 8);
     bit_stream_->add_bytes(reinterpret_cast<const uint8_t *>(&value[0]), value.length());

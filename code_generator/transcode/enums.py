@@ -23,12 +23,14 @@ class Enums:
 
         self.cpp_class = CppClass(class_name="EnumTypes", derived_from_class=None,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"type_conversion/base_types.h\"\n", namespace=namespace)
-        self.cpp_class.add_member("BaseTypes * base_types;")
-        self.cpp_class.add_constructor("BaseTypes * base_types", "this->base_types = base_types;\n")
+                                           "#include \"type_conversion/base_types.h\"\n#include \"base/stringstream.h\"\n", namespace=namespace)
+        self.cpp_class.add_member("BaseTypes * base_types;\nStringStream * string_stream;")
+        self.cpp_class.add_constructor("BaseTypes * base_types, StringStream * string_stream",
+                                       "this->base_types = base_types;\nthis->string_stream = string_stream;")
 
         for enum in self.all_enum_types:
             self.cpp_class.add_function(self.getDecodeFunction(enum))
+            self.cpp_class.add_function(self.getEncodeFunction(enum))
 
     def getDecodeFunction(self, enum: EnumType):
         num_items = len(enum.enumerations)
@@ -46,6 +48,30 @@ class Enums:
                 f"return ENUM2STR[enum_num];\n"
         return CppFunction(function_name=f"decode_{enum.type_name}",
                     return_type="std::string",
+                    arguments=None,
+                    code=code,
+                    comment=None)
+
+    def getEncodeFunction(self, enum: EnumType):
+        num_items = len(enum.enumerations)
+        num_bits = ceil(log2(num_items))
+        code = f"const uint8_t n_bits = {num_bits};\n" \
+               f"auto str_enum = string_stream->get_next_item();\n" \
+               f"static std::unordered_map<std::string, uint8_t> const table = {{\n"
+        for i, item in enumerate(enum.enumerations):
+            code += f"\t{{\"{item}\", {i}}},\n"
+        code += f"}};\n" \
+                f"auto it = table.find(str_enum);\n" \
+                f"if (it != table.end()) {{\n" \
+                "\tauto enum_value = it->second;\n" \
+                "\tbase_types->injectNBitsForEnum(enum_value, n_bits);\n" \
+                f"}} else {{\n" \
+                f"\tstd::ostringstream stm;\n" \
+                f"\tstm << \"The Enum value \" << str_enum << \" is not part of the Enum {enum.type_name}\";\n" \
+                f"\tthrow std::runtime_error(stm.str());\n" \
+                f"}}\n"
+        return CppFunction(function_name=f"encode_{enum.type_name}",
+                    return_type="void",
                     arguments=None,
                     code=code,
                     comment=None)

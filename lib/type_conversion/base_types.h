@@ -19,6 +19,8 @@ class BaseTypes {
 
 	virtual uint32_t extractNBitsForEnum(uint32_t n_bits);
 
+    virtual void injectNBitsForEnum(uint8_t value, uint8_t n_bits);
+
 	virtual void injectString(std::string value);
 
 	virtual std::string extractString();

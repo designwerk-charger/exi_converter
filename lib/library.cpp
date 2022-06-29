@@ -63,8 +63,8 @@ std::string decode_iso15118_2(BitStream *bitstream) {
     }
 
     BaseTypes base_types(bitstream);
-    iso15118_2::EnumTypes enums(&base_types);
     StringStream stringstream("");
+    iso15118_2::EnumTypes enums(&base_types, &stringstream);
     iso15118_2::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     iso15118_2::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
@@ -93,8 +93,8 @@ std::string decode_din_spec(BitStream *bitstream) {
     }
 
     BaseTypes base_types(bitstream);
-    din_spec::EnumTypes enums(&base_types);
     StringStream stringstream("");
+    din_spec::EnumTypes enums(&base_types, &stringstream);
     din_spec::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     din_spec::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
@@ -116,8 +116,8 @@ std::string decode_din_spec(BitStream *bitstream) {
 
 std::string decode_app_protocol(BitStream *bitstream) {
     BaseTypes base_types(bitstream);
-    app_protocol::EnumTypes enums(&base_types);
     StringStream stringstream("");
+    app_protocol::EnumTypes enums(&base_types, &stringstream);
     app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 

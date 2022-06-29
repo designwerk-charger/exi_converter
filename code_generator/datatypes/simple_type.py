@@ -118,6 +118,10 @@ class EnumType(SimpleType):
                                      return_type="uint32_t", arguments="uint32_t n_bits",
                                      comment="",
                                      code="", member_object_name="base_types_"))
+        functions.append(CppFunction(function_name="injectNBitsForEnum",
+                                     return_type="void", arguments="uint8_t value, uint8_t n_bits",
+                                     comment="",
+                                     code="", member_object_name="base_types_"))
         return functions
 
     @property

@@ -21,7 +21,7 @@ class Iso2ComplexTypesTest : public ::testing::Test {
         string_stream = std::make_shared<StringStream>("");
         bit_stream = std::make_shared<BitStream>(raw_data);
         base_types = std::make_shared<BaseTypes>(bit_stream.get());
-        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get());
+        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get(), string_stream.get());
         complex_types = std::make_shared<iso15118_2::ComplexTypes>(base_types.get(),
                                                                    enum_types.get(), string_stream.get());
     }
