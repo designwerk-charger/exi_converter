@@ -45,28 +45,40 @@ PYBIND11_MODULE(exi_converter, m) {
 }
 
 
-std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream) {
-    BitStream bitstream;
-    BaseTypes base_types(&bitstream);
+std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStream * bitstream) {
+    BaseTypes base_types(bitstream);
     iso15118_2::EnumTypes enums(&base_types, stringstream);
     iso15118_2::ComplexTypes complex_types(&base_types, &enums, stringstream);
-    iso15118_2::BodyMessage body_message(&complex_types, &bitstream, stringstream);
+    iso15118_2::BodyMessage body_message(&complex_types, bitstream, stringstream);
 
-    stringstream->get_next_item();
+    bitstream->add_max_8bits(76, 7);
+    auto identifier = stringstream->get_item_and_move_to_next();
+    if (identifier != "V2G_Message") {
+        throw std::runtime_error("Found \"" + identifier + "\" instead of \"V2G_Message\" item found in "
+            + stringstream->get_input_data());
+    }
+    base_types.add_event_code("V2G_Message");
 
-    /*
-    stringstream.start_key("V2G_Message");
-    base_types.check_event_code_is_0("StartV2G_Message");
-    stringstream.start_key("Header");
-    complex_types.decode_MessageHeaderType();
-    stringstream.end_key(); // header
+    auto header = stringstream->get_item_and_move_to_next();
+    if (header != "Header") {
+        throw std::runtime_error("Found \"" + header + "\" instead of \"Header\" item found in "
+            + stringstream->get_input_data());
+    }
+    complex_types.encode_MessageHeaderType();
 
-    stringstream.start_key("Body");
-    base_types.check_event_code_is_0("Body");
-    */
+    stringstream->get_item_and_move_to_next();
+    stringstream->get_item_and_move_to_next();
+
+    auto body = stringstream->get_item_and_move_to_next();
+    if (body != "Body") {
+        throw std::runtime_error("Found \"" + body + "\" instead of \"Body\" item found in "
+                                 + stringstream->get_input_data());
+    }
+    base_types.add_event_code("Body");
+    body_message.encodeBody();
 
 
-    return bitstream.get_exi_data();
+    return bitstream->get_exi_data();
 }
 
 std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
@@ -75,10 +87,13 @@ std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
 
 
     InputStringStream stringstream(json_str);
+    BitStream bitstream;
 
+    // adding exi options
+    bitstream.add_max_8bits(0x80, 8);
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
-        return encode_iso15118_2(&stringstream);
+        return encode_iso15118_2(&stringstream, &bitstream);
     } else if (ns == "urn:din:70121:2012:MsgDef") {
         // Todo
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {

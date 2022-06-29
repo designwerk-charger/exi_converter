@@ -49,6 +49,8 @@ class BaseTypes {
 
 	virtual void check_event_code_is_0(std::string current_type_name);
 
+	virtual void add_event_code(std::string current_type_name);
+
 	virtual uint8_t get_event_code_with_n_bits(int8_t n_bits, std::string current_type_name);
 
   private:

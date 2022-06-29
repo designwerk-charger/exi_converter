@@ -40,8 +40,8 @@ class ComplexTypes:
                                        "input_string_stream_ = input_string_stream;\noutput_string_stream_ = nullptr;\n")
 
         for ct in self.all_complex_types:
-            ct_func = self.getDecodeFunction(ct)
-            self.cpp_class.add_function(ct_func)
+            self.cpp_class.add_function(self.getDecodeFunction(ct))
+            self.cpp_class.add_function(self.getEncodeFunction(ct))
 
     @property
     def local_suffix_cnt(self):
@@ -313,6 +313,17 @@ class ComplexTypes:
             code += f"base_types_->check_event_code_is_0(\"Finish{ct.type_name}\");\n"
 
         return CppFunction(function_name=ct.decode_function.function_name,
+                           return_type="void",
+                           arguments=None,
+                           code=code,
+                           comment=None)
+
+    def getEncodeFunction(self, ct: ComplexType):
+        code = ""
+
+        code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"
+
+        return CppFunction(function_name=ct.encode_function.function_name,
                            return_type="void",
                            arguments=None,
                            code=code,

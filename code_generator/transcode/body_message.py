@@ -34,7 +34,7 @@ class BodyMessage:
         relevant_body_elements_numbered = self.get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema)
 
         self.cpp_class = CppClass(class_name="BodyMessage", derived_from_class=None,
-                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/output_string_stream.h\"\n",
+                                  includes="#include <utility>\n#include <unordered_map>\n#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/output_string_stream.h\"\n",
                                   namespace=namespace)
         self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n"
                                   "\tOutputStringStream * output_string_stream_;\n\tInputStringStream * input_string_stream_;")
@@ -46,6 +46,7 @@ class BodyMessage:
                                        "output_string_stream_ = nullptr;\ninput_string_stream_ = input_string_stream;\n")
 
         self.cpp_class.add_function(self.getDecodeFunction(relevant_body_elements_numbered))
+        self.cpp_class.add_function(self.getEncodeFunction(relevant_body_elements_numbered))
 
 
     def getDecodeFunction(self, elements) -> CppFunction:
@@ -74,6 +75,30 @@ class BodyMessage:
                 f"output_string_stream_->end_key();\n"
 
         return CppFunction(function_name="decodeBody",
+                           return_type="void",
+                           arguments=None,
+                           code=code,
+                           comment=None)
+
+    def getEncodeFunction(self, elements) -> CppFunction: #void (foo::*method)()
+        code = f"static std::unordered_map<std::string, std::pair<uint32_t, void(ComplexTypes::*)(void)>> const table = {{\n"
+        for key, value in elements.items():
+            if value.type.local_name in self.complex_type_names:
+                code += f"\t{{\"{value.local_name}\", std::make_pair({key}, &ComplexTypes::encode_{value.type.local_name})}},\n"
+        code += f"}};\n\n"
+
+        code += f"std::string msg_name = input_string_stream_->get_item_and_move_to_next();\n" \
+                f"auto it = table.find(msg_name);\n" \
+                f"if (it != table.end()) {{\n" \
+                "\tauto message_nr = it->second.first;\n" \
+                "\tauto message_fcn = it->second.second;\n" \
+                "\tbit_stream_->add_max_8bits(message_nr, 6);\n" \
+                "\t(complex_types_->*message_fcn)();\n" \
+                f"}} else {{\n" \
+                f"\tthrow std::runtime_error(\"The message with name \" + msg_name + \" can not be found\");\n" \
+                f"}}\n"
+
+        return CppFunction(function_name="encodeBody",
                            return_type="void",
                            arguments=None,
                            code=code,

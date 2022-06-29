@@ -17,6 +17,10 @@ InputStringStream::InputStringStream(const std::string & input_data) :
     }
 }
 
-std::string InputStringStream::get_next_item() {
+std::string InputStringStream::get_item_and_move_to_next() {
     return input_items_.at(item_cnt_++);
+}
+
+std::string InputStringStream::get_item() {
+    return input_items_.at(item_cnt_);
 }

@@ -9,6 +9,6 @@ const std::string TEST_INPUT = "{\"V2G_Message\": {\"Header\": {\"SessionID\": \
 TEST(StringStreamTest_getNextItem, ReturnsFirstTwoItems) {
     InputStringStream ss(TEST_INPUT);
 
-    EXPECT_EQ(ss.get_next_item(), "V2G_Message");
-    EXPECT_EQ(ss.get_next_item(), "Header");
+    EXPECT_EQ(ss.get_item_and_move_to_next(), "V2G_Message");
+    EXPECT_EQ(ss.get_item_and_move_to_next(), "Header");
 }

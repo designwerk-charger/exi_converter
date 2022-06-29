@@ -29,7 +29,7 @@ std::vector<uint8_t> hex2bin(const std::string & src_str) {
 std::string bin2hex(const std::vector<uint8_t> & src_data) {
     std::ostringstream out_str;
     for (const auto & data : src_data) {
-        out_str << std::setfill('0') << std::setw(2) << std::right << std::hex << data;
+        out_str << std::setfill('0') << std::setw(2) << std::right << std::hex << static_cast<int>(data);
     }
     return out_str.str();
 }
