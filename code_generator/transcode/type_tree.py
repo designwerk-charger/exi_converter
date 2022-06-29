@@ -11,7 +11,7 @@ from datatypes.element import Element, Attribute, AnyElement
 from datatypes.simple_type import SimpleType, EnumType, StringType, DecimalType, BoolType, HexBinType, Base64Type, \
     IgnoredType, UriType, NBitDecimalType
 
-from dom.ccs_messages import MESSAGE_TYPES, ADDITIONAL_TYPES
+from transcode.ccs_messages import MESSAGE_TYPES, ADDITIONAL_TYPES
 
 
 class TypeTree:

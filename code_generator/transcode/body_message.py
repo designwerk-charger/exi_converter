@@ -5,7 +5,7 @@ from xmlschema import XsdElement
 
 from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
-from dom.complex_types import ComplexTypes
+from transcode.complex_types import ComplexTypes
 
 
 class BodyMessage:

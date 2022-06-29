@@ -3,11 +3,11 @@ import argparse
 import os
 import sys
 
-from dom.base_types import BaseTypes
-from dom.body_message import BodyMessage
-from dom.complex_types import ComplexTypes
-from dom.enums import Enums
-from dom.type_tree import TypeTree
+from transcode.base_types import BaseTypes
+from transcode.body_message import BodyMessage
+from transcode.complex_types import ComplexTypes
+from transcode.enums import Enums
+from transcode.type_tree import TypeTree
 
 
 class CmdLineParser:
