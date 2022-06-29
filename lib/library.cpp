@@ -44,10 +44,47 @@ PYBIND11_MODULE(exi_converter, m) {
             .def("encode", &ExiCodec::encode, "Enocode EXI from json");
 }
 
-char* ExiCodec::encode(std::string json_str, std::string ns) {
+
+std::vector<uint8_t> encode_iso15118_2(StringStream * stringstream) {
+    BitStream bitstream;
+    BaseTypes base_types(&bitstream);
+    iso15118_2::EnumTypes enums(&base_types, stringstream);
+    iso15118_2::ComplexTypes complex_types(&base_types, &enums, stringstream);
+    iso15118_2::BodyMessage body_message(&complex_types, &bitstream, stringstream);
+
+    stringstream->get_next_item();
+
+    /*
+    stringstream.start_key("V2G_Message");
+    base_types.check_event_code_is_0("StartV2G_Message");
+    stringstream.start_key("Header");
+    complex_types.decode_MessageHeaderType();
+    stringstream.end_key(); // header
+
+    stringstream.start_key("Body");
+    base_types.check_event_code_is_0("Body");
+    */
+
+
+    return bitstream.get_exi_data();
+}
+
+std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
     std::cout << "input string: "<< json_str << std::endl;
     std::cout << "function encode ..." << std::endl;
-    return (char*)"RETURN_BYTE_STREAM_OF_ENCODED_EXI";
+
+
+    StringStream stringstream(json_str);
+
+
+    if (ns == "urn:iso:15118:2:2013:MsgDef") {
+        return encode_iso15118_2(&stringstream);
+    } else if (ns == "urn:din:70121:2012:MsgDef") {
+        // Todo
+    } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
+        // Todo
+    }
+    throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }
 
 std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string ns) {
@@ -142,8 +179,6 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
     // checking header byte
     uint8_t exi_options;
     bitstream.get_next_n_bits(8, &exi_options);
-    std::cout << "decoding message " << ns << " with options 0x" << std::hex << int(exi_options) << std::endl;
-
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
         return decode_iso15118_2(&bitstream);

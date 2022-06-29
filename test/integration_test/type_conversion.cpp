@@ -1,5 +1,7 @@
 #include "type_conversion.h"
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include "library.h"
 
 int char2int(char input) {
@@ -22,6 +24,14 @@ std::vector<uint8_t> hex2bin(const std::string & src_str) {
         src += 2;
     }
     return output;
+}
+
+std::string bin2hex(const std::vector<uint8_t> & src_data) {
+    std::ostringstream out_str;
+    for (const auto & data : src_data) {
+        out_str << std::setfill('0') << std::setw(2) << std::right << std::hex << data;
+    }
+    return out_str.str();
 }
 
 TestDataContainer::TestDataContainer(const std::string &name, const std::string &hex_str, const std::string &json_str) {
@@ -49,4 +59,21 @@ std::string run_decoding(const TestDataContainer & data, const std::string & ns)
     std::cout << "Result:   " << output_data << std::endl;
     std::cout << "Expected: " << data.json_str << std::endl;
     return output_data;
+}
+
+std::string run_encoding(const TestDataContainer & data, const std::string & ns) {
+    ExiCodec codec;
+    std::string output_str;
+
+    try {
+        auto output_data = codec.encode(data.json_str, ns);
+        output_str = bin2hex(output_data);
+    } catch (const std::exception& ex) {
+        std::cout << "Failed encoding message " << data.name << " (" << ex.what() << ")" << std::endl;
+    }
+
+    std::cout << "Encoding " << data.json_str << std::endl;
+    std::cout << "Result:   " << output_str << std::endl;
+    std::cout << "Expected: " << data.hex_str << std::endl;
+    return output_str;
 }

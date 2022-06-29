@@ -24,3 +24,4 @@ class TestDataContainer {
 };
 
 std::string run_decoding(const TestDataContainer & data, const std::string & ns);
+std::string run_encoding(const TestDataContainer & data, const std::string & ns);
