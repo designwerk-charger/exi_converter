@@ -34,11 +34,16 @@ class BodyMessage:
         relevant_body_elements_numbered = self.get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema)
 
         self.cpp_class = CppClass(class_name="BodyMessage", derived_from_class=None,
-                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/stringstream.h\"\n",
+                                  includes="#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/output_string_stream.h\"\n",
                                   namespace=namespace)
-        self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n\tStringStream * string_stream_;")
-        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, StringStream * string_stream",
-                                       "complex_types_ = complex_types;\n\tbit_stream_ = bit_stream;\n\tstring_stream_ = string_stream;\n")
+        self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n"
+                                  "\tOutputStringStream * output_string_stream_;\n\tInputStringStream * input_string_stream_;")
+        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, OutputStringStream * output_string_stream",
+                                       "complex_types_ = complex_types;\nbit_stream_ = bit_stream;\n"
+                                       "output_string_stream_ = output_string_stream;\ninput_string_stream_ = nullptr;\n")
+        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, InputStringStream * input_string_stream",
+                                       "complex_types_ = complex_types;\nbit_stream_ = bit_stream;\n"
+                                       "output_string_stream_ = nullptr;\ninput_string_stream_ = input_string_stream;\n")
 
         self.cpp_class.add_function(self.getDecodeFunction(relevant_body_elements_numbered))
 
@@ -54,7 +59,7 @@ class BodyMessage:
                         f"\t\t#ifndef NDEBUG\n" \
                         f"\t\tstd::cout << \"decoding body as type '{value.type.local_name}' -> {key}\" << std::endl;\n" \
                         f"\t\t#endif\n" \
-                        f"\t\tstring_stream_->start_key(\"{value.local_name}\");\n" \
+                        f"\t\toutput_string_stream_->start_key(\"{value.local_name}\");\n" \
                         f"\t\tcomplex_types_->decode_{value.type.local_name}();\n" \
                         f"\t\tbreak;\n"
             else:
@@ -66,7 +71,7 @@ class BodyMessage:
                 f"\t\tstm << \"The requested value \" << message_type << \" is out of range!\";\n" \
                 f"\t\tthrow std::runtime_error(stm.str());\n" \
                 f"}};\n" \
-                f"string_stream_->end_key();\n"
+                f"output_string_stream_->end_key();\n"
 
         return CppFunction(function_name="decodeBody",
                            return_type="void",

@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "base/stringstream.h"
+#include "base/output_string_stream.h"
 
 
 class MockBaseTypes : public BaseTypes {
@@ -20,8 +20,7 @@ TEST(Iso2EnumTypesTest, decode_responseCodeType) {
     uint8_t data;
     BitStream bs(&data, 1);
     MockBaseTypes mock(&bs);
-    StringStream ss("");
-    iso15118_2::EnumTypes et(&mock, &ss);
+    iso15118_2::EnumTypes et(&mock);
     ON_CALL(mock, extractNBitsForEnum).WillByDefault(::testing::Return(10));
 
     std::string result = et.decode_responseCodeType();
@@ -30,7 +29,7 @@ TEST(Iso2EnumTypesTest, decode_responseCodeType) {
 }
 
 TEST(Iso2EnumTypesTest, encode_responseCodeType) {
-    StringStream ss("{FAILED_CertificateExpired}");
+    InputStringStream ss("{FAILED_CertificateExpired}");
     BitStream bs;
     MockBaseTypes mock(&bs);
     iso15118_2::EnumTypes et(&mock, &ss);
@@ -41,7 +40,7 @@ TEST(Iso2EnumTypesTest, encode_responseCodeType) {
 }
 
 TEST(Iso2EnumTypesTest, encode_throws_exception_when_responseCodeType_not_found) {
-    StringStream ss("{ValueNotInEnum}");
+    InputStringStream ss("{ValueNotInEnum}");
     BitStream bs;
     MockBaseTypes mock(&bs);
     iso15118_2::EnumTypes et(&mock, &ss);

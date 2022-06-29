@@ -1,23 +1,14 @@
 #include "gtest/gtest.h"
 
-#include "base/stringstream.h"
+#include "base/output_string_stream.h"
 
-
-const std::string TEST_INPUT = "{\"V2G_Message\": {\"Header\": {\"SessionID\": \"F05FBD2A935C8EC5\"}, \"Body\": {\"SessionSetupRes\": {\"ResponseCode\": \"OK_NewSessionEstablished\", \"EVSEID\": \"CH123DW123\", \"EVSETimeStamp\": 277130}}}}";  // NOLINT
 
 TEST(StringStreamTest, CanBeCreated_when_InputDataIsEmpty) {
-    EXPECT_NO_THROW(StringStream(""));
-}
-
-TEST(StringStreamTest_getNextItem, ReturnsFirstTwoItems) {
-    StringStream ss(TEST_INPUT);
-
-    EXPECT_EQ(ss.get_next_item(), "V2G_Message");
-    EXPECT_EQ(ss.get_next_item(), "Header");
+    EXPECT_NO_THROW(OutputStringStream());
 }
 
 TEST(StringStreamTest_getFullStream, CreateKeyAndValue) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("key");
     ss.add_value(static_cast<std::string>("value"));
@@ -27,7 +18,7 @@ TEST(StringStreamTest_getFullStream, CreateKeyAndValue) {
 }
 
 TEST(StringStreamTest_getFullStream, CreateKeyAndKeyWithValue) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("key1");
     ss.start_key("key2");
@@ -40,7 +31,7 @@ TEST(StringStreamTest_getFullStream, CreateKeyAndKeyWithValue) {
 
 
 TEST(StringStreamTest_getFullStream, CreateKeyWithTwoValues) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("key1");
     ss.add_value(static_cast<std::string>("value1"));
@@ -53,7 +44,7 @@ TEST(StringStreamTest_getFullStream, CreateKeyWithTwoValues) {
 }
 
 TEST(StringStreamTest_getFullStream, CreatingFullMessageString) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("V2G_Message");
     ss.start_key("Header");
@@ -82,7 +73,7 @@ TEST(StringStreamTest_getFullStream, CreatingFullMessageString) {
 }
 
 TEST(StringStreamTest_getFullStream, AddsEmptyValue_when_KeyStartedWithoutValue) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("key1");
     ss.end_key();
@@ -91,7 +82,7 @@ TEST(StringStreamTest_getFullStream, AddsEmptyValue_when_KeyStartedWithoutValue)
 }
 
 TEST(StringStreamTest_getFullStream, ListBraketsAreAdded_when_StartEndListCalled) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("list1");
     ss.start_list();
@@ -101,7 +92,7 @@ TEST(StringStreamTest_getFullStream, ListBraketsAreAdded_when_StartEndListCalled
 }
 
 TEST(StringStreamTest_getFullStream, ListCreatedWithTwoValues) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("sl");
     ss.start_list();
@@ -114,7 +105,7 @@ TEST(StringStreamTest_getFullStream, ListCreatedWithTwoValues) {
 }
 
 TEST(StringStreamTest_getFullStream, ListCreatedWithTwoKeyValues) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     ss.start_key("sl");
     ss.start_list();
@@ -135,7 +126,7 @@ TEST(StringStreamTest_getFullStream, ListCreatedWithTwoKeyValues) {
 
 
 TEST(StringStreamTest_startList, ThrowException_when_StartListNotAfterStartKey) {
-    StringStream ss("");
+    OutputStringStream ss;
 
     EXPECT_THROW(ss.start_list(), std::runtime_error);
 }

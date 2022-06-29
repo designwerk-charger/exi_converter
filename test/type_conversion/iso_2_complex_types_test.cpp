@@ -6,7 +6,7 @@
 
 class Iso2ComplexTypesTest : public ::testing::Test {
  public:
-    std::shared_ptr<StringStream> string_stream;
+    std::shared_ptr<OutputStringStream> string_stream;
     std::shared_ptr<BitStream> bit_stream;
     std::shared_ptr<BaseTypes> base_types;
     std::shared_ptr<iso15118_2::EnumTypes> enum_types;
@@ -18,10 +18,10 @@ class Iso2ComplexTypesTest : public ::testing::Test {
     }
 
     void setupWithRawData(std::vector<uint8_t> raw_data) {
-        string_stream = std::make_shared<StringStream>("");
+        string_stream = std::make_shared<OutputStringStream>();
         bit_stream = std::make_shared<BitStream>(raw_data);
         base_types = std::make_shared<BaseTypes>(bit_stream.get());
-        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get(), string_stream.get());
+        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get());
         complex_types = std::make_shared<iso15118_2::ComplexTypes>(base_types.get(),
                                                                    enum_types.get(), string_stream.get());
     }

@@ -45,7 +45,7 @@ PYBIND11_MODULE(exi_converter, m) {
 }
 
 
-std::vector<uint8_t> encode_iso15118_2(StringStream * stringstream) {
+std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream) {
     BitStream bitstream;
     BaseTypes base_types(&bitstream);
     iso15118_2::EnumTypes enums(&base_types, stringstream);
@@ -74,7 +74,7 @@ std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
     std::cout << "function encode ..." << std::endl;
 
 
-    StringStream stringstream(json_str);
+    InputStringStream stringstream(json_str);
 
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
@@ -100,8 +100,8 @@ std::string decode_iso15118_2(BitStream *bitstream) {
     }
 
     BaseTypes base_types(bitstream);
-    StringStream stringstream("");
-    iso15118_2::EnumTypes enums(&base_types, &stringstream);
+    OutputStringStream stringstream;
+    iso15118_2::EnumTypes enums(&base_types);
     iso15118_2::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     iso15118_2::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
@@ -130,8 +130,8 @@ std::string decode_din_spec(BitStream *bitstream) {
     }
 
     BaseTypes base_types(bitstream);
-    StringStream stringstream("");
-    din_spec::EnumTypes enums(&base_types, &stringstream);
+    OutputStringStream stringstream;
+    din_spec::EnumTypes enums(&base_types);
     din_spec::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     din_spec::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
@@ -153,8 +153,8 @@ std::string decode_din_spec(BitStream *bitstream) {
 
 std::string decode_app_protocol(BitStream *bitstream) {
     BaseTypes base_types(bitstream);
-    StringStream stringstream("");
-    app_protocol::EnumTypes enums(&base_types, &stringstream);
+    OutputStringStream stringstream;
+    app_protocol::EnumTypes enums(&base_types);
     app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 

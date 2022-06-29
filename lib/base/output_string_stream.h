@@ -6,11 +6,9 @@
 #include <sstream>
 #include <vector>
 
-class StringStream {
+class OutputStringStream {
   public:
-    StringStream(const std::string & input_data);
-
-    std::string get_next_item();
+    OutputStringStream();
 
     void start_key(const std::string & key);
     void add_value(const std::string & value);
@@ -28,7 +26,4 @@ class StringStream {
     enum commands_t {nocmd, startkey, addvalue, startlist, nextitem, endlist, endkey};
     commands_t last_command_;
     std::ostringstream output_data_;
-    std::string input_data_;
-    std::vector<std::string> input_items_;
-    uint8_t item_cnt_;
 };

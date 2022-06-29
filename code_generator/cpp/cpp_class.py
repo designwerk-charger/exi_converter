@@ -1,9 +1,16 @@
 import os
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
 
 from cpp.cpp_function import CppFunction
 from cpp.helper import CamelCase2snake_case
+
+
+@dataclass
+class Constructor:
+    arguments: str
+    code: str
 
 
 class CppClass:
@@ -14,8 +21,7 @@ class CppClass:
         self.includes = includes
         self.functions: List[CppFunction] = []
         self.filename = CamelCase2snake_case(class_name)
-        self.constructor_arguments = None
-        self.constructor_code = None
+        self.constructor = []
         self.has_constructor = False
         self.member_lines = []
         self.virtual = virtual
@@ -25,8 +31,7 @@ class CppClass:
         self.member_lines.append(member_line)
 
     def add_constructor(self, arguments: str, code: str):
-        self.constructor_arguments = arguments
-        self.constructor_code = code
+        self.constructor.append(Constructor(arguments, code))
         self.has_constructor = True
 
     def add_function(self, function: CppFunction):
@@ -45,10 +50,11 @@ class CppClass:
             cpp_code += f"namespace {self.namespace} {{\n\n"
 
         if self.has_constructor:
-            cpp_code += f"{self.class_name}::{self.class_name}({self.constructor_arguments}) ""{\n"
-            for l in self.constructor_code.splitlines():
-                cpp_code += f"\t{l}\n"
-            cpp_code += "};\n\n"
+            for constructor in self.constructor:
+                cpp_code += f"{self.class_name}::{self.class_name}({constructor.arguments}) ""{\n"
+                for l in constructor.code.splitlines():
+                    cpp_code += f"\t{l}\n"
+                cpp_code += "};\n\n"
 
         for f in self.functions:
             cpp_code += f.get_implementation(self.class_name) + "\n\n"
@@ -75,9 +81,10 @@ class CppClass:
                     f"  public:\n\n"
 
         if self.has_constructor:
-            cpp_code += f"\t{self.class_name}({self.constructor_arguments});\n"
-            if self.virtual:
-                cpp_code += f"\tvirtual ~{self.class_name}() = default;  // LCOV_EXCL_LINE\n"
+            for constructor in self.constructor:
+                cpp_code += f"\t{self.class_name}({constructor.arguments});\n"
+                if self.virtual:
+                    cpp_code += f"\tvirtual ~{self.class_name}() = default;  // LCOV_EXCL_LINE\n"
 
         for f in self.functions:
             cpp_code += "\n" + f.get_definition(virtual_function=self.virtual) + "\n"

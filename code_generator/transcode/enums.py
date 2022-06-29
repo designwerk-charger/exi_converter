@@ -23,10 +23,12 @@ class Enums:
 
         self.cpp_class = CppClass(class_name="EnumTypes", derived_from_class=None,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"type_conversion/base_types.h\"\n#include \"base/stringstream.h\"\n", namespace=namespace)
-        self.cpp_class.add_member("BaseTypes * base_types;\nStringStream * string_stream;")
-        self.cpp_class.add_constructor("BaseTypes * base_types, StringStream * string_stream",
-                                       "this->base_types = base_types;\nthis->string_stream = string_stream;")
+                                           "#include \"type_conversion/base_types.h\"\n#include \"base/input_string_stream.h\"\n", namespace=namespace)
+        self.cpp_class.add_member("BaseTypes * base_types;\nInputStringStream * input_string_stream;")
+        self.cpp_class.add_constructor("BaseTypes * base_types",
+                                       "this->base_types = base_types;\nthis->input_string_stream = nullptr;")
+        self.cpp_class.add_constructor("BaseTypes * base_types, InputStringStream * input_string_stream",
+                                       "this->base_types = base_types;\nthis->input_string_stream = input_string_stream;")
 
         for enum in self.all_enum_types:
             self.cpp_class.add_function(self.getDecodeFunction(enum))
@@ -56,7 +58,7 @@ class Enums:
         num_items = len(enum.enumerations)
         num_bits = ceil(log2(num_items))
         code = f"const uint8_t n_bits = {num_bits};\n" \
-               f"auto str_enum = string_stream->get_next_item();\n" \
+               f"auto str_enum = input_string_stream->get_next_item();\n" \
                f"static std::unordered_map<std::string, uint8_t> const table = {{\n"
         for i, item in enumerate(enum.enumerations):
             code += f"\t{{\"{item}\", {i}}},\n"

@@ -1,27 +1,12 @@
 #include <vector>
 #include <iostream>
-#include "stringstream.h"
+#include "output_string_stream.h"
 
 
-StringStream::StringStream(const std::string & input_data) :
-    input_data_(input_data), output_data_(), item_cnt_(0), last_command_(nocmd) {
-    std::size_t prev = 0, pos;
-    while ((pos = input_data_.find_first_of(":{},\"", prev)) != std::string::npos) {
-        if (pos > prev) {
-            auto s_str = input_data_.substr(prev, pos - prev);
-            if (s_str != " ") {
-                input_items_.push_back(s_str);
-            }
-        }
-        prev = pos+1;
-    }
-}
+OutputStringStream::OutputStringStream() :
+    output_data_(), last_command_(nocmd) { }
 
-std::string StringStream::get_next_item() {
-    return input_items_.at(item_cnt_++);
-}
-
-void StringStream::start_key(const std::string & key) {
+void OutputStringStream::start_key(const std::string & key) {
     if (last_command_ == endkey) {
         output_data_ << ",\"" << key << "\":";
     } else {
@@ -30,7 +15,7 @@ void StringStream::start_key(const std::string & key) {
     last_command_ = startkey;
 }
 
-void StringStream::end_key() {
+void OutputStringStream::end_key() {
     if (last_command_ == endkey) {
         output_data_ << "}";
     } else if (last_command_ == startkey) {
@@ -43,22 +28,22 @@ void StringStream::end_key() {
 #endif
 }
 
-void StringStream::add_value(const std::string & value) {
+void OutputStringStream::add_value(const std::string & value) {
     output_data_ << "\"" << value << "\"";
     last_command_ = addvalue;
 }
 
-void StringStream::add_value(int32_t value) {
+void OutputStringStream::add_value(int32_t value) {
     output_data_ << value;
     last_command_ = addvalue;
 }
 
-void StringStream::add_value(bool value) {
+void OutputStringStream::add_value(bool value) {
     output_data_ << ((value == 0) ? "false" : "true");
     last_command_ = addvalue;
 }
 
-void StringStream::start_list() {
+void OutputStringStream::start_list() {
     if (last_command_ != startkey) {
         throw std::runtime_error("Start list requires preceding start key! (" + get_full_stream() + ")");
     }
@@ -66,7 +51,7 @@ void StringStream::start_list() {
     last_command_ = startlist;
 }
 
-void StringStream::next_item() {
+void OutputStringStream::next_item() {
     if (last_command_ == endkey) {
         output_data_ << "},";
     } else if (last_command_ == addvalue) {
@@ -75,7 +60,7 @@ void StringStream::next_item() {
     last_command_ = nextitem;
 }
 
-void StringStream::end_list() {
+void OutputStringStream::end_list() {
     if (last_command_ == endkey) {
         output_data_ << "}";
     }
@@ -83,6 +68,6 @@ void StringStream::end_list() {
     last_command_ = endlist;
 }
 
-std::string StringStream::get_full_stream() {
+std::string OutputStringStream::get_full_stream() {
     return output_data_.str() + "}";
 }

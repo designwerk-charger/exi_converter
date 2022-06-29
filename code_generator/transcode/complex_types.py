@@ -23,12 +23,21 @@ class ComplexTypes:
                 self.all_complex_types.append(t)
 
         self.cpp_class = CppClass(class_name="ComplexTypes", derived_from_class=None,
-                                  includes="#include <iostream>\n#include <cstdint>\n#include <cstdio>\n#include <string>\n#include <sstream>\n#include <unordered_map>\n"
-                                           "#include \"type_conversion/base_types.h\"\n#include \"enum_types.h\"\n#include \"base/stringstream.h\"\n",
+                                  includes="#include <iostream>\n#include <cstdint>\n#include <cstdio>\n"
+                                           "#include <string>\n#include <sstream>\n#include <unordered_map>\n"
+                                           "#include \"type_conversion/base_types.h\"\n#include \"enum_types.h\"\n"
+                                           "#include \"base/output_string_stream.h\"\n"
+                                           "#include \"base/input_string_stream.h\"\n",
                                   namespace=namespace)
-        self.cpp_class.add_member("BaseTypes * base_types_;\n\tEnumTypes * enum_types_;\n\tStringStream * string_stream_;")
-        self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, StringStream * string_stream",
-                                       "base_types_ = base_types;\nenum_types_ = enum_types;\nstring_stream_ = string_stream;\n")
+        self.cpp_class.add_member("BaseTypes * base_types_;\n\tEnumTypes * enum_types_;\n"
+                                  "\tOutputStringStream * output_string_stream_;\n"
+                                  "\tInputStringStream * input_string_stream_;")
+        self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, OutputStringStream * output_string_stream",
+                                       "base_types_ = base_types;\nenum_types_ = enum_types;\n"
+                                       "output_string_stream_ = output_string_stream;\ninput_string_stream_ = nullptr;\n")
+        self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, InputStringStream * input_string_stream",
+                                       "base_types_ = base_types;\nenum_types_ = enum_types;\n"
+                                       "input_string_stream_ = input_string_stream;\noutput_string_stream_ = nullptr;\n")
 
         for ct in self.all_complex_types:
             ct_func = self.getDecodeFunction(ct)
@@ -47,13 +56,13 @@ class ComplexTypes:
         if isinstance(element, Element) and not from_optional:
             return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return return_str + \
-               f"{indent_str}\tstring_stream_->start_key(\"{element.element_name}\");\n" \
+               f"{indent_str}\toutput_string_stream_->start_key(\"{element.element_name}\");\n" \
                f"{indent_str}\tauto var = {element.element_type.decode_function.call()};\n" \
-               f"{indent_str}\tstring_stream_->add_value(var);\n" \
+               f"{indent_str}\toutput_string_stream_->add_value(var);\n" \
                f"{indent_str}\t#ifndef NDEBUG\n" \
                f"{indent_str}\t\tstd::cout << \"getting value for {optional_str}{element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
                f"{indent_str}\t#endif\n" \
-               f"{indent_str}\tstring_stream_->end_key();\n" \
+               f"{indent_str}\toutput_string_stream_->end_key();\n" \
                f"{indent_str}}}\n"
 
     @staticmethod
@@ -68,9 +77,9 @@ class ComplexTypes:
     @staticmethod
     def _decode_complex_element(element_name: str, element_type: ComplexType, indent: int) -> str:
         indent_str = "\t" * indent
-        return f"{indent_str}string_stream_->start_key(\"{element_name}\");\n" \
+        return f"{indent_str}output_string_stream_->start_key(\"{element_name}\");\n" \
                f"{indent_str}{element_type.decode_function.call()};\n" \
-               f"{indent_str}string_stream_->end_key();\n"
+               f"{indent_str}output_string_stream_->end_key();\n"
 
     @staticmethod
     def _do_abstract_element_checks(element: Element):
@@ -111,8 +120,8 @@ class ComplexTypes:
         else:
             code = f"base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n"
 
-        code += f"string_stream_->start_key(\"{element.element_name}\");\n" \
-                f"string_stream_->start_list();\n"
+        code += f"output_string_stream_->start_key(\"{element.element_name}\");\n" \
+                f"output_string_stream_->start_list();\n"
 
         code += f"int further_items{suffix};\n" \
                 f"for(int i=0; i<{element.max_items}; i++) {{;\n" \
@@ -121,7 +130,7 @@ class ComplexTypes:
                 f"\t\tif (further_items{suffix} == 1) {{\n" \
                 f"\t\t\tbreak;\n" \
                 f"\t\t}} else if (further_items{suffix} == 0) {{\n" \
-                f"\t\t\tstring_stream_->next_item();\n" \
+                f"\t\t\toutput_string_stream_->next_item();\n" \
                 f"\t\t}} else {{\n" \
                 f"\t\t\tthrow std::runtime_error(\"Unexpected code while decoding {element.element_name} List!\");\n" \
                 f"\t\t}}\n" \
@@ -131,7 +140,7 @@ class ComplexTypes:
             code += f"\t{{\n" \
                     f"\t\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
                     f"\t\tauto var = {element.element_type.decode_function.call()};\n" \
-                    f"\t\tstring_stream_->add_value(var);\n" \
+                    f"\t\toutput_string_stream_->add_value(var);\n" \
                     f"\t\t#ifndef NDEBUG\n" \
                     f"\t\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
                     f"\t\t#endif\n"
@@ -142,8 +151,8 @@ class ComplexTypes:
             code += f"{element.element_type.decode_function.call()};\n"
 
         code += f"}}\n" \
-                f"string_stream_->end_list();\n" \
-                f"string_stream_->end_key();\n" \
+                f"output_string_stream_->end_list();\n" \
+                f"output_string_stream_->end_key();\n" \
                 f"// base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"  # Todo: check if the end element is needed
 
         return code
