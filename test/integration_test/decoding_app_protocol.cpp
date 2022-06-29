@@ -21,6 +21,9 @@ INSTANTIATE_TEST_CASE_P(
                 TestDataContainer(
                 "supportedAppProtocolRes",
                 "80400080",
-                R"({"supportedAppProtocolRes":{"ResponseCode":"OK_SuccessfulNegotiation","SchemaID":2}})")
-                )
+                R"({"supportedAppProtocolRes":{"ResponseCode":"OK_SuccessfulNegotiation","SchemaID":2}})"),
+                TestDataContainer(
+                "supportedAppProtocolReq_With0Character_CausingErrorInOldCcsHandler",
+                "8000e3ab9371d3234b71d1b981899189d191818991d26b9b3a232b3000020000280401e75726e3a69736f3a31353131383a323a323031333a4d7367446566000040000a00080",   // NOLINT
+                R"({"supportedAppProtocolReq":{"AppProtocol":[{"ProtocolNamespace":"urn:din:70121:2012:MsgDef","VersionNumberMajor":2,"VersionNumberMinor":0,"SchemaID":10,"Priority":2},{"ProtocolNamespace":"urn:iso:15118:2:2013:MsgDef","VersionNumberMajor":2,"VersionNumberMinor":0,"SchemaID":20,"Priority":1}]}})"))
 );
