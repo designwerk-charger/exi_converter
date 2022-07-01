@@ -57,7 +57,7 @@ class ComplexTypes:
         indent_str = "\t" * indent
         optional_str = "optional " if element.is_optional else ""
         return_str = f"{indent_str}{{  // decode {optional_str}simple {element.__class__.__name__} type\n"
-        if isinstance(element, Element) and not from_optional:
+        if not from_optional:
             return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return return_str + \
                f"{indent_str}\toutput_string_stream_->start_key(\"{element.element_name}\");\n" \
