@@ -328,25 +328,30 @@ class ComplexTypes:
 
     def encode_simple_type(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
-        optional_str = "optional " if element.is_optional else ""
-        code = f"{indent_str}// encode {optional_str}simple {element.__class__.__name__} type\n"
-        if isinstance(element, Element) and not from_optional:
+        code = ""
+
+        if not from_optional:
             code += f"{indent_str}base_types_->add_event_code(\"Start+{element.element_name}\");\n"
 
-        code += f"input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
+        code += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
                 f"{indent_str}#ifndef NDEBUG\n" \
-                f"{indent_str}\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {optional_str}{element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
+                f"{indent_str}\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
                 f"{indent_str}#endif\n" \
                 f"{indent_str}{element.element_type.encode_function.call()};\n"
         return code
 
     def encode_simple_element(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
+        optional_str = "optional " if element.is_optional else ""
         if isinstance(element, Attribute):
-            return f"{self.encode_simple_type(element, indent, from_optional)}"
-        return f"{indent_str}base_types_->add_event_code(\"Start{element.element_name}\");\n" \
-               f"{self.encode_simple_type(element, indent, from_optional)}" \
-               f"{indent_str}base_types_->add_event_code(\"End{element.element_name}\");\n"
+            return f"{indent_str}{{  // encode {optional_str}simple Attribute type\n" \
+                   f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
+                   f"{indent_str}}}\n"
+        return f"{indent_str}{{  // encode {optional_str}simple Element type\n" \
+               f"{indent_str}\tbase_types_->add_event_code(\"Start{element.element_name}\");\n" \
+               f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
+               f"{indent_str}\tbase_types_->add_event_code(\"End{element.element_name}\");\n" \
+               f"{indent_str}}}\n"
 
     def encodeComplexElement(self, element: Element) -> str:
         code = ""
@@ -354,8 +359,8 @@ class ComplexTypes:
 
     def encodeElement(self, element: Element) -> str:
         if element.element_type.is_simple_not_complex:
-            return self.encode_simple_element(element, 0)
-        return self.encodeComplexElement(element)
+            return self.encode_simple_element(element, 0) + "\n"
+        return self.encodeComplexElement(element) + "\n"
 
     def getEncodeFunction(self, ct: ComplexType):
         code = ""
