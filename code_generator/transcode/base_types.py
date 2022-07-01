@@ -14,10 +14,12 @@ class BaseTypes:
 
         self.cpp_class = CppClass(class_name="BaseTypes", derived_from_class=None, virtual=True,
                                   includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n"
-                                           "#include \"base/bitstream.h\"\n")
-        self.cpp_class.add_member("BitStream * bit_stream_;")
+                                           "#include \"base/bitstream.h\"\n#include \"base/input_string_stream.h\"\n")
+        self.cpp_class.add_member("BitStream * bit_stream_;\nInputStringStream * input_string_stream_;")
         self.cpp_class.add_constructor("BitStream * bit_stream",
-                                       "bit_stream_ = bit_stream;\n")
+                                       "bit_stream_ = bit_stream;\ninput_string_stream_ = nullptr;")
+        self.cpp_class.add_constructor("BitStream * bit_stream, InputStringStream * input_string_stream",
+                                       "bit_stream_ = bit_stream;\ninput_string_stream_ = input_string_stream;\n")
         for t in self.simple_types.values():
             self.cpp_class.add_functions(t.get_base_type_functions())
 

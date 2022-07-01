@@ -10,6 +10,7 @@ class InputStringStream {
   public:
     InputStringStream(const std::string & input_data);
 
+    void verify_item_and_move_to_next(const std::string & expected_item);
     std::string get_item_and_move_to_next();
     std::string get_item();
 

@@ -46,24 +46,17 @@ PYBIND11_MODULE(exi_converter, m) {
 
 
 std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStream * bitstream) {
-    BaseTypes base_types(bitstream);
+    BaseTypes base_types(bitstream, stringstream);
     iso15118_2::EnumTypes enums(&base_types, stringstream);
     iso15118_2::ComplexTypes complex_types(&base_types, &enums, stringstream);
     iso15118_2::BodyMessage body_message(&complex_types, bitstream, stringstream);
 
     bitstream->add_max_8bits(76, 7);
-    auto identifier = stringstream->get_item_and_move_to_next();
-    if (identifier != "V2G_Message") {
-        throw std::runtime_error("Found \"" + identifier + "\" instead of \"V2G_Message\" item found in "
-            + stringstream->get_input_data());
-    }
+
+    stringstream->verify_item_and_move_to_next("V2G_Message");
     base_types.add_event_code("V2G_Message");
 
-    auto header = stringstream->get_item_and_move_to_next();
-    if (header != "Header") {
-        throw std::runtime_error("Found \"" + header + "\" instead of \"Header\" item found in "
-            + stringstream->get_input_data());
-    }
+    stringstream->verify_item_and_move_to_next("Header");
     complex_types.encode_MessageHeaderType();
 
     stringstream->get_item_and_move_to_next();

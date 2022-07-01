@@ -1,7 +1,16 @@
 #include "type_conversion/base_types.h"
+#include "base/bitstream.h"
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
+class MockBitStream : public BitStream {
+ public:
+    MockBitStream() : BitStream() {}  // NOLINT
+
+    // void add_max_8bits(uint8_t data, uint8_t num_bits);
+    MOCK_METHOD(void , add_max_8bits, (uint8_t, uint8_t), (override));
+};
 
 TEST(BaseTypeTest, GetBoolFromExiStream_When_AskedForBool) {
     uint8_t msb_set = 0x80;
@@ -92,53 +101,81 @@ TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
     ASSERT_EQ(bt_out, "DEADBEAF");
 }
 
-TEST(BaseTypeTest, BoolWasAddedToExi_When_BoolWasInjected) {
-    BitStream bs;
-    BaseTypes bt(&bs);
-    std::vector<uint8_t>exi_data;
-    std::vector<uint8_t>test_vector;
-    test_vector.push_back(0x80);
+TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
+    MockBitStream mbs;
+    InputStringStream iss("{true}");
+    BaseTypes bt(&mbs, &iss);
 
-    bt.injectBoolValue(true);
-    exi_data = bs.get_exi_data();
+    EXPECT_CALL(mbs, add_max_8bits(1, 1)).Times(1);
 
-    ASSERT_EQ(exi_data, test_vector);
+    bt.injectBoolValue();
+}
+
+TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
+    MockBitStream mbs;
+    InputStringStream iss("{false}");
+    BaseTypes bt(&mbs, &iss);
+
+    EXPECT_CALL(mbs, add_max_8bits(0, 1)).Times(1);
+
+    bt.injectBoolValue();
+}
+
+TEST(BaseTypeTest, RaiseRuntimeException_When_BoolUnknownInjected) {
+    MockBitStream mbs;
+    InputStringStream iss("{bool?}");
+    BaseTypes bt(&mbs, &iss);
+
+    EXPECT_THROW(bt.injectBoolValue(), std::runtime_error);
 }
 
 TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
-    BitStream bs;
-    BaseTypes bt(&bs);
-    std::vector<uint8_t>exi_data;
-    std::vector<uint8_t>test_vector;
-    test_vector.push_back(0b10001010);
-    test_vector.push_back(0b11110101);
-    test_vector.push_back(0b00010000);
+    MockBitStream mbs;
+    InputStringStream iss("{277130}");
+    BaseTypes bt(&mbs, &iss);
 
-    bt.injectIntegerNumber(277130, true);
-    exi_data = bs.get_exi_data();
+    EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
+    EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
+    EXPECT_CALL(mbs, add_max_8bits(0b00010000, 8)).Times(1);
 
-    ASSERT_EQ(exi_data, test_vector);
+    bt.injectIntegerNumber(4, true);
+}
+
+TEST(BaseTypeTest, RaiseRuntimeException_When_UintCanNotBeInjected) {
+    MockBitStream mbs;
+    InputStringStream iss("{r277130}");
+    BaseTypes bt(&mbs, &iss);
+
+    EXPECT_THROW(bt.injectIntegerNumber(4, true), std::invalid_argument);
 }
 
 TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
-    BitStream bs;
-    BaseTypes bt(&bs);
-    std::vector<uint8_t>exi_data;
-    std::vector<uint8_t>test_vector;
-    test_vector.push_back(0b01000101);
-    test_vector.push_back(0b01111010);
-    test_vector.push_back(0b10001000);
-    test_vector.push_back(0b0);
+    MockBitStream mbs;
+    InputStringStream iss("{277130}");
+    BaseTypes bt(&mbs, &iss);
 
-    bt.injectIntegerNumber(277130, false);
-    exi_data = bs.get_exi_data();
+    EXPECT_CALL(mbs, add_max_8bits(0b0, 1)).Times(1);
+    EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
+    EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
+    EXPECT_CALL(mbs, add_max_8bits(0b00010000, 8)).Times(1);
 
-    ASSERT_EQ(exi_data, test_vector);
+    bt.injectIntegerNumber(4, false);
+}
+
+TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
+    MockBitStream mbs;
+    InputStringStream iss("{1}");
+    BaseTypes bt(&mbs, &iss);
+
+    EXPECT_CALL(mbs, add_max_8bits(0x04, 3)).Times(1);
+
+    bt.injectNBitNumber(3, -3);
 }
 
 TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     BitStream bs;
-    BaseTypes bt(&bs);
+    InputStringStream iss("{CH123DW123}");
+    BaseTypes bt(&bs, &iss);
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>test_vector;
     test_vector.push_back(0b00001100);
@@ -153,7 +190,7 @@ TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     test_vector.push_back(0b00110010);
     test_vector.push_back(0b00110011);
 
-    bt.injectString("CH123DW123");
+    bt.injectString();
     exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
@@ -161,23 +198,24 @@ TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
 
 TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
     BitStream bs;
-    BaseTypes bt(&bs);
+    InputStringStream iss("{F05FBD2A935C8EC5}");
+    BaseTypes bt(&bs, &iss);
     std::vector<uint8_t>exi_data;
-    std::vector<uint8_t>test_vector;
-    test_vector.push_back(0b00001000);
-    test_vector.push_back(0b11110000);
-    test_vector.push_back(0b01011111);
-    test_vector.push_back(0b10111101);
-    test_vector.push_back(0b00101010);
-    test_vector.push_back(0b10010011);
-    test_vector.push_back(0b01011100);
-    test_vector.push_back(0b10001110);
-    test_vector.push_back(0b11000101);
+    std::vector<uint8_t>expected_data;
+    expected_data.push_back(0b00001000);
+    expected_data.push_back(0b11110000);
+    expected_data.push_back(0b01011111);
+    expected_data.push_back(0b10111101);
+    expected_data.push_back(0b00101010);
+    expected_data.push_back(0b10010011);
+    expected_data.push_back(0b01011100);
+    expected_data.push_back(0b10001110);
+    expected_data.push_back(0b11000101);
 
-    bt.injectHexBin("F05FBD2A935C8EC5");
+    bt.injectHexBin(16);
     exi_data = bs.get_exi_data();
 
-    ASSERT_EQ(exi_data, test_vector);
+    ASSERT_EQ(exi_data, expected_data);
 }
 
 TEST(BaseTypeTest, ExtractBase64_fromChargeParameterDiscoveryRes) {

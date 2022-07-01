@@ -11,13 +11,14 @@ public:
     BitStream(uint8_t * input_data, size_t length_byte);
     BitStream(const std::vector<uint8_t> & input_data);
     BitStream();
+    virtual ~BitStream() = default;  // LCOV_EXCL_LINE
 
-    void get_next_n_bits(uint32_t bitsrequested, uint8_t * data);
-    uint32_t get_max_4bytes(uint8_t bitsrequested);
+    virtual void get_next_n_bits(uint32_t bitsrequested, uint8_t * data);
+    virtual uint32_t get_max_4bytes(uint8_t bitsrequested);
 
-    void add_max_8bits(uint8_t data, uint8_t num_bits);
-    void add_bytes(const uint8_t * data, uint8_t num_bytes);
-    std::vector<uint8_t> get_exi_data();
+    virtual void add_max_8bits(uint8_t data, uint8_t num_bits);
+    virtual void add_bytes(const uint8_t * data, uint8_t num_bytes);
+    virtual std::vector<uint8_t> get_exi_data();
 private:
     std::vector<uint8_t>exi_data_;
     uint32_t bit_counter_;

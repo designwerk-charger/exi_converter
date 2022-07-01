@@ -17,6 +17,15 @@ InputStringStream::InputStringStream(const std::string & input_data) :
     }
 }
 
+void InputStringStream::verify_item_and_move_to_next(const std::string & expected_item) {
+    std::string current_item = input_items_.at(item_cnt_++);
+    if (current_item != expected_item) {
+        throw std::runtime_error(
+                "Found \"" + current_item + "\" instead of \"" + expected_item
+                + "\" item found in " + get_input_data());
+    }
+}
+
 std::string InputStringStream::get_item_and_move_to_next() {
     return input_items_.at(item_cnt_++);
 }

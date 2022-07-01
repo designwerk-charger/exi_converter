@@ -38,9 +38,9 @@ class BoolType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectBoolValue",
-                           return_type="void", arguments="bool",
+                           return_type="void", arguments=None,
                            comment="/ \\brief writes the given boolean value to the bitstream",
-                           code="")
+                           code="", member_object_name="base_types_")
 
     @property
     def decode_function(self):
@@ -68,9 +68,9 @@ class Base64Type(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectBase64Value",
-                           return_type="void", arguments="std::string value",
+                           return_type="void", arguments=None,
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_")
 
     @property
     def decode_function(self):
@@ -129,7 +129,7 @@ class EnumType(SimpleType):
         return CppFunction(function_name=f"encode_{self.type_name}",
                            return_type="void", arguments="std::string value",
                            comment="",
-                           code="")
+                           code="", member_object_name="enum_types_")
 
     @property
     def decode_function(self):
@@ -150,9 +150,9 @@ class StringType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectString",
-                           return_type="void", arguments="std::string value",
+                           return_type="void", arguments=None,
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_")
 
     @property
     def decode_function(self):
@@ -173,9 +173,9 @@ class UriType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectUri",
-                           return_type="void", arguments="std::string value",
+                           return_type="void", arguments=None,
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_")
 
     @property
     def decode_function(self):
@@ -208,9 +208,9 @@ class DecimalType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectIntegerNumber",
-                           return_type="void", arguments="int32_t number, bool is_unsigned",
+                           return_type="void", arguments="uint8_t n_bytes, bool is_unsigned",
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_", call_args=f"{self.num_bytes}, {str(self.is_unsigned).lower()}")
 
     @property
     def decode_function(self):
@@ -238,14 +238,14 @@ class NBitDecimalType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectNBitNumber",
-                           return_type="void", arguments="int32_t number, uint8_t bits, int32_t offset",
+                           return_type="void", arguments="uint8_t n_bits, int32_t offset",
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_", call_args=f"{self.num_bits}, {self.min_val}")
 
     @property
     def decode_function(self):
         return CppFunction(function_name="extractNBitNumber",
-                           return_type="int32_t", arguments="uint8_t bits, int32_t offset",
+                           return_type="int32_t", arguments="uint8_t n_bits, int32_t offset",
                            comment="",
                            code="", member_object_name="base_types_", call_args=f"{self.num_bits}, {self.min_val}")
 
@@ -265,9 +265,9 @@ class HexBinType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectHexBin",
-                           return_type="void", arguments="std::string",
+                           return_type="void", arguments="uint8_t max_length",
                            comment="",
-                           code="")
+                           code="", member_object_name="base_types_", call_args=f"{self.max_length}")
 
     @property
     def decode_function(self):

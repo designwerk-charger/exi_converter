@@ -3,10 +3,14 @@
 #include <iomanip>
 #include "base_types.h"
 
-BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
+BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream), input_string_stream_(nullptr) {}
+BaseTypes::BaseTypes(BitStream * bit_stream, InputStringStream * input_string_stream) :
+    bit_stream_(bit_stream), input_string_stream_(input_string_stream) {}
 
 
-void BaseTypes::injectHexBin(std::string hex_string) {
+void BaseTypes::injectHexBin(uint8_t max_length) {
+    std::string hex_string = input_string_stream_->get_item_and_move_to_next();
+
     uint8_t length_data_array;
     length_data_array = hex_string.length() >> 1;
     bit_stream_->add_max_8bits(length_data_array, 8);
@@ -47,7 +51,8 @@ void BaseTypes::injectNBitsForEnum(uint8_t value, uint8_t n_bits) {
     bit_stream_->add_max_8bits(value, n_bits);
 }
 
-void BaseTypes::injectString(std::string value) {
+void BaseTypes::injectString() {
+    std::string value = input_string_stream_->get_item_and_move_to_next();
     bit_stream_->add_max_8bits(value.length() + 2, 8);
     bit_stream_->add_bytes(reinterpret_cast<const uint8_t *>(&value[0]), value.length());
 }
@@ -73,20 +78,23 @@ std::string BaseTypes::extractString() {
     return out_string;
 }
 
-void BaseTypes::injectUri(std::string value) {
-    injectString(value);
+void BaseTypes::injectUri() {
+    injectString();
 }
 
 std::string BaseTypes::extractUri() {
     return extractString();
 }
 
-void BaseTypes::injectIntegerNumber(int32_t number, bool is_unsigned) {
+void BaseTypes::injectIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
+    auto value = input_string_stream_->get_item_and_move_to_next();
+    uint32_t number = std::stoi(value);
     if (!is_unsigned) {
+        // Todo MBN there might be an error
         if (number < 0) {
-            injectBoolValue(true);
+            bit_stream_->add_max_8bits(1, 1);
         }
-        injectBoolValue(false);
+        bit_stream_->add_max_8bits(0, 1);
     }
     number = abs(number);
 
@@ -128,14 +136,29 @@ int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     return sign_factor * int_number;
 }
 
-void BaseTypes::injectNBitNumber(int32_t number, uint8_t bits, int32_t offset) { }
+void BaseTypes::injectNBitNumber(uint8_t bits, int32_t offset) {
+    auto value = input_string_stream_->get_item_and_move_to_next();
+    int32_t number = std::stoi(value);
+    number -= offset;
+    bit_stream_->add_max_8bits(number, bits);
+}
 
 int32_t BaseTypes::extractNBitNumber(uint8_t bits, int32_t offset) {
     uint32_t output_data = bit_stream_->get_max_4bytes(bits);
     return static_cast<int32_t>(output_data) + offset;
 }
 
-void BaseTypes::injectBoolValue(bool bool_var) {
+void BaseTypes::injectBoolValue() {
+    auto value = input_string_stream_->get_item_and_move_to_next();
+    bool bool_var;
+    if (value == "true") {
+        bool_var = true;
+    } else if (value == "false") {
+        bool_var = false;
+    } else {
+        throw std::runtime_error("The boolean value '" + value + "' can not be parsed!");
+    }
+
     bit_stream_->add_max_8bits(bool_var, 1);
 }
 
@@ -160,11 +183,11 @@ void BaseTypes::check_event_code_is_0(std::string current_type_name) {
 }
 
 void BaseTypes::add_event_code(std::string current_type_name) {
-    bit_stream_->add_max_8bits(0, 1);
-
     #ifndef NDEBUG
-    std::cout << "add event code for '" << current_type_name << "'";
+    std::cout << "add event code for '" << current_type_name << "' ↴" << std::endl;
     #endif
+
+    bit_stream_->add_max_8bits(0, 1);
 }
 
 uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current_type_name) {
@@ -178,7 +201,9 @@ uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current
     return event_code;
 }
 
-void BaseTypes::injectBase64Value(std::string value) { }
+void BaseTypes::injectBase64Value() {
+    // Todo MBN get data and implement
+}
 
 
 std::string BaseTypes::extractBase64Value() {

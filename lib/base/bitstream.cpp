@@ -130,8 +130,7 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
         std::cout << "\tsetting " << std::dec << static_cast<int>(num_bits) << "bit(s) at position "
                   << bit_counter_ - num_bits << " -> 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
                   << static_cast<int>(data)
-                  << std::dec << " (" << static_cast<int>(data) << ")"
-                  << "↴" << std::endl;
+                  << std::dec << " (" << static_cast<int>(data) << ")" << std::endl;
     #endif
 }
 
