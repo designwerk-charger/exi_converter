@@ -83,8 +83,8 @@ class CppClass:
         if self.has_constructor:
             for constructor in self.constructor:
                 cpp_code += f"\t{self.class_name}({constructor.arguments});\n"
-                if self.virtual:
-                    cpp_code += f"\tvirtual ~{self.class_name}() = default;  // LCOV_EXCL_LINE\n"
+            if self.virtual:
+                cpp_code += f"\tvirtual ~{self.class_name}() = default;  // LCOV_EXCL_LINE\n"
 
         for f in self.functions:
             cpp_code += "\n" + f.get_definition(virtual_function=self.virtual) + "\n"
