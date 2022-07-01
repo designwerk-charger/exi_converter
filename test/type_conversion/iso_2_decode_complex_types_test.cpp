@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 
 
-class Iso2ComplexTypesTest : public ::testing::Test {
+class Iso2DecodeComplexTypesTest : public ::testing::Test {
  public:
     std::shared_ptr<OutputStringStream> string_stream;
     std::shared_ptr<BitStream> bit_stream;
@@ -27,7 +27,7 @@ class Iso2ComplexTypesTest : public ::testing::Test {
     }
 };
 
-TEST_F(Iso2ComplexTypesTest, DecodeElementsWithSubstitutes_PowerDeliveryResType) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeElementsWithSubstitutes_PowerDeliveryResType) {
     /* Data extracted from OpenV2G
      *   DecodePowerDeliveryResType -> Start
      *   getting 1bit(s) from position 100 --> 0x0000 1
@@ -68,7 +68,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeElementsWithSubstitutes_PowerDeliveryResType)
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"}})");
 }
 
-TEST_F(Iso2ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_SelectedServiceList) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_SelectedServiceList) {
     /* Data extracted from OpenV2G
      * DecodeSelectedServiceList -> Start
      *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}SelectedService)]
@@ -98,7 +98,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReqType_S
     ASSERT_EQ(string_stream->get_full_stream(), R"({"SelectedService":[{"ServiceID":1}]})");
 }
 
-TEST_F(Iso2ComplexTypesTest, DecodeElementsList_ServiceDiscoveryRes_PaymentOptionList) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeElementsList_ServiceDiscoveryRes_PaymentOptionList) {
     /* Data extracted from OpenV2G
      * PaymentOptionList --> Start
      *   PaymentOption 1
@@ -121,7 +121,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeElementsList_ServiceDiscoveryRes_PaymentOptio
     ASSERT_EQ(string_stream->get_full_stream(), R"({"PaymentOption":["ExternalPayment"]})");
 }
 
-TEST_F(Iso2ComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
     /* Data extracted from OpenV2G
      * DecodeServiceDiscoveryReq -> Start
      *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceScope), START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceCategory), END_ELEMENT]
@@ -139,7 +139,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeOptionalElements_ServiceDiscoveryReqType_when
     ASSERT_EQ(string_stream->get_full_stream(), R"({"ServiceDiscoveryReq":{}})");
 }
 
-TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_ServiceDiscoveryRes_ChargeServiceType) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeComplexCombination_ServiceDiscoveryRes_ChargeServiceType) {
     /* Data extracted from OpenV2G
      * ChargeServiceType --> Start
      *   FirstStartTag[START_ELEMENT(ServiceID)]
@@ -200,7 +200,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_ServiceDiscoveryRes_Charge
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_WeldingDetectionRes_EVSEPresentVoltage_PhysicalValueType) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeComplexCombination_WeldingDetectionRes_EVSEPresentVoltage_PhysicalValueType) {
     /* Data extracted from OpenV2G
      * PhysicalValueType -> Start
      *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
@@ -241,7 +241,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_WeldingDetectionRes_EVSEPr
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_MessageHeaderType) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeComplexCombination_MessageHeaderType) {
     /* Data extracted from OpenV2G
      * Start iso header
      *   FirstStartTag[START_ELEMENT(SessionID)]
@@ -615,7 +615,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeComplexCombination_MessageHeaderType) {
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeOptionalElements_DC_EVChargeParameterType) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeOptionalElements_DC_EVChargeParameterType) {
     /* Data extracted from OpenV2G
      * DC_EVChargeParameterType -> Start
      *   FirstStartTag[START_ELEMENT(DepartureTime), START_ELEMENT(DC_EVStatus)]
@@ -812,7 +812,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeOptionalElements_DC_EVChargeParameterType) {
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeOptionalDerivation_PowerDeliveryReq) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeOptionalDerivation_PowerDeliveryReq) {
     /* Data extracted from OpenV2G
      * DecodePowerDeliveryReqType -> Start
      *     getting 1bit(s) from position 100 --> 0x0000
@@ -870,7 +870,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeOptionalDerivation_PowerDeliveryReq) {
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_PMaxScheduleEntry) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_PMaxScheduleEntry) {
     /* Data extracted from OpenV2G
      * PMaxScheduleType Start
      *   FirstStartTag[START_ELEMENT(PMaxScheduleEntry)]
@@ -938,7 +938,7 @@ TEST_F(Iso2ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_PMaxSchedule
 }
 
 
-TEST_F(Iso2ComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_SalesTariff) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeList_ChargeParameterDiscoveryRes_SalesTariff) {
     /* Data extracted from OpenV2G
      * SalesTariffType Start
      *   FirstStartTag[ATTRIBUTE[STRING](Id), START_ELEMENT(SalesTariffID)]
