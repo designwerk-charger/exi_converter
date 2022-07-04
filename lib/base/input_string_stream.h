@@ -16,6 +16,9 @@ class InputStringStream {
 
     std::string get_input_data() {return input_data_;};
 
+    bool is_list_start_move_to_next();
+    bool is_list_end_move_to_next();
+
   private:
     std::string input_data_;
     std::vector<std::string> input_items_;

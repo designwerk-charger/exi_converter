@@ -26,6 +26,22 @@ void InputStringStream::verify_item_and_move_to_next(const std::string & expecte
     }
 }
 
+bool InputStringStream::is_list_start_move_to_next() {
+    if (input_items_.at(item_cnt_) == "[") {
+        item_cnt_++;
+        return true;
+    }
+    return false;
+}
+
+bool InputStringStream::is_list_end_move_to_next() {
+    if (input_items_.at(item_cnt_) == "]") {
+        item_cnt_++;
+        return true;
+    }
+    return false;
+}
+
 std::string InputStringStream::get_item_and_move_to_next() {
     return input_items_.at(item_cnt_++);
 }
