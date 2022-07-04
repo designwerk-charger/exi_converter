@@ -327,36 +327,86 @@ class ComplexTypes:
         indent_str = "\t" * indent
         optional_str = "optional " if element.is_optional else ""
         if isinstance(element, Attribute):
-            return f"{indent_str}{{  // encode {optional_str}simple Attribute type\n" \
+            return f"{indent_str}{{  // encode {optional_str}simple Attribute type {element.element_type.type_name}\n" \
                    f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
                    f"{indent_str}}}\n"
-        return f"{indent_str}{{  // encode {optional_str}simple Element type\n" \
+        return f"{indent_str}{{  // encode {optional_str}simple Element type {element.element_type.type_name}\n" \
                f"{indent_str}\tbase_types_->add_event_code(\"Start{element.element_name}\");\n" \
                f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
                f"{indent_str}\tbase_types_->add_event_code(\"End{element.element_name}\");\n" \
                f"{indent_str}}}\n"
 
+    def encode_list(self, element: Element, indent: int):
+        def _encode_list_item():
+            if element.element_type.is_simple_not_complex:
+                return f"{indent_str}\tbase_types_->add_event_code(\"StartSimpleElement{element.element_type.type_name}\");\n" \
+                       f"{indent_str}\t#ifndef NDEBUG\n" \
+                       f"{indent_str}\t\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
+                       f"{indent_str}\t#endif\n" \
+                       f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
+                       f"{indent_str}\tbase_types_->add_event_code(\"EndSimpleElement{element.element_type.type_name}\");\n"
+            else:
+                return f"{indent_str}\t{element.element_type.encode_function.call()};\n"
+
+        if isinstance(element, Attribute):
+            raise RuntimeError(f"List can not be of type Attribute! {element}")
+
+        indent_str = "\t" * indent
+        code = f"{indent_str}{{  // encode list Element type {element.element_type.type_name}\n" \
+               f"{indent_str}\tinput_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
+               f"{indent_str}\tbase_types_->add_event_code(\"Start{element.element_name}List\");\n" \
+               f"{indent_str}\tbool is_in_list = input_string_stream_->is_list_start_move_to_next();\n" \
+               f"{indent_str}\tif (!is_in_list) {{\n" \
+               f"{indent_str}\t\tthrow std::runtime_error(\"Expecting at least one item in list {element.element_type.type_name}\");\n" \
+               f"{indent_str}\t}}\n" \
+               f"{indent_str}\tfor(int i=0; i<{element.max_items}; i++) {{\n" \
+               f"{indent_str}\t\tif (i!=0) {{\n" \
+               f"{indent_str}\t\t\tis_in_list = !input_string_stream_->is_list_end_move_to_next();\n" \
+               f"{indent_str}\t\t\tif (is_in_list) {{\n" \
+               f"{indent_str}\t\t\t\tbase_types_->add_event_code_with_n_bits(0, 2, \"NextListItem_{element.element_name}\");\n" \
+               f"{indent_str}\t\t\t}} else {{\n" \
+               f"{indent_str}\t\t\t\tbase_types_->add_event_code_with_n_bits(1, 2, \"NoFurtherListItem_{element.element_name}\");\n" \
+               f"{indent_str}\t\t\t\tbreak;\n" \
+               f"{indent_str}\t\t\t}}\n" \
+               f"{indent_str}\t\t}}\n" \
+               f"{_encode_list_item()}" \
+               f"{indent_str}\t}}\n" \
+               f"{indent_str}}}\n"
+        return code
+
     def encodeComplexElement(self, element: Element) -> str:
         code = ""
         return code
 
-    def encodeElement(self, element: Element) -> str:
+    def encodeElement(self, element: Element, indent=0, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
-            return self.encode_simple_element(element, 0) + "\n"
+            return self.encode_simple_element(element, indent, from_optional) + "\n"
         return self.encodeComplexElement(element) + "\n"
+
+    def getEncodeCodeForOptionalAndAbstractBlob(self, elements: List[Element], is_last: bool) -> str:
+        return ""
 
     def getEncodeFunction(self, ct: ComplexType):
         code = ""
+        optional_blob = []
 
         for element in ct.child_elements:
             if element.is_list:
-                print("ERROR: Encoding list not yet implemented!")
-            elif element.is_optional:
-                print("ERROR: Encoding optional elements not yet implemented!")
+                code += self.encode_list(element, indent=0)
+                continue
             elif element.element_type.is_abstract:
                 print("ERROR: Encoding Abstract types not yet implemented!")
-            else:
-                code += self.encodeElement(element)
+                continue
+            elif element.is_optional:
+                optional_blob.append(element)
+                continue
+
+            if optional_blob != 0:
+                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
+                code += self.getEncodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
+                code += "\n"
+                optional_blob = []
+            code += self.encodeElement(element)
 
         code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"
 

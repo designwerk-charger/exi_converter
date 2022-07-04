@@ -1,5 +1,6 @@
 #include "type_conversion/base_types.h"
 #include "iso15118_2/complex_types.h"
+#include "integration_test/type_conversion.h"
 
 #include "gtest/gtest.h"
 
@@ -26,6 +27,13 @@ class Iso2EncodeComplexTypesTest : public ::testing::Test {
                                                                    enum_types.get(), string_stream.get());
     }
 };
+
+inline static void compareBinaryVector(const std::vector<uint8_t> & actual, const std::vector<uint8_t> & expected) {
+    std::cout << "Actual:   " << bin2hex(actual) << std::endl;
+    std::cout << "Expected: " << bin2hex(expected) << std::endl;
+    ASSERT_EQ(actual, expected);
+}
+
 
 TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElements_PhysicalValueType) {
     /* Data extracted from OpenV2G
@@ -65,3 +73,42 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElements_PhysicalValueType) {
 
     ASSERT_EQ(bit_stream.get()->get_exi_data(), output_raw);
 }
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleAttributes_EMAIDType) {
+    // !! Really unsure if this data is correct !!
+    // Data from https://github.com/SwitchEV/RISE-V2G/tree/master/RISE-V2G-Certificates/signature-creation-testdata
+    std::string input_json = R"({"Id":"id4","value":"DEABCC123ABC56"})";
+    std::vector<uint8_t> output_raw =
+            hex2bin("02B4B21A041111505090D0CC4C8CD05090CD4D800");
+    // hex input original from RiseV2G "5205696434620888A828486866264668284866A6CFA00");
+    setupWithJsonData(input_json);
+
+    complex_types->encode_EMAIDType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList) {
+    /* Data extracted from OpenV2G
+     * PaymentOptionList --> Start
+     *   PaymentOption 1
+     *     getting 1bit(s) from position 109 --> 0x0000
+     *     getting 1bit(s) from position 110 --> 0x0000
+     *   PaymentOptionType (Enum)
+     *     getting 1bit(s) from position 111 --> 0x0001
+     *     getting 1bit(s) from position 112 --> 0x0000
+     *   PaymentOption 2
+     *     getting 2bit(s) from position 113 --> 0x0001
+     * PaymentOptionList --> Done
+     * -->  0b00100100
+     */
+
+    std::string input_json = R"({"PaymentOption":["ExternalPayment"]})";
+    std::vector<uint8_t> output_raw = {0b00100100};
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PaymentOptionListType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
