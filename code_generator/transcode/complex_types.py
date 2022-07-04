@@ -156,8 +156,7 @@ class ComplexTypes:
 
         code += f"}}\n" \
                 f"output_string_stream_->end_list();\n" \
-                f"output_string_stream_->end_key();\n" \
-                f"// base_types_->check_event_code_is_0(\"EndList{element.element_name}\");\n"  # Todo: check if the end element is needed
+                f"output_string_stream_->end_key();\n"
 
         return code
 
@@ -176,7 +175,7 @@ class ComplexTypes:
                 raise RuntimeError("Unexpected type")
         return A + E + anyE
 
-    def getDecodeCodeForOptionalBlob(self, elements: List[Element], is_last: bool) -> str:
+    def getDecodeCodeForOptionalAndAbstractBlob(self, elements: List[Element], is_last: bool) -> str:
         bases_handled = []
 
         def get_all_elements_flat():
@@ -204,28 +203,12 @@ class ComplexTypes:
                     return len(elem.element_type.base_class.derived_classes) + 1
 
         def get_num_AnyElements() -> int:
-            cnt = 0
-            for e in elements:
-                if isinstance(e, AnyElement):
-                    cnt += 1
-            return cnt
-
-        def needs_endelement() -> bool:
-            has_min_1_optional = any([e.is_optional for e in all_elements_flat])
-            all_are_abstract = all([e.element_type.is_abstract for e in all_elements_flat])
-            if all_elements_flat[-1].element_type.is_abstract and not has_min_1_optional:
-                # if last Elements is abstract. there is no need for end element
-                return False
-            if is_last:
-                return True
-            #if all_elements_flat[-1].is_optional: # or elements[-1].element_type.is_abstract:
-            #    return True
-            return False
+            return sum([isinstance(e, AnyElement) for e in elements])
 
         def get_num_eventcode_bits(progress=0) -> int:
             cnt = len(get_all_elements_flat()) - progress + 1 + get_num_AnyElements()  # +1 because one optional parameter gets at least 2 bits reading
 
-            if needs_endelement():
+            if is_last:
                 cnt += 1
             return ceil(log2(cnt))
 
@@ -233,7 +216,7 @@ class ComplexTypes:
         while_loop_offset = 0
         all_elements_flat = get_all_elements_flat()
         names = "_".join([e.element_name for e in all_elements_flat])
-        end_str = " + END_ELEMENT" if needs_endelement() else ""
+        end_str = " + END_ELEMENT" if is_last else ""
         code = f"// Decoding optional elements: {[en.element_name for en in all_elements_flat]}{end_str}\n" \
                f"uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({max(get_num_eventcode_bits(), 2)}, \"Start{names}\");\n"
         code += f"bool continue_loop{suffix} = true;\n" \
@@ -268,8 +251,9 @@ class ComplexTypes:
     def getDecodeFunction(self, ct: ComplexType):
         code = ""
         optional_blob = []
-        was_normal_complex = True
+        was_normal_complex = False
         for element in ct.child_elements:
+            was_normal_complex = False
             if element.is_list:
                 if element.is_optional:
                     print(f"WARNING: list as optional types not yet tested ({element.element_name})")
@@ -277,20 +261,18 @@ class ComplexTypes:
                 elif len(optional_blob) != 0:
                     # finish optional list and decode list
                     sorted_blob = self.sortOptionalBlobElements(optional_blob)
-                    code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=False)
+                    code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
                     code += "\n"
                     code += self.decodeElementAsList(element, 0)
                     optional_blob = []
-                    was_normal_complex = False
                 else:
                     code += self.decodeElementAsList(element, 0)
-                    was_normal_complex = False
             elif element.element_type.is_abstract and not element.is_optional:
                 self._do_abstract_element_checks(element)
                 optional_blob.append(element)
                 # # finish optional list with abstract types
                 sorted_blob = self.sortOptionalBlobElements(optional_blob)
-                code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=False)
+                code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
                 code += "\n"
                 optional_blob = []
             elif element.is_optional:
@@ -298,7 +280,7 @@ class ComplexTypes:
             elif len(optional_blob) != 0:
                 # finish optional list and add new element
                 sorted_blob = self.sortOptionalBlobElements(optional_blob)
-                code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=True)
+                code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
                 code += "\n"
                 code += self.decode_element_with_event_code(element, 0, from_optional=optional_blob[-1].is_optional)
                 optional_blob = []
@@ -308,12 +290,13 @@ class ComplexTypes:
                 code += self.decode_element_with_event_code(element, 0)
                 code += "\n"
                 was_normal_complex = True
+
         if len(optional_blob) != 0:
             sorted_blob = self.sortOptionalBlobElements(optional_blob)
-            code += self.getDecodeCodeForOptionalBlob(sorted_blob, is_last=True)
-            was_normal_complex = not sorted_blob[-1].is_optional
+            code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
 
         if was_normal_complex:
+            # Add Finish reading bit when type not ending with a list ore abstract element
             code += f"base_types_->check_event_code_is_0(\"Finish{ct.type_name}\");\n"
 
         return CppFunction(function_name=ct.decode_function.function_name,

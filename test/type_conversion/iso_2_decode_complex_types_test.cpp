@@ -98,7 +98,7 @@ TEST_F(Iso2DecodeComplexTypesTest, DecodeElementsList_PaymentServiceSelectionReq
     ASSERT_EQ(string_stream->get_full_stream(), R"({"SelectedService":[{"ServiceID":1}]})");
 }
 
-TEST_F(Iso2DecodeComplexTypesTest, DecodeElementsList_ServiceDiscoveryRes_PaymentOptionList) {
+TEST_F(Iso2DecodeComplexTypesTest, DecodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList) {
     /* Data extracted from OpenV2G
      * PaymentOptionList --> Start
      *   PaymentOption 1
