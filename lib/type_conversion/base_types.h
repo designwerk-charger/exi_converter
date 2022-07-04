@@ -55,6 +55,8 @@ public:
 
     virtual void add_event_code(std::string current_type_name);
 
+    virtual void add_event_code_with_n_bits(int8_t event_code, int8_t n_bits, std::string current_type_name);
+
 private:
     BitStream * bit_stream_;
     InputStringStream * input_string_stream_;

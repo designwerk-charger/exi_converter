@@ -190,6 +190,15 @@ void BaseTypes::add_event_code(std::string current_type_name) {
     bit_stream_->add_max_8bits(0, 1);
 }
 
+void BaseTypes::add_event_code_with_n_bits(int8_t event_code, int8_t n_bits, std::string current_type_name) {
+#ifndef NDEBUG
+    std::cout << "add " << int(n_bits) << "bit(s) event code '" << int(event_code)
+        << "' for '" << current_type_name << "' ↴" << std::endl;
+#endif
+
+    bit_stream_->add_max_8bits(event_code, n_bits);
+}
+
 uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current_type_name) {
     uint8_t event_code;
     bit_stream_->get_next_n_bits(n_bits, &event_code);
