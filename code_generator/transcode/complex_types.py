@@ -49,6 +49,47 @@ class ComplexTypes:
         return self._local_suffix_cnt
 
 ################################################################################
+# Simple helpers
+################################################################################
+
+    @staticmethod
+    def sortOptionalBlobElements(elements: List[Element]) -> str:
+        anyE = []
+        E = []
+        A = []
+        for e in elements:
+            if isinstance(e, AnyElement):
+                anyE.append(e)
+            elif isinstance(e, Attribute):
+                A.append(e)
+            elif isinstance(e, Element):
+                E.append(e)
+            else:
+                raise RuntimeError("Unexpected type")
+        return A + E + anyE
+
+    @staticmethod
+    def get_all_elements_flat(elements: List[Element]):
+        all_elements_flat = []
+        for e in elements:
+            if e.element_type.is_abstract:
+                for (element_name, element_type) in e.substitutes.items():
+                    all_elements_flat.append(Element(element_name=element_name, element_type=element_type, is_optional=e.is_optional, max_items=1, substitutes={}))
+            else:
+                all_elements_flat.append(e)
+        return all_elements_flat
+
+    @staticmethod
+    def get_num_AnyElements(elements: List[Element]) -> int:
+        return sum([isinstance(e, AnyElement) for e in elements])
+
+    @staticmethod
+    def get_num_abstract_elements_per_base(elem: Element):
+        if elem.element_type.is_simple_not_complex or elem.element_type.base_class is None:
+            return 1
+        return len(elem.element_type.base_class.derived_classes) + 1
+
+################################################################################
 # DECODE
 ################################################################################
 
@@ -160,53 +201,12 @@ class ComplexTypes:
 
         return code
 
-    def sortOptionalBlobElements(self, elements: List[Element]) -> str:
-        anyE = []
-        E = []
-        A = []
-        for e in elements:
-            if isinstance(e, AnyElement):
-                anyE.append(e)
-            elif isinstance(e, Attribute):
-                A.append(e)
-            elif isinstance(e, Element):
-                E.append(e)
-            else:
-                raise RuntimeError("Unexpected type")
-        return A + E + anyE
-
     def getDecodeCodeForOptionalAndAbstractBlob(self, elements: List[Element], is_last: bool) -> str:
-        bases_handled = []
-
-        def get_all_elements_flat():
-            all_elements_flat = []
-            for e in elements:
-                if e.element_type.is_abstract:
-                    for (element_name, element_type) in e.substitutes.items():
-                        all_elements_flat.append(Element(element_name=element_name, element_type=element_type, is_optional=e.is_optional, max_items=1, substitutes={}))
-                else:
-                    all_elements_flat.append(e)
-            return all_elements_flat
-
-        def get_num_abstract_elements_per_base(elem: Element):
-            if elem.element_type.is_abstract:
-                if elem.element_type.type_name in bases_handled:
-                    return 0
-                raise RuntimeError(f"Unhandled Abstract type of element {elem}")
-            else:
-                if elem.element_type.is_simple_not_complex or elem.element_type.base_class is None:
-                    return 1
-                elif elem.element_type.base_class_name in bases_handled:
-                    return 0
-                else:
-                    bases_handled.append(elem.element_type.base_class_name)
-                    return len(elem.element_type.base_class.derived_classes) + 1
-
-        def get_num_AnyElements() -> int:
-            return sum([isinstance(e, AnyElement) for e in elements])
 
         def get_num_eventcode_bits(progress=0) -> int:
-            cnt = len(get_all_elements_flat()) - progress + 1 + get_num_AnyElements()  # +1 because one optional parameter gets at least 2 bits reading
+            cnt = 1  # +1 because one optional parameter gets at least 2 bits reading
+            cnt += len(ComplexTypes.get_all_elements_flat(elements)) + ComplexTypes.get_num_AnyElements(elements)
+            cnt -= progress
 
             if is_last:
                 cnt += 1
@@ -214,7 +214,7 @@ class ComplexTypes:
 
         suffix = self.local_suffix_cnt
         while_loop_offset = 0
-        all_elements_flat = get_all_elements_flat()
+        all_elements_flat = ComplexTypes.get_all_elements_flat(elements)
         names = "_".join([e.element_name for e in all_elements_flat])
         end_str = " + END_ELEMENT" if is_last else ""
         code = f"// Decoding optional elements: {[en.element_name for en in all_elements_flat]}{end_str}\n" \
@@ -229,7 +229,7 @@ class ComplexTypes:
                 code += self.decodeElementAsList(element, 2, from_optional=True)
             else:
                 code += f"{self.decode_element_with_event_code(element, 2, from_optional=True)}"
-            while_loop_offset += get_num_abstract_elements_per_base(element)
+            while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
             if element.is_optional and ((i != (len(all_elements_flat)-1)) or is_last):
                 # not last element
                 code += f"\t\tec{suffix} = {while_loop_offset} + base_types_->get_event_code_with_n_bits(" \
@@ -260,7 +260,7 @@ class ComplexTypes:
                     optional_blob.append(element)
                 elif len(optional_blob) != 0:
                     # finish optional list and decode list
-                    sorted_blob = self.sortOptionalBlobElements(optional_blob)
+                    sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
                     code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
                     code += "\n"
                     code += self.decodeElementAsList(element, 0)
@@ -271,7 +271,7 @@ class ComplexTypes:
                 self._do_abstract_element_checks(element)
                 optional_blob.append(element)
                 # # finish optional list with abstract types
-                sorted_blob = self.sortOptionalBlobElements(optional_blob)
+                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
                 code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
                 code += "\n"
                 optional_blob = []
@@ -279,7 +279,7 @@ class ComplexTypes:
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
                 # finish optional list and add new element
-                sorted_blob = self.sortOptionalBlobElements(optional_blob)
+                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
                 code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
                 code += "\n"
                 code += self.decode_element_with_event_code(element, 0, from_optional=optional_blob[-1].is_optional)
@@ -292,7 +292,7 @@ class ComplexTypes:
                 was_normal_complex = True
 
         if len(optional_blob) != 0:
-            sorted_blob = self.sortOptionalBlobElements(optional_blob)
+            sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
             code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
 
         if was_normal_complex:
