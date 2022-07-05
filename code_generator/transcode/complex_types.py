@@ -53,7 +53,7 @@ class ComplexTypes:
 ################################################################################
 
     @staticmethod
-    def sortOptionalBlobElements(elements: List[Element]) -> str:
+    def sort_optional_and_abstract_elements(elements: List[Element]) -> str:
         anyE = []
         E = []
         A = []
@@ -88,6 +88,17 @@ class ComplexTypes:
         if elem.element_type.is_simple_not_complex or elem.element_type.base_class is None:
             return 1
         return len(elem.element_type.base_class.derived_classes) + 1
+
+    @staticmethod
+    def do_abstract_element_checks(element: Element):
+        if not isinstance(element.element_type, ComplexType):
+            raise NotImplementedError(f"The type of Element {element.element_name} is not ComplexType")
+        if len(element.element_type.derived_classes) == 0:
+            print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
+        if len(element.element_type.derived_classes) != len(element.substitutes):
+            print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
+        if element.is_optional:
+            print(f"WARNING: element {element.element_name} with abstract class {element.element_type.type_name} is optional!")
 
 ################################################################################
 # DECODE
@@ -126,17 +137,6 @@ class ComplexTypes:
                f"{indent_str}{element_type.decode_function.call()};\n" \
                f"{indent_str}output_string_stream_->end_key();\n"
 
-    @staticmethod
-    def _do_abstract_element_checks(element: Element):
-        if not isinstance(element.element_type, ComplexType):
-            raise NotImplementedError(f"The type of Element {element.element_name} is not ComplexType")
-        if len(element.element_type.derived_classes) == 0:
-            print(f"WARNING: abstract class {element.element_type.type_name} has no derived classes")
-        if len(element.element_type.derived_classes) != len(element.substitutes):
-            print(f"WARNING: abstract class {element.element_type.type_name} has not same number of derivations as the element has substitutes")
-        if element.is_optional:
-            print(f"WARNING: element {element.element_name} with abstract class {element.element_type.type_name} is optional!")
-
     def _decode_complex_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
 
@@ -158,7 +158,7 @@ class ComplexTypes:
             return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
         return self._decode_complex_element_with_event_code(element, indent, from_optional)
 
-    def decodeElementAsList(self, element: Element, indent: int, from_optional=False) -> str:
+    def decode_list(self, element: Element, indent: int, from_optional=False) -> str:
         suffix = self.local_suffix_cnt
         if element.is_optional:
             code = ""
@@ -201,7 +201,7 @@ class ComplexTypes:
 
         return code
 
-    def getDecodeCodeForOptionalAndAbstractBlob(self, elements: List[Element], is_last: bool) -> str:
+    def get_decode_code_for_optional_and_abstract_blob(self, elements: List[Element], is_last: bool) -> str:
 
         def get_num_eventcode_bits(progress=0) -> int:
             cnt = 1  # +1 because one optional parameter gets at least 2 bits reading
@@ -226,7 +226,7 @@ class ComplexTypes:
         for i, element in enumerate(all_elements_flat):
             code += f"\tcase {i}:\n"
             if element.is_list:
-                code += self.decodeElementAsList(element, 2, from_optional=True)
+                code += self.decode_list(element, 2, from_optional=True)
             else:
                 code += f"{self.decode_element_with_event_code(element, 2, from_optional=True)}"
             while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
@@ -260,27 +260,27 @@ class ComplexTypes:
                     optional_blob.append(element)
                 elif len(optional_blob) != 0:
                     # finish optional list and decode list
-                    sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
-                    code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
+                    sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+                    code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                     code += "\n"
-                    code += self.decodeElementAsList(element, 0)
+                    code += self.decode_list(element, 0)
                     optional_blob = []
                 else:
-                    code += self.decodeElementAsList(element, 0)
+                    code += self.decode_list(element, 0)
             elif element.element_type.is_abstract and not element.is_optional:
-                self._do_abstract_element_checks(element)
+                self.do_abstract_element_checks(element)
                 optional_blob.append(element)
                 # # finish optional list with abstract types
-                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
-                code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
+                sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+                code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                 code += "\n"
                 optional_blob = []
             elif element.is_optional:
                 optional_blob.append(element)
             elif len(optional_blob) != 0:
                 # finish optional list and add new element
-                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
-                code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
+                sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+                code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=True)
                 code += "\n"
                 code += self.decode_element_with_event_code(element, 0, from_optional=optional_blob[-1].is_optional)
                 optional_blob = []
@@ -292,8 +292,8 @@ class ComplexTypes:
                 was_normal_complex = True
 
         if len(optional_blob) != 0:
-            sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
-            code += self.getDecodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=True)
+            sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+            code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=True)
 
         if was_normal_complex:
             # Add Finish reading bit when type not ending with a list ore abstract element
@@ -309,7 +309,7 @@ class ComplexTypes:
 # ENCODE
 ################################################################################
 
-    def encode_simple_type(self, element: Element, indent: int, from_optional=False) -> str:
+    def _encode_simple_type(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
         code = ""
 
@@ -323,16 +323,16 @@ class ComplexTypes:
                 f"{indent_str}{element.element_type.encode_function.call()};\n"
         return code
 
-    def encode_simple_element(self, element: Element, indent: int, from_optional=False) -> str:
+    def _encode_simple_element(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
         optional_str = "optional " if element.is_optional else ""
         if isinstance(element, Attribute):
             return f"{indent_str}{{  // encode {optional_str}simple Attribute type {element.element_type.type_name}\n" \
-                   f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
+                   f"{self._encode_simple_type(element, indent + 1, from_optional)}" \
                    f"{indent_str}}}\n"
         return f"{indent_str}{{  // encode {optional_str}simple Element type {element.element_type.type_name}\n" \
                f"{indent_str}\tbase_types_->add_event_code(\"Start{element.element_name}\");\n" \
-               f"{self.encode_simple_type(element, indent + 1, from_optional)}" \
+               f"{self._encode_simple_type(element, indent + 1, from_optional)}" \
                f"{indent_str}\tbase_types_->add_event_code(\"End{element.element_name}\");\n" \
                f"{indent_str}}}\n"
 
@@ -374,16 +374,16 @@ class ComplexTypes:
                f"{indent_str}}}\n"
         return code
 
-    def encodeComplexElement(self, element: Element) -> str:
+    def _encode_complex_element(self, element: Element) -> str:
         code = ""
         return code
 
     def encodeElement(self, element: Element, indent=0, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
-            return self.encode_simple_element(element, indent, from_optional) + "\n"
-        return self.encodeComplexElement(element) + "\n"
+            return self._encode_simple_element(element, indent, from_optional) + "\n"
+        return self._encode_complex_element(element) + "\n"
 
-    def getEncodeCodeForOptionalAndAbstractBlob(self, elements: List[Element], is_last: bool) -> str:
+    def get_encode_code_for_optional_and_abstract_blob(self, elements: List[Element], is_last: bool) -> str:
         return ""
 
     def getEncodeFunction(self, ct: ComplexType):
@@ -402,8 +402,8 @@ class ComplexTypes:
                 continue
 
             if optional_blob != 0:
-                sorted_blob = ComplexTypes.sortOptionalBlobElements(optional_blob)
-                code += self.getEncodeCodeForOptionalAndAbstractBlob(sorted_blob, is_last=False)
+                sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+                code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                 code += "\n"
                 optional_blob = []
             code += self.encodeElement(element)
