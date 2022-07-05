@@ -144,13 +144,8 @@ class ComplexTypes:
         if not from_optional:
             return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
         return_str += f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}"
-        if len(element.element_type.child_elements) == 0 or not element.element_type.child_elements[-1].is_list:
-            if not from_optional:
-                return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
-            else:
-                return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"  # Todo: check if the end element is needed
-        else:
-            return_str += f"{indent_str}// Skipping check_event_code_is_0 for End{element.element_name} because of list\n"
+        if not from_optional:
+            return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
         return return_str
 
     def decode_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
@@ -158,7 +153,7 @@ class ComplexTypes:
             return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
         return self._decode_complex_element_with_event_code(element, indent, from_optional)
 
-    def decode_list(self, element: Element, indent: int, from_optional=False) -> str:
+    def decode_list(self, element: Element, indent: int) -> str:
         suffix = self.local_suffix_cnt
         if element.is_optional:
             code = ""
@@ -189,8 +184,7 @@ class ComplexTypes:
                     f"\t\t#ifndef NDEBUG\n" \
                     f"\t\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
                     f"\t\t#endif\n"
-            if not from_optional:
-                code += f"\t\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
+            code += f"\t\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
             code += f"\t}}\n"
         else:
             code += f"{element.element_type.decode_function.call()};\n"
@@ -226,7 +220,7 @@ class ComplexTypes:
         for i, element in enumerate(all_elements_flat):
             code += f"\tcase {i}:\n"
             if element.is_list:
-                code += self.decode_list(element, 2, from_optional=True)
+                code += self.decode_list(element, 2)
             else:
                 code += f"{self.decode_element_with_event_code(element, 2, from_optional=True)}"
             while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
