@@ -100,6 +100,16 @@ class ComplexTypes:
         if element.is_optional:
             print(f"WARNING: element {element.element_name} with abstract class {element.element_type.type_name} is optional!")
 
+    @staticmethod
+    def get_num_eventcode_bits(elements: List[Element], is_last: bool, progress=0) -> int:
+        cnt = 1  # +1 because one optional parameter gets at least 2 bits reading
+        cnt += len(ComplexTypes.get_all_elements_flat(elements)) + ComplexTypes.get_num_AnyElements(elements)
+        cnt -= progress
+
+        if is_last:
+            cnt += 1
+        return ceil(log2(cnt))
+
 ################################################################################
 # DECODE
 ################################################################################
@@ -196,23 +206,13 @@ class ComplexTypes:
         return code
 
     def get_decode_code_for_optional_and_abstract_blob(self, elements: List[Element], is_last: bool) -> str:
-
-        def get_num_eventcode_bits(progress=0) -> int:
-            cnt = 1  # +1 because one optional parameter gets at least 2 bits reading
-            cnt += len(ComplexTypes.get_all_elements_flat(elements)) + ComplexTypes.get_num_AnyElements(elements)
-            cnt -= progress
-
-            if is_last:
-                cnt += 1
-            return ceil(log2(cnt))
-
         suffix = self.local_suffix_cnt
         while_loop_offset = 0
         all_elements_flat = ComplexTypes.get_all_elements_flat(elements)
         names = "_".join([e.element_name for e in all_elements_flat])
         end_str = " + END_ELEMENT" if is_last else ""
         code = f"// Decoding optional elements: {[en.element_name for en in all_elements_flat]}{end_str}\n" \
-               f"uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({max(get_num_eventcode_bits(), 2)}, \"Start{names}\");\n"
+               f"uint8_t ec{suffix} = base_types_->get_event_code_with_n_bits({max(ComplexTypes.get_num_eventcode_bits(elements, is_last), 2)}, \"Start{names}\");\n"
         code += f"bool continue_loop{suffix} = true;\n" \
                 f"while(continue_loop{suffix}){{\n" \
                 f"switch(ec{suffix}) {{\n"
@@ -227,7 +227,7 @@ class ComplexTypes:
             if element.is_optional and ((i != (len(all_elements_flat)-1)) or is_last):
                 # not last element
                 code += f"\t\tec{suffix} = {while_loop_offset} + base_types_->get_event_code_with_n_bits(" \
-                        f"{max(1, get_num_eventcode_bits(while_loop_offset))}, \"Start{names}{i}\");\n"
+                        f"{max(1, ComplexTypes.get_num_eventcode_bits(elements, is_last, while_loop_offset))}, \"Start{names}{i}\");\n"
             else:
                 code += f"\t\tcontinue_loop{suffix} = false;\n"
             code += f"\t\tbreak;\n"
