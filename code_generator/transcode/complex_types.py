@@ -115,53 +115,51 @@ class ComplexTypes:
 ################################################################################
 
     @staticmethod
+    def _decode_simple_type(element: Element, indent: int, from_optional=False) -> str:
+        indent_str = "\t" * indent
+        return_str = ""
+        if not from_optional:
+            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
+        return_str += \
+               f"{indent_str}output_string_stream_->start_key(\"{element.element_name}\");\n" \
+               f"{indent_str}auto var = {element.element_type.decode_function.call()};\n" \
+               f"{indent_str}output_string_stream_->add_value(var);\n" \
+               f"{indent_str}#ifndef NDEBUG\n" \
+               f"{indent_str}\tstd::cout << \"getting value for {element.element_type.type_name} '{element.element_name}' -> \" << var << std::endl;\n" \
+               f"{indent_str}#endif\n" \
+               f"{indent_str}output_string_stream_->end_key();\n"
+        return return_str
+
+    @staticmethod
     def _decode_simple_element(element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
         optional_str = "optional " if element.is_optional else ""
-        return_str = f"{indent_str}{{  // decode {optional_str}simple {element.__class__.__name__} type\n"
-        if not from_optional:
-            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
-        return return_str + \
-               f"{indent_str}\toutput_string_stream_->start_key(\"{element.element_name}\");\n" \
-               f"{indent_str}\tauto var = {element.element_type.decode_function.call()};\n" \
-               f"{indent_str}\toutput_string_stream_->add_value(var);\n" \
-               f"{indent_str}\t#ifndef NDEBUG\n" \
-               f"{indent_str}\t\tstd::cout << \"getting value for {optional_str}{element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
-               f"{indent_str}\t#endif\n" \
-               f"{indent_str}\toutput_string_stream_->end_key();\n" \
+        if isinstance(element, Attribute):
+            return f"{indent_str}{{  // decode {optional_str}simple Attribute type {element.element_type.type_name}\n" \
+                   f"{ComplexTypes._decode_simple_type(element, indent + 1, from_optional)}" \
+                   f"{indent_str}}}\n"
+        return f"{indent_str}{{  // decode {optional_str}simple Element type {element.element_type.type_name}\n" \
+               f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
+               f"{ComplexTypes._decode_simple_type(element, indent + 1, from_optional)}" \
+               f"{indent_str}\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n" \
                f"{indent_str}}}\n"
 
-    @staticmethod
-    def _decode_simple_element_with_event_code(element: Element, indent: int, from_optional=False) -> str:
+    def _decode_complex_element(self, element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
-        if isinstance(element, Attribute):
-            return f"{ComplexTypes._decode_simple_element(element, indent, from_optional)}"
-        return f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
-               f"{ComplexTypes._decode_simple_element(element, indent, from_optional)}" \
-               f"{indent_str}base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
+        optional_str = "optional " if element.is_optional else ""
 
-    @staticmethod
-    def _decode_complex_element(element_name: str, element_type: ComplexType, indent: int) -> str:
-        indent_str = "\t" * indent
-        return f"{indent_str}output_string_stream_->start_key(\"{element_name}\");\n" \
-               f"{indent_str}{element_type.decode_function.call()};\n" \
-               f"{indent_str}output_string_stream_->end_key();\n"
-
-    def _decode_complex_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
-        indent_str = "\t" * indent
-
-        return_str = f"{indent_str}// decode complex {element.__class__.__name__} type\n"
+        return_str = f"{indent_str}// decode {optional_str}complex element {element.element_name} with type {element.element_type.type_name}\n"
         if not from_optional:
             return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
-        return_str += f"{ComplexTypes._decode_complex_element(element.element_name, element.element_type, indent)}"
-        if not from_optional:
-            return_str += f"{indent_str}// base_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
+        return_str += f"{indent_str}output_string_stream_->start_key(\"{element.element_name}\");\n" \
+                      f"{indent_str}{element.element_type.decode_function.call()};\n" \
+                      f"{indent_str}output_string_stream_->end_key();\n"
         return return_str
 
-    def decode_element_with_event_code(self, element: Element, indent: int, from_optional=False) -> str:
+    def decode_element(self, element: Element, indent: int, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
-            return ComplexTypes._decode_simple_element_with_event_code(element, indent, from_optional)
-        return self._decode_complex_element_with_event_code(element, indent, from_optional)
+            return ComplexTypes._decode_simple_element(element, indent, from_optional)
+        return self._decode_complex_element(element, indent, from_optional)
 
     def decode_list(self, element: Element, indent: int) -> str:
         suffix = self.local_suffix_cnt
@@ -222,7 +220,7 @@ class ComplexTypes:
             if element.is_list:
                 code += self.decode_list(element, 2)
             else:
-                code += f"{self.decode_element_with_event_code(element, 2, from_optional=True)}"
+                code += f"{self.decode_element(element, 2, from_optional=True)}"
             while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
             if element.is_optional and ((i != (len(all_elements_flat)-1)) or is_last):
                 # not last element
@@ -276,12 +274,12 @@ class ComplexTypes:
                 sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
                 code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=True)
                 code += "\n"
-                code += self.decode_element_with_event_code(element, 0, from_optional=optional_blob[-1].is_optional)
+                code += self.decode_element(element, 0, from_optional=optional_blob[-1].is_optional)
                 optional_blob = []
                 code += "\n"
                 was_normal_complex = True
             else:
-                code += self.decode_element_with_event_code(element, 0)
+                code += self.decode_element(element, 0)
                 code += "\n"
                 was_normal_complex = True
 
@@ -312,7 +310,7 @@ class ComplexTypes:
 
         code += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
                 f"{indent_str}#ifndef NDEBUG\n" \
-                f"{indent_str}\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
+                f"{indent_str}\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.element_type.type_name} '{element.element_name}' -> \" << std::endl;\n" \
                 f"{indent_str}#endif\n" \
                 f"{indent_str}{element.element_type.encode_function.call()};\n"
         return code
@@ -372,7 +370,7 @@ class ComplexTypes:
         code = ""
         return code
 
-    def encodeElement(self, element: Element, indent=0, from_optional=False) -> str:
+    def encode_element(self, element: Element, indent=0, from_optional=False) -> str:
         if element.element_type.is_simple_not_complex:
             return self._encode_simple_element(element, indent, from_optional) + "\n"
         return self._encode_complex_element(element) + "\n"
@@ -400,7 +398,8 @@ class ComplexTypes:
                 code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                 code += "\n"
                 optional_blob = []
-            code += self.encodeElement(element)
+            code += self.encode_element(element)
+
 
         code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"
 
