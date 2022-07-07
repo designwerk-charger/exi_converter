@@ -59,8 +59,6 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
     stringstream->verify_item_and_move_to_next("Header");
     complex_types.encode_MessageHeaderType();
 
-    stringstream->get_item_and_move_to_next();
-    stringstream->get_item_and_move_to_next();
 
     auto body = stringstream->get_item_and_move_to_next();
     if (body != "Body") {
@@ -70,6 +68,30 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
     base_types.add_event_code("Body");
     body_message.encodeBody();
 
+
+    return bitstream->get_exi_data();
+}
+
+std::string encode_din_spec(InputStringStream * stringstream, BitStream * bitstream) {
+    return "";
+}
+
+std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitStream * bitstream) {
+    BaseTypes base_types(bitstream, stringstream);
+    app_protocol::EnumTypes enums(&base_types, stringstream);
+    app_protocol::ComplexTypes complex_types(&base_types, &enums, stringstream);
+    app_protocol::BodyMessage body_message(&complex_types, bitstream, stringstream);
+
+    auto message_id = stringstream->get_item_and_move_to_next();
+    if (message_id == "supportedAppProtocolReq") {
+        bitstream->add_max_8bits(0, 2);
+        complex_types.encode_supportedAppProtocolReqType();
+    } else if (message_id == "supportedAppProtocolRes") {
+        bitstream->add_max_8bits(1, 2);
+        complex_types.encode_supportedAppProtocolResType();
+    } else {
+        throw std::runtime_error("The AppProtocol is unknown (" + message_id + ")!");
+    }
 
     return bitstream->get_exi_data();
 }
@@ -89,8 +111,9 @@ std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
         return encode_iso15118_2(&stringstream, &bitstream);
     } else if (ns == "urn:din:70121:2012:MsgDef") {
         // Todo
+        encode_din_spec(&stringstream, &bitstream);
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
-        // Todo
+        return encode_app_protocol(&stringstream, &bitstream);
     }
     throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }
@@ -117,7 +140,6 @@ std::string decode_iso15118_2(BitStream *bitstream) {
     base_types.check_event_code_is_0("StartV2G_Message");
     stringstream.start_key("Header");
     complex_types.decode_MessageHeaderType();
-    // base_types.check_event_code_is_0("EndHeader");
     stringstream.end_key(); // header
 
     stringstream.start_key("Body");
@@ -147,7 +169,6 @@ std::string decode_din_spec(BitStream *bitstream) {
     base_types.check_event_code_is_0("StartV2G_Message");
     stringstream.start_key("Header");
     complex_types.decode_MessageHeaderType();
-    // base_types.check_event_code_is_0("EndHeader");
     stringstream.end_key(); // header
 
     stringstream.start_key("Body");

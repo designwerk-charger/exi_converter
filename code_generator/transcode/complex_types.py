@@ -338,7 +338,7 @@ class ComplexTypes:
                        f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
                        f"{indent_str}\tbase_types_->add_event_code(\"EndSimpleElement{element.element_type.type_name}\");\n"
             else:
-                return f"{indent_str}\t{element.element_type.encode_function.call()};\n"
+                return f"{indent_str}\t\t{element.element_type.encode_function.call()};\n"
 
         if isinstance(element, Attribute):
             raise RuntimeError(f"List can not be of type Attribute! {element}")
@@ -400,10 +400,11 @@ class ComplexTypes:
             #       base_types->injectNBitsForEnum(enum_value, n_bits);
         code += f"\t}};\n" \
                 f"\n" \
-                f"\tuint8_t num_bits_eventcode, offset;" \
+                f"\tuint8_t num_bits_eventcode, offset;\n" \
                 f"\tbool continue_loop = true;\n" \
+                f"\tstd::string element_name;" \
                 f"\twhile(continue_loop){{\n" \
-                f"\t\tauto element_name = input_string_stream_->get_item();\n" \
+                f"\t\telement_name = input_string_stream_->get_item();\n" \
                 f"\t\tauto it = table.find(element_name);\n" \
                 f"\t\tif (it != table.end()) {{\n" \
                 f"\t\t\tuint8_t index = it->second;\n" \
@@ -444,36 +445,13 @@ class ComplexTypes:
                 f"}}\n"
         return code
 
-        for i, element in enumerate(all_elements_flat):
-            code += f"\tcase {i}:\n"
-            if element.is_list:
-                code += self.decode_list(element, 2)
-            else:
-                code += f"{self.decode_element(element, 2, from_optional=True)}"
-            while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
-            if element.is_optional and ((i != (len(all_elements_flat)-1)) or is_last):
-                # not last element
-                code += f"\t\tec{suffix} = {while_loop_offset} + base_types_->get_event_code_with_n_bits(" \
-                        f"{max(1, ComplexTypes.get_num_eventcode_bits(elements, is_last, while_loop_offset))}, \"Start{names}{i}\");\n"
-            else:
-                code += f"\t\tcontinue_loop{suffix} = false;\n"
-            code += f"\t\tbreak;\n"
-
-        if all_elements_flat[-1].is_optional:  # special case for optional messages at the end of a complex type
-            code += f"\tcase {len(all_elements_flat)}:\n" \
-                    f"\t\tcontinue_loop{suffix} = false;\n" \
-                    f"\t\tbreak;\n"
-        code += f"\tdefault:\n" \
-                f"\t\tthrow std::runtime_error(\"While parsing event code for '{names}' a unexpected code (\" +  std::to_string(ec{suffix}) + \") appeared  0!\");\n" \
-                f"}}\n"
-        code += f"}}"
-        return code
-
     def getEncodeFunction(self, ct: ComplexType):
         code = ""
         optional_blob = []
+        was_normal_complex = False
 
         for element in ct.child_elements:
+            was_normal_complex = False
             if element.is_list:
                 code += self.encode_list(element, indent=0)
                 continue
@@ -490,12 +468,14 @@ class ComplexTypes:
                 code += "\n"
                 optional_blob = []
             code += self.encode_element(element)
+            was_normal_complex = True
 
         if len(optional_blob) != 0:
             sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
             code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=True)
 
-        code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"
+        if was_normal_complex:
+            code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"
 
         return CppFunction(function_name=ct.encode_function.function_name,
                            return_type="void",
