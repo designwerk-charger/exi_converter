@@ -122,7 +122,7 @@ void extract_array(const std::string & input_data, std::size_t * current_pos, In
             (*current_pos)++;
         } while (current_char == ',');
     } else {
-        throw std::invalid_argument("Unhandled control character '" + std::to_string(current_char)
+        throw std::invalid_argument("Unhandled control character '" + std::string(1, current_char)
                                     + "' at " + std::to_string(*current_pos) + " while parsing array ("
                                     + input_data_with_position_marked(input_data, *current_pos) + ")");
     }
@@ -135,13 +135,24 @@ void extract_array(const std::string & input_data, std::size_t * current_pos, In
 /* a key starts with {" or ," characters! */
 void extract_key(const std::string & input_data, std::size_t * current_pos, InputStringStream::item_store_t * data) {
     check_control_chars(input_data, current_pos, '{', ',');
-    check_control_char(input_data, current_pos, '"');
+    char current_char = get_control_char(input_data, current_pos);
+    if (current_char == '}') {
+        // empty key
+        (*current_pos)++;
+        return;
+    } else if (current_char == '"') {
+        (*current_pos)++;
+    } else {
+        throw std::invalid_argument("Invalid control character at start key '" + std::string(1, current_char)
+                                    + "' at position " + std::to_string(*current_pos) + " found! ("
+                                    + input_data_with_position_marked(input_data, *current_pos) + ")");
+    }
 
     auto key = extract_string(input_data, current_pos);
     data->emplace_back(std::make_pair(key, InputStringStream::key_str));
 
     check_control_char(input_data, current_pos, ':');
-    char current_char = get_control_char(input_data, current_pos);
+    current_char = get_control_char(input_data, current_pos);
     if (current_char == '{') {
         do {
             extract_key(input_data, current_pos, data);
@@ -162,8 +173,11 @@ void extract_key(const std::string & input_data, std::size_t * current_pos, Inpu
     } else if (current_char == '}') {
         // end key
         (*current_pos)++;
+    } else if (current_char == ']') {
+        // end array, keep position
+        return;
     } else {
-        throw std::invalid_argument("Unexpected element ending control character '" + std::to_string(current_char)
+        throw std::invalid_argument("Unexpected element ending control character '" + std::string(1, current_char)
                                     + "' at " + std::to_string(*current_pos) + " while parsing array ("
                                     + input_data_with_position_marked(input_data, *current_pos) + ")");
     }

@@ -167,3 +167,22 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexElementsList_PaymentServiceSelec
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
+    /* Data extracted from OpenV2G
+     * DecodeServiceDiscoveryReq -> Start
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceScope), START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceCategory), END_ELEMENT]
+     *     getting 2bit(s) from position 100 --> 0x0002
+     * DecodeServiceDiscoveryReq -> Done
+     */
+
+    std::vector<uint8_t> raw_data({0b10000000});
+
+    std::string input_json = R"({"ServiceDiscoveryReq":{}})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_ServiceDiscoveryReqType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+}
+

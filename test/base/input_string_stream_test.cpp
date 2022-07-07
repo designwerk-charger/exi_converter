@@ -55,6 +55,18 @@ TEST(StringStreamTest_ItemSplitting, ContainsKeyWithOneArrayKeyValue) {
     EXPECT_EQ(items.at(4).first, "]");
 }
 
+TEST(StringStreamTest_ItemSplitting, WorksWithEmptyKey) {
+    auto items = InputStringStream::split_items(R"({"SessionStopReq":{}})");
+    EXPECT_EQ(items.at(0).first, "SessionStopReq");
+    EXPECT_EQ(items.size(), 1);
+}
+
+void assert_item_equality(const InputStringStream::item_store_t & result, const std::vector<std::string> & expected) {
+    for (int i=0; i < expected.size(); i++) {
+        EXPECT_EQ(result.at(i).first, expected.at(i));
+    }
+}
+
 TEST(StringStreamTest_ItemSplitting, WorksWithFlatMultipleKeyValues) {
     auto items = InputStringStream::split_items(R"({"Multiplier":1,"Unit":"A","Value":4})");
     EXPECT_EQ(items.at(0).first, "Multiplier");
@@ -63,6 +75,17 @@ TEST(StringStreamTest_ItemSplitting, WorksWithFlatMultipleKeyValues) {
     EXPECT_EQ(items.at(3).first, "A");
     EXPECT_EQ(items.at(4).first, "Value");
     EXPECT_EQ(items.at(5).first, "4");
+}
+
+TEST(StringStreamTest_ItemSplitting, WorksWithAComplexConstruct) {
+    auto items = InputStringStream::split_items(R"({"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]})");
+    assert_item_equality(items, {"CanonicalizationMethod", "Algorithm",
+                                 "http://www.w3.org/TR/canonical-exi/", "SignatureMethod", "Algorithm",
+                                 "http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256", "Reference", "[", "URI",
+                                 "#id1", "Transforms", "Transform", "[", "Algorithm",
+                                 "http://www.w3.org/TR/canonical-exi/", "]", "DigestMethod", "Algorithm",
+                                 "http://www.w3.org/2001/04/xmlenc#sha256", "DigestValue",
+                                 "FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA=", "]"});
 }
 
 
