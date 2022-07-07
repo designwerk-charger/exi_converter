@@ -1,20 +1,12 @@
 #include "type_conversion/base_types.h"
 #include "iso15118_2/enum_types.h"
+#include "base/output_string_stream.h"
+#include "mock/mock_input_string_stream.h"
+#include "mock/mock_base_types.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "base/output_string_stream.h"
 
-
-class MockBaseTypes : public BaseTypes {
- public:
-    MockBaseTypes(BitStream * bs) : BaseTypes(bs) {}  // NOLINT
-    // uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits)
-    MOCK_METHOD(uint32_t , extractNBitsForEnum, (uint32_t), (override));
-
-    // void injectNBitsForEnum(uint8_t value, uint8_t n_bits);
-    MOCK_METHOD(void , injectNBitsForEnum, (uint8_t, uint8_t), (override));
-};
 
 TEST(Iso2EnumTypesTest, decode_responseCodeType) {
     uint8_t data;
@@ -29,21 +21,24 @@ TEST(Iso2EnumTypesTest, decode_responseCodeType) {
 }
 
 TEST(Iso2EnumTypesTest, encode_responseCodeType) {
-    InputStringStream ss("{FAILED_CertificateExpired}");
+    MockInputStringStream miss;
     BitStream bs;
     MockBaseTypes mock(&bs);
-    iso15118_2::EnumTypes et(&mock, &ss);
+    iso15118_2::EnumTypes et(&mock, &miss);
 
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("FAILED_CertificateExpired"));
     EXPECT_CALL(mock, injectNBitsForEnum(10, 5)).Times(1);
 
     et.encode_responseCodeType();
 }
 
 TEST(Iso2EnumTypesTest, encode_throws_exception_when_responseCodeType_not_found) {
-    InputStringStream ss("{ValueNotInEnum}");
+    MockInputStringStream miss;
     BitStream bs;
     MockBaseTypes mock(&bs);
-    iso15118_2::EnumTypes et(&mock, &ss);
+    iso15118_2::EnumTypes et(&mock, &miss);
+
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("ValueNotInEnum"));
 
     ASSERT_THROW(et.encode_responseCodeType(), std::runtime_error);
 }

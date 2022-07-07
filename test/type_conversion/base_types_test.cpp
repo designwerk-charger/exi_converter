@@ -1,16 +1,10 @@
 #include "type_conversion/base_types.h"
 #include "base/bitstream.h"
-
+#include "mock/mock_input_string_stream.h"
+#include "mock/mock_bitstream.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-class MockBitStream : public BitStream {
- public:
-    MockBitStream() : BitStream() {}  // NOLINT
-
-    // void add_max_8bits(uint8_t data, uint8_t num_bits);
-    MOCK_METHOD(void , add_max_8bits, (uint8_t, uint8_t), (override));
-};
 
 TEST(BaseTypeTest, GetBoolFromExiStream_When_AskedForBool) {
     uint8_t msb_set = 0x80;
@@ -103,9 +97,10 @@ TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
 
 TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{true}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
 
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("true"));
     EXPECT_CALL(mbs, add_max_8bits(1, 1)).Times(1);
 
     bt.injectBoolValue();
@@ -113,9 +108,10 @@ TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
 
 TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{false}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
 
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("false"));
     EXPECT_CALL(mbs, add_max_8bits(0, 1)).Times(1);
 
     bt.injectBoolValue();
@@ -123,16 +119,20 @@ TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_BoolUnknownInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{bool?}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
+
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("bool?"));
 
     EXPECT_THROW(bt.injectBoolValue(), std::runtime_error);
 }
 
 TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{277130}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
+
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("277130"));
 
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
@@ -143,16 +143,20 @@ TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_UintCanNotBeInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{r277130}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
+
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("r277130"));
 
     EXPECT_THROW(bt.injectIntegerNumber(4, true), std::invalid_argument);
 }
 
 TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
     MockBitStream mbs;
-    InputStringStream iss("{277130}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
+
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("277130"));
 
     EXPECT_CALL(mbs, add_max_8bits(0b0, 1)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
@@ -164,9 +168,10 @@ TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
 
 TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
     MockBitStream mbs;
-    InputStringStream iss("{1}");
-    BaseTypes bt(&mbs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&mbs, &miss);
 
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("1"));
     EXPECT_CALL(mbs, add_max_8bits(0x04, 3)).Times(1);
 
     bt.injectNBitNumber(3, -3);
@@ -174,8 +179,10 @@ TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
 
 TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     BitStream bs;
-    InputStringStream iss("{CH123DW123}");
-    BaseTypes bt(&bs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("CH123DW123"));
+
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>test_vector;
     test_vector.push_back(0b00001100);
@@ -198,8 +205,10 @@ TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
 
 TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
     BitStream bs;
-    InputStringStream iss("{F05FBD2A935C8EC5}");
-    BaseTypes bt(&bs, &iss);
+    MockInputStringStream miss;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("F05FBD2A935C8EC5"));
+
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>expected_data;
     expected_data.push_back(0b00001000);

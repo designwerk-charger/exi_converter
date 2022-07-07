@@ -9,7 +9,7 @@
 class BitStream {
 public:
     BitStream(uint8_t * input_data, size_t length_byte);
-    BitStream(const std::vector<uint8_t> & input_data);
+    explicit BitStream(const std::vector<uint8_t> & input_data);
     BitStream();
     virtual ~BitStream() = default;  // LCOV_EXCL_LINE
 
