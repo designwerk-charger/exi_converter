@@ -42,8 +42,7 @@ std::string BaseTypes::extractHexBin(uint8_t max_length) {
 }
 
 uint32_t BaseTypes::extractNBitsForEnum(uint32_t n_bits) {
-    uint32_t output_data = 0;
-    bit_stream_->get_next_n_bits(n_bits, reinterpret_cast<uint8_t *>(&output_data));
+    uint32_t output_data = bit_stream_->get_max_4bytes(n_bits);
     return output_data;
 }
 
@@ -118,7 +117,7 @@ int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     int32_t int_number = 0;
     int32_t sign_factor = 1;
     if (!is_unsigned) {
-        bit_stream_->get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data));
+        output_data = bit_stream_->get_max_4bytes(1);
         if (output_data) {
             sign_factor = -1;
         }
@@ -127,7 +126,7 @@ int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
     bool read_another_octet = true;
     uint8_t bit_shifter = 0;
     while (read_another_octet) {
-        bit_stream_->get_next_n_bits(8, reinterpret_cast<uint8_t *>(&output_data));
+        output_data = bit_stream_->get_max_4bytes(8);
         read_another_octet = output_data & 0x0080;
         output_data = output_data & 0x007F;
         int_number = int_number + (output_data << bit_shifter);
@@ -163,14 +162,12 @@ void BaseTypes::injectBoolValue() {
 }
 
 bool BaseTypes::extractBoolValue() {
-    uint32_t output_data = 0;
-    bit_stream_->get_next_n_bits(1, reinterpret_cast<uint8_t *>(&output_data));
+    uint32_t output_data = bit_stream_->get_max_4bytes(1);
     return output_data;
 }
 
 void BaseTypes::check_event_code_is_0(std::string current_type_name) {
-    uint8_t event_code;
-    bit_stream_->get_next_n_bits(1, &event_code);
+    uint8_t event_code = bit_stream_->get_max_4bytes(1);
 
     #ifndef NDEBUG
     std::cout << "check event code for '" << current_type_name << "' --> "
@@ -200,8 +197,7 @@ void BaseTypes::add_event_code_with_n_bits(int8_t event_code, int8_t n_bits, std
 }
 
 uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current_type_name) {
-    uint8_t event_code;
-    bit_stream_->get_next_n_bits(n_bits, &event_code);
+    uint8_t event_code = bit_stream_->get_max_4bytes(n_bits);
 
 #ifndef NDEBUG
     std::cout << "check multibit event code for '" << current_type_name << "' --> " << std::dec << int(event_code)

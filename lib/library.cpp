@@ -124,8 +124,7 @@ std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string 
 
 
 std::string decode_iso15118_2(BitStream *bitstream) {
-    uint8_t message_id;
-    bitstream->get_next_n_bits(7, &message_id);
+    uint8_t message_id = bitstream->get_max_4bytes(7);
     if (message_id != 76) {
         throw std::runtime_error("V2G_Message with ID 76 was expected! Instead got ID " + std::to_string(message_id));
     }
@@ -153,8 +152,7 @@ std::string decode_iso15118_2(BitStream *bitstream) {
 
 
 std::string decode_din_spec(BitStream *bitstream) {
-    uint8_t message_id;
-    bitstream->get_next_n_bits(7, &message_id);
+    uint8_t message_id = bitstream->get_max_4bytes(7);
     if (message_id != 77) {
         throw std::runtime_error("V2G_Message with ID 77 was expected! Instead got ID " + std::to_string(message_id));
     }
@@ -187,8 +185,7 @@ std::string decode_app_protocol(BitStream *bitstream) {
     app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
     app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
-    uint8_t message_id;
-    bitstream->get_next_n_bits(2, &message_id);
+    uint8_t message_id = bitstream->get_max_4bytes(2);
     if (message_id == 0) {
         stringstream.start_key("supportedAppProtocolReq");
         complex_types.decode_supportedAppProtocolReqType();
@@ -206,8 +203,10 @@ std::string ExiCodec::decode(const std::vector<uint8_t> & byte_stream, std::stri
     BitStream bitstream(byte_stream);
 
     // checking header byte
-    uint8_t exi_options;
-    bitstream.get_next_n_bits(8, &exi_options);
+    uint32_t exi_options = bitstream.get_max_4bytes(8);
+    if (exi_options != 0x80) {
+        throw std::runtime_error("Exi options are '" + std::to_string(exi_options) + "' instead of 0!");
+    }
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
         return decode_iso15118_2(&bitstream);
