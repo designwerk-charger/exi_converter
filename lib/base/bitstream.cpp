@@ -102,27 +102,23 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
     if (num_bits > 8)
         throw std::range_error("Number of bits must be < 8");
 
-    uint8_t tmp_byte;
-    uint8_t addr_exi_byte;
-    uint8_t bit_pos_in_byte;
-    uint8_t bits_left_in_byte;
-
-    addr_exi_byte = bit_counter_ >> 3;
-    bit_pos_in_byte = bit_counter_ - (addr_exi_byte << 3);
-    bits_left_in_byte = 8 - bit_pos_in_byte;
+    uint8_t addr_exi_byte = bit_counter_ >> 3;
+    uint8_t bit_pos_in_byte = bit_counter_ - (addr_exi_byte << 3);
+    uint8_t bits_left_in_byte = 8 - bit_pos_in_byte;
 
     if (bits_left_in_byte < num_bits) {
-        tmp_byte = data >> bit_pos_in_byte;
-        exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
-        tmp_byte = data << (8 - bit_pos_in_byte);
-        exi_data_.push_back(tmp_byte);
+        // data is larger than current byte has left
+        uint8_t data_for_current_byte = data >> bit_pos_in_byte;
+        uint8_t data_for_next_byte = data << (8 - (num_bits - bits_left_in_byte));
+        exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | data_for_current_byte;
+        exi_data_.push_back(data_for_next_byte);
     } else {
-        tmp_byte = data << (8 - num_bits - bit_pos_in_byte);
+        uint8_t tmp_byte = data << (bits_left_in_byte - num_bits);
         if (bit_pos_in_byte == 0) {
-            exi_data_.push_back(0x00);
+            exi_data_.push_back(tmp_byte);
+        } else {
+            exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | tmp_byte;
         }
-        tmp_byte = tmp_byte | exi_data_.at(addr_exi_byte);
-        exi_data_.at(addr_exi_byte) = tmp_byte;
     }
     bit_counter_ += num_bits;
 

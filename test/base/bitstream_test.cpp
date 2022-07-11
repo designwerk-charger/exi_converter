@@ -7,6 +7,19 @@ TEST(BitStreamTest, ThrowInvalidArgumentException_When_InitializingWithLenghZero
     EXPECT_THROW(BitStream(NULL, 0), std::invalid_argument);
 }
 
+TEST(BitStreamTest, TestInjectingTogetherWithExtractcting_ones) {
+    BitStream bs_inject;
+
+    for (uint8_t i=1; i < 9; i++) {
+        bs_inject.add_max_8bits(1, i);
+    }
+
+    BitStream bs_extract = BitStream(bs_inject.get_exi_data());
+    for (uint8_t i=1; i < 9; i++) {
+        EXPECT_EQ(1, bs_extract.get_max_4bytes(i));
+    }
+}
+
 TEST(BitStreamTest_GetNextNBits, ThrowInvalidArgumentException_When_Bits0) {
     BitStream bs;
     uint8_t output_data;
@@ -253,66 +266,55 @@ TEST(BitStreamTest_AddBits, ThrowInvalidArgumentException_When_DataIsNull) {
     EXPECT_THROW(bs.add_max_8bits(0xAB, 9), std::range_error);
 }
 
-TEST(BitStreamTest_AddBits, AddsFirstBit_When_OneBitAdded) {
-    uint8_t input_data = 0x01;
-    std::vector<uint8_t>exi_data;
+TEST(BitStreamTest_AddBits, FirstBitSet_When_OneAddedAsOneBit) {
     BitStream bs;
 
-    bs.add_max_8bits(input_data, 1);
-    exi_data = bs.get_exi_data();
+    bs.add_max_8bits(0x01, 1);
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data[0], 0x80);
 }
 
-TEST(BitStreamTest_AddBits, AddsFirst2Bits_When_TwoBitAdded) {
-    uint8_t input_data = 0x02;
-    std::vector<uint8_t>exi_data;
+TEST(BitStreamTest_AddBits, SecondBitSet_When_OneAddedAsTwoBits) {
     BitStream bs;
 
-    bs.add_max_8bits(input_data, 2);
-    exi_data = bs.get_exi_data();
+    bs.add_max_8bits(0x01, 2);
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
-    ASSERT_EQ(exi_data[0], 0x80);
+    ASSERT_EQ(exi_data[0], 0x40);
 }
 
-TEST(BitStreamTest_AddBits, AddsTwoConsequtive2Bits_When_TwoBitsAddedWithTwoFunctionCalls) {
-    uint8_t input_data_1 = 0x01;
-    uint8_t input_data_2 = 0x01;
-    std::vector<uint8_t>exi_data;
+TEST(BitStreamTest_AddBits, FirstTwoBitsSet_When_TwoBitsAddedWithTwoFunctionCalls) {
     BitStream bs;
 
-    bs.add_max_8bits(input_data_1, 1);
-    bs.add_max_8bits(input_data_2, 1);
-    exi_data = bs.get_exi_data();
+    bs.add_max_8bits(0x01, 1);
+    bs.add_max_8bits(0x01, 1);
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data[0], 0xC0);
 }
 
 TEST(BitStreamTest_AddBits, Adds1Byte_When_OneByteAdded) {
     uint8_t input_data = 0xDE;
-    std::vector<uint8_t>exi_data;
-    std::vector<uint8_t>test_vector;
+    std::vector<uint8_t> test_vector;
     test_vector.push_back(input_data);
     BitStream bs;
 
     bs.add_max_8bits(input_data, 8);
-    exi_data = bs.get_exi_data();
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
 }
 
 TEST(BitStreamTest_AddBits, Adds1BitAnd1Byte_When_1BitAnd1ByteAddedIn2FunctionCalls) {
-    uint8_t input_data_1 = 0x01;
-    uint8_t input_data_2 = 0x01;
     std::vector<uint8_t>test_vector;
-    std::vector<uint8_t>exi_data;
     BitStream bs;
-    test_vector.push_back(0x80);
+    test_vector.push_back(0xA0);
     test_vector.push_back(0x80);
 
-    bs.add_max_8bits(input_data_1, 1);
-    bs.add_max_8bits(input_data_2, 8);
-    exi_data = bs.get_exi_data();
+    bs.add_max_8bits(0x01, 1);
+    bs.add_max_8bits(0x41, 8);
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
 }
@@ -322,11 +324,10 @@ TEST(BitStreamTest_AddBits, Adds2Bytes_When_2BytesAdded) {
     std::vector<uint8_t>test_vector;
     test_vector.push_back(input_data[0]);
     test_vector.push_back(input_data[1]);
-    std::vector<uint8_t>exi_data;
     BitStream bs;
 
     bs.add_bytes(input_data, 2);
-    exi_data = bs.get_exi_data();
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
 }
@@ -337,12 +338,26 @@ TEST(BitStreamTest_AddBits, Adds2ByteAnd1Bit_When_2ByteAnd1BitAdded) {
     test_vector.push_back(input_data[0]);
     test_vector.push_back(input_data[1]);
     test_vector.push_back(0x80);
-    std::vector<uint8_t>exi_data;
     BitStream bs;
 
     bs.add_bytes(input_data, 2);
     bs.add_max_8bits(input_data[2], 1);
-    exi_data = bs.get_exi_data();
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
+
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BitStreamTest_AddBits, AddingCorrectlyInJunksOf3Bits) {
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0x24);
+    test_vector.push_back(0x90);
+    BitStream bs;
+
+    bs.add_max_8bits(0x01, 3);
+    bs.add_max_8bits(0x01, 3);
+    bs.add_max_8bits(0x01, 3);
+    bs.add_max_8bits(0x01, 3);
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
 }
