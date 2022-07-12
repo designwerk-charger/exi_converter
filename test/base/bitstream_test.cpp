@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "base/bitstream.h"
+#include "integration_test/type_conversion.h"
 
 
 TEST(BitStreamTest, ThrowInvalidArgumentException_When_InitializingWithLenghZero) {
@@ -359,5 +360,42 @@ TEST(BitStreamTest_AddBits, AddingCorrectlyInJunksOf3Bits) {
     bs.add_max_8bits(0x01, 3);
     std::vector<uint8_t> exi_data = bs.get_exi_data();
 
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BitStreamTest_AddBits, AddingBitsWithProblematicPattern1) {
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0x1e);
+    test_vector.push_back(0x00);
+    BitStream bs;
+
+    bs.add_max_8bits(0x00, 2);
+    bs.add_max_8bits(0x3C, 7);
+
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
+
+    std::cout << "Actual:   " << bin2hex(exi_data) << std::endl;
+    std::cout << "Expected: " << bin2hex(test_vector) << std::endl;
+    ASSERT_EQ(exi_data, test_vector);
+}
+
+TEST(BitStreamTest_AddBits, AddingBitsWithProblematicPattern2) {
+    std::vector<uint8_t>test_vector;
+    test_vector.push_back(0x03);
+    test_vector.push_back('f');
+    test_vector.push_back('o');
+    test_vector.push_back('o');
+    BitStream bs;
+
+    bs.add_max_8bits(0x03, 8);
+    bs.add_max_8bits(0x19, 6);
+    bs.add_max_8bits(0x26, 6);
+    bs.add_max_8bits(0x3d, 6);
+    bs.add_max_8bits(0x2f, 6);
+
+    std::vector<uint8_t> exi_data = bs.get_exi_data();
+
+    std::cout << "Actual:   " << bin2hex(exi_data) << std::endl;
+    std::cout << "Expected: " << bin2hex(test_vector) << std::endl;
     ASSERT_EQ(exi_data, test_vector);
 }

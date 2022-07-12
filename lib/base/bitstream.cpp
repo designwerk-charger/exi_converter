@@ -108,8 +108,9 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
 
     if (bits_left_in_byte < num_bits) {
         // data is larger than current byte has left
-        uint8_t data_for_current_byte = data >> bit_pos_in_byte;
-        uint8_t data_for_next_byte = data << (8 - (num_bits - bits_left_in_byte));
+        uint8_t data_for_current_byte = (data >> (num_bits-bits_left_in_byte)) & ((1 << bits_left_in_byte) - 1);
+        uint8_t bits_in_new_byte = num_bits - bits_left_in_byte;
+        uint8_t data_for_next_byte = (data & ((1 << bits_in_new_byte) - 1)) << (8 - bits_in_new_byte);
         exi_data_[addr_exi_byte] = exi_data_[addr_exi_byte] | data_for_current_byte;
         exi_data_.push_back(data_for_next_byte);
     } else {
@@ -124,8 +125,8 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
 
     #ifndef NDEBUG
         std::cout << "\tsetting " << std::dec << static_cast<int>(num_bits) << "bit(s) at position "
-                  << bit_counter_ - num_bits << " -> 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
-                  << static_cast<int>(data)
+                  << bit_counter_ - num_bits << " -> 0x" << std::setfill('0') << std::setw(2) << std::right
+                  << std::hex << static_cast<int>(data)
                   << std::dec << " (" << static_cast<int>(data) << ")" << std::endl;
     #endif
 }
