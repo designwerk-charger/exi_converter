@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
+
 #include "base_types.h"
 
 BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream), input_string_stream_(nullptr) {}
@@ -85,18 +87,7 @@ std::string BaseTypes::extractUri() {
     return extractString();
 }
 
-void BaseTypes::injectIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
-    auto value = input_string_stream_->get_item_and_move_to_next();
-    uint32_t number = std::stoi(value);
-    if (!is_unsigned) {
-        // Todo MBN there might be an error
-        if (number < 0) {
-            bit_stream_->add_max_8bits(1, 1);
-        }
-        bit_stream_->add_max_8bits(0, 1);
-    }
-    number = abs(number);
-
+void BaseTypes::_injectUnsignedNumber(uint32_t number) {
     uint8_t pos_highest_set_bit = 0;
     uint32_t tmp_number;
     tmp_number = number;
@@ -110,6 +101,21 @@ void BaseTypes::injectIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
         pos_highest_set_bit -= 7;
     }
     bit_stream_->add_max_8bits(0x7F & number, 8);
+}
+
+void BaseTypes::injectIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
+    auto value = input_string_stream_->get_item_and_move_to_next();
+    uint32_t number = std::stoi(value);
+    if (!is_unsigned) {
+        // Todo MBN there might be an error
+        if (number < 0) {
+            bit_stream_->add_max_8bits(1, 1);
+        }
+        bit_stream_->add_max_8bits(0, 1);
+    }
+    number = abs(number);
+
+    _injectUnsignedNumber(number);
 }
 
 int32_t BaseTypes::extractIntegerNumber(uint8_t n_bytes, bool is_unsigned) {
@@ -207,7 +213,69 @@ uint8_t BaseTypes::get_event_code_with_n_bits(int8_t n_bits, std::string current
 }
 
 void BaseTypes::injectBase64Value() {
-    // Todo MBN get data and implement
+    static const uint8_t base64_values[] = {
+            0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x64, 0x64, 0x3E, 0x64, 0x64, 0x64, 0x3F,
+            0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B,
+            0x3C, 0x3D, 0x64, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+            0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+            0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+            0x17, 0x18, 0x19, 0x64, 0x64, 0x64, 0x64, 0x64,
+            0x64, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20,
+            0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
+            0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30,
+            0x31, 0x32, 0x33, 0x64, 0x64, 0x64, 0x64, 0x64};
+
+    auto value = input_string_stream_->get_item_and_move_to_next();
+
+    // ensure length of string is multiple of 4
+    size_t aligned_to_4_length = (value.length() >> 2) << 2;
+    if (aligned_to_4_length != value.length()) {
+        throw std::runtime_error("The base64 encoded value has not a length with a multiple of 4 ("
+            + std::to_string(value.length()) + ")!");
+    }
+
+    // find length in bytes and add it to stream
+    size_t num_bytes = (value.length() >> 2) * 3;
+    size_t num_full_chars = value.length();
+    if (value.at(value.length() - 1) == '=') {
+        num_bytes--;
+        num_full_chars--;
+        if (value.at(value.length() - 2) == '=') {
+            num_bytes--;
+            num_full_chars--;
+        }
+    }
+    _injectUnsignedNumber(num_bytes);
+    size_t num_bits = num_bytes << 3;
+
+    size_t i;
+    for (i = 0; i < num_full_chars; i++) {
+        const auto & current_char = value.at(i);
+        if (current_char > 127) [[ unlikely ]] {
+            throw std::runtime_error("The character '" + std::string(1, current_char) + "' at position "
+                + std::to_string(i) + " can not be encoded to base64!");
+        }
+
+        const auto & encoded_value = base64_values[current_char];
+        if (encoded_value == 64) [[ unlikely ]] {
+            throw std::runtime_error("The character '" + std::string(1, current_char) + "' at position "
+                                     + std::to_string(i) + " can not be encoded to base64!");
+        }
+
+        if (num_bits < 6) [[ unlikely ]] {  // NOLINT
+            bit_stream_->add_max_8bits(encoded_value >> (6 - num_bits), num_bits);
+            return;
+        } else {
+            bit_stream_->add_max_8bits(encoded_value, 6);
+            num_bits -= 6;
+        }
+    }
 }
 
 

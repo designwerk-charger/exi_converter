@@ -244,9 +244,8 @@ TEST(BaseTypeTest, ExtractBase64_TestData1) {
     std::vector<uint8_t> raw_data({0x01, 'f'});
     BitStream bs(raw_data);
     BaseTypes bt(&bs);
-    std::string bt_out;
 
-    bt_out = bt.extractBase64Value();
+    std::string bt_out = bt.extractBase64Value();
 
     ASSERT_EQ(bt_out, "Zg==");
 }
@@ -255,9 +254,8 @@ TEST(BaseTypeTest, ExtractBase64_TestData2) {
     std::vector<uint8_t> raw_data({0x02, 'f', 'o'});
     BitStream bs(raw_data);
     BaseTypes bt(&bs);
-    std::string bt_out;
 
-    bt_out = bt.extractBase64Value();
+    std::string bt_out = bt.extractBase64Value();
 
     ASSERT_EQ(bt_out, "Zm8=");
 }
@@ -266,9 +264,62 @@ TEST(BaseTypeTest, ExtractBase64_TestData3) {
     std::vector<uint8_t> raw_data({0x03, 'f', 'o', 'o'});
     BitStream bs(raw_data);
     BaseTypes bt(&bs);
-    std::string bt_out;
 
-    bt_out = bt.extractBase64Value();
+    std::string bt_out = bt.extractBase64Value();
 
     ASSERT_EQ(bt_out, "Zm9v");
+}
+
+TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputIsNotAMultipleOf4) {
+    MockInputStringStream miss;
+    BitStream bs;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("kI3"));
+
+    EXPECT_THROW(bt.injectBase64Value(), std::runtime_error);
+}
+
+TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputContainsNonEncodableCharacters) {
+    MockInputStringStream miss;
+    BitStream bs;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("k)3"));
+
+    EXPECT_THROW(bt.injectBase64Value(), std::runtime_error);
+}
+
+TEST(BaseTypeTest, InjectBase64_TestData1) {
+    std::vector<uint8_t> expected_exi_data({0x03, 'f', 'o', 'o'});
+    MockInputStringStream miss;
+    BitStream bs;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zm9v"));
+
+    bt.injectBase64Value();
+
+    ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
+}
+
+TEST(BaseTypeTest, InjectBase64_TestData2) {
+    std::vector<uint8_t> expected_exi_data({0x02, 'f', 'o'});
+    MockInputStringStream miss;
+    BitStream bs;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zm8="));
+
+    bt.injectBase64Value();
+
+    ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
+}
+
+TEST(BaseTypeTest, InjectBase64_TestData3) {
+    std::vector<uint8_t> expected_exi_data({0x01, 'f'});
+    MockInputStringStream miss;
+    BitStream bs;
+    BaseTypes bt(&bs, &miss);
+    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zg=="));
+
+    bt.injectBase64Value();
+
+    ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
 }

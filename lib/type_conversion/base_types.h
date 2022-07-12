@@ -60,4 +60,6 @@ public:
 private:
     BitStream * bit_stream_;
     InputStringStream * input_string_stream_;
+
+    void _injectUnsignedNumber(uint32_t number);
 };
