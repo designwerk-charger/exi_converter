@@ -168,44 +168,45 @@ class ComplexTypes:
         return self._decode_complex_element(element, indent, from_optional)
 
     def decode_list(self, element: Element, indent: int) -> str:
+        indent_str = "\t" * indent
         suffix = self.local_suffix_cnt
         if element.is_optional:
             code = ""
         else:
-            code = f"base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n"
+            code = f"{indent_str}base_types_->check_event_code_is_0(\"StartList{element.element_name}\");\n"
 
-        code += f"output_string_stream_->start_key(\"{element.element_name}\");\n" \
-                f"output_string_stream_->start_list();\n"
+        code += f"{indent_str}output_string_stream_->start_key(\"{element.element_name}\");\n" \
+                f"{indent_str}output_string_stream_->start_list();\n"
 
-        code += f"int further_items{suffix};\n" \
-                f"for(int i=0; i<{element.max_items}; i++) {{;\n" \
-                f"\tif (i!=0) {{\n" \
-                f"\t\tfurther_items{suffix} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n" \
-                f"\t\tif (further_items{suffix} == 1) {{\n" \
-                f"\t\t\tbreak;\n" \
-                f"\t\t}} else if (further_items{suffix} == 0) {{\n" \
-                f"\t\t\toutput_string_stream_->next_item();\n" \
-                f"\t\t}} else {{\n" \
-                f"\t\t\tthrow std::runtime_error(\"Unexpected code while decoding {element.element_name} List!\");\n" \
-                f"\t\t}}\n" \
-                f"\t}}\n"
+        code += f"{indent_str}int further_items{suffix};\n" \
+                f"{indent_str}for(int i=0; i<{element.max_items}; i++) {{;\n" \
+                f"{indent_str}\tif (i!=0) {{\n" \
+                f"{indent_str}\t\tfurther_items{suffix} = base_types_->get_event_code_with_n_bits(2, \"ListItem{element.element_name}\");\n" \
+                f"{indent_str}\t\tif (further_items{suffix} == 1) {{\n" \
+                f"{indent_str}\t\t\tbreak;\n" \
+                f"{indent_str}\t\t}} else if (further_items{suffix} == 0) {{\n" \
+                f"{indent_str}\t\t\toutput_string_stream_->next_item();\n" \
+                f"{indent_str}\t\t}} else {{\n" \
+                f"{indent_str}\t\t\tthrow std::runtime_error(\"Unexpected code while decoding {element.element_name} List!\");\n" \
+                f"{indent_str}\t\t}}\n" \
+                f"{indent_str}\t}}\n"
 
         if element.element_type.is_simple_not_complex:
-            code += f"\t{{\n" \
-                    f"\t\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
-                    f"\t\tauto var = {element.element_type.decode_function.call()};\n" \
-                    f"\t\toutput_string_stream_->add_value(var);\n" \
-                    f"\t\t#ifndef NDEBUG\n" \
-                    f"\t\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
-                    f"\t\t#endif\n"
-            code += f"\t\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
-            code += f"\t}}\n"
+            code += f"{indent_str}\t{{\n" \
+                    f"{indent_str}\t\tbase_types_->check_event_code_is_0(\"Start{element.element_name}\");\n" \
+                    f"{indent_str}\t\tauto var = {element.element_type.decode_function.call()};\n" \
+                    f"{indent_str}\t\toutput_string_stream_->add_value(var);\n" \
+                    f"{indent_str}\t\t#ifndef NDEBUG\n" \
+                    f"{indent_str}\t\t\tstd::cout << \"getting value for {element.__class__.__name__} '{element.element_name}' -> \" << var << std::endl;\n" \
+                    f"{indent_str}\t\t#endif\n"
+            code += f"{indent_str}\t\tbase_types_->check_event_code_is_0(\"End{element.element_name}\");\n"
+            code += f"{indent_str}\t}}\n"
         else:
-            code += f"{element.element_type.decode_function.call()};\n"
+            code += f"{indent_str}{element.element_type.decode_function.call()};\n"
 
-        code += f"}}\n" \
-                f"output_string_stream_->end_list();\n" \
-                f"output_string_stream_->end_key();\n"
+        code += f"{indent_str}}}\n" \
+                f"{indent_str}output_string_stream_->end_list();\n" \
+                f"{indent_str}output_string_stream_->end_key();\n"
 
         return code
 
