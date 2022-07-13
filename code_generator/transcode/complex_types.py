@@ -120,8 +120,10 @@ class ComplexTypes:
     def _decode_simple_type(element: Element, indent: int, from_optional=False) -> str:
         indent_str = "\t" * indent
         return_str = ""
-        if not from_optional:
-            return_str += f"{indent_str}\tbase_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
+        if from_optional:
+            return_str += f"{indent_str}//   without check_event_code_is_0(...) because previous element was optional;\n"
+        else:
+            return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start+{element.element_name}\");\n"
         return_str += \
                f"{indent_str}output_string_stream_->start_key(\"{element.element_name}\");\n" \
                f"{indent_str}auto var = {element.element_type.decode_function.call()};\n" \
@@ -151,7 +153,9 @@ class ComplexTypes:
         optional_str = "optional " if element.is_optional else ""
 
         return_str = f"{indent_str}// decode {optional_str}complex element {element.element_name} with type {element.element_type.type_name}\n"
-        if not from_optional:
+        if from_optional:
+            return_str += f"{indent_str}//   without check_event_code_is_0(...) because previous element was optional;\n"
+        else:
             return_str += f"{indent_str}base_types_->check_event_code_is_0(\"Start{element.element_name}\");\n"
         return_str += f"{indent_str}output_string_stream_->start_key(\"{element.element_name}\");\n" \
                       f"{indent_str}{element.element_type.decode_function.call()};\n" \
@@ -307,7 +311,9 @@ class ComplexTypes:
         indent_str = "\t" * indent
         code = ""
 
-        if not from_optional:
+        if from_optional:
+            code += f"{indent_str}//   without add_event_code(...) because previous element was optional;\n"
+        else:
             code += f"{indent_str}base_types_->add_event_code(\"Start+{element.element_name}\");\n"
 
         code += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
@@ -373,7 +379,9 @@ class ComplexTypes:
         optional_str = "optional " if element.is_optional else ""
 
         return_str = f"{indent_str}// encode {optional_str}complex element {element.element_name} with type {element.element_type.type_name}\n"
-        if not from_optional:
+        if from_optional:
+            return_str += f"{indent_str}//   without add_event_code(...) because previous element was optional;\n"
+        else:
             return_str += f"{indent_str}base_types_->add_event_code(\"Start{element.element_name}\");\n"
         return_str += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
                       f"{indent_str}{element.element_type.encode_function.call()};\n"
