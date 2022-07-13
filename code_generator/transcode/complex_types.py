@@ -268,7 +268,7 @@ class ComplexTypes:
             elif element.element_type.is_abstract and not element.is_optional:
                 self.do_abstract_element_checks(element)
                 optional_blob.append(element)
-                # # finish optional list with abstract types
+                # finish optional list with abstract types
                 sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
                 code += self.get_decode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                 code += "\n"
@@ -467,10 +467,19 @@ class ComplexTypes:
         for element in ct.child_elements:
             was_normal_complex = False
             if element.is_list:
-                code += self.encode_list(element, indent=0)
+                if element.is_optional:
+                    optional_blob.append(element)
+                else:
+                    code += self.encode_list(element, indent=0)
                 continue
-            elif element.element_type.is_abstract:
-                print("ERROR: Encoding Abstract types not yet implemented!")
+            elif element.element_type.is_abstract and not element.is_optional:
+                self.do_abstract_element_checks(element)
+                optional_blob.append(element)
+                # finish optional list with abstract types
+                sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
+                code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
+                code += "\n"
+                optional_blob = []
                 continue
             elif element.is_optional:
                 optional_blob.append(element)
