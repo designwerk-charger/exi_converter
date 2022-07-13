@@ -179,7 +179,8 @@ class TypeTree:
                 components.append(Attribute(element_name="value", element_type=refered_item.base_class,
                                           is_optional=False))
             if len(components) == 0:
-                print(f"WARNING: Complex Element without components {refered_item.type_name}")
+                # print(f"WARNING: Complex Element without components {refered_item.type_name}")
+                pass
             elif isinstance(components[-1], Attribute):
                 print(f"Attribute only component in Type {refered_item.type_name}")
             refered_item.add_child_elements(components)
