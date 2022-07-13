@@ -102,7 +102,7 @@ void BitStream::add_max_8bits(uint8_t data, uint8_t num_bits) {
     if (num_bits > 8)
         throw std::range_error("Number of bits must be < 8");
 
-    uint8_t addr_exi_byte = bit_counter_ >> 3;
+    size_t addr_exi_byte = bit_counter_ >> 3;
     uint8_t bit_pos_in_byte = bit_counter_ - (addr_exi_byte << 3);
     uint8_t bits_left_in_byte = 8 - bit_pos_in_byte;
 

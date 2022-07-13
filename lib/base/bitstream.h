@@ -21,8 +21,8 @@ public:
     virtual std::vector<uint8_t> get_exi_data();
 private:
     std::vector<uint8_t>exi_data_;
-    uint32_t bit_counter_;
-    uint32_t num_bits_;
+    size_t bit_counter_;
+    size_t num_bits_;
 };
 
 #endif //EXI_CONVERTER_BITSTREAM_H
