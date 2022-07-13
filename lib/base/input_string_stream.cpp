@@ -194,11 +194,15 @@ InputStringStream::item_store_t InputStringStream::split_items(const std::string
 
 
 void InputStringStream::verify_item_and_move_to_next(const std::string & expected_item) {
-    const std::string & current_item = input_items_.at(item_cnt_++).first;
-    if (current_item != expected_item) {
-        throw std::runtime_error(
-                "Found \"" + current_item + "\" instead of \"" + expected_item
+    try {
+        const std::string &current_item = input_items_.at(item_cnt_++).first;
+        if (current_item != expected_item) {
+            throw std::runtime_error("Found \"" + current_item + "\" instead of \"" + expected_item
                 + "\" item found in " + get_input_data());
+        }
+    } catch (const std::out_of_range& _) {
+        throw std::runtime_error("Tried to verify item \"" + expected_item
+                                 + "\" but no further items are available from " + get_input_data());
     }
 }
 
