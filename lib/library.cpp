@@ -67,7 +67,8 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
     }
     base_types.add_event_code("Body");
     body_message.encodeBody();
-
+    base_types.add_event_code("FinishedBody");
+    base_types.add_event_code("Finished");
 
     return bitstream->get_exi_data();
 }
