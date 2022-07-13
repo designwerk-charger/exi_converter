@@ -186,3 +186,201 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqTyp
     compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
 }
 
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterType) {
+    /* Data extracted from OpenV2G
+     * DC_EVChargeParameterType -> Start
+     *   FirstStartTag[START_ELEMENT(DepartureTime), START_ELEMENT(DC_EVStatus)]
+     *     getting 2bit(s) from position 109 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 111 --> 0x0000
+     *     getting 8bit(s) from position 112 --> 0x0000
+     *   END_ELEMENT(DepartureTime)
+     *     getting 1bit(s) from position 120 --> 0x0000
+     *   Element[START_ELEMENT(DC_EVStatus)]
+     *     getting 1bit(s) from position 121 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(EVReady)]
+     *     getting 1bit(s) from position 122 --> 0x0000
+     *     getting 1bit(s) from position 123 --> 0x0000
+     *     getting 1bit(s) from position 124 --> 0x0001
+     *   END_ELEMENT(EVReady)
+     *     getting 1bit(s) from position 125 --> 0x0000
+     *   Element[START_ELEMENT(EVErrorCode)]
+     *     getting 1bit(s) from position 126 --> 0x0000
+     *     getting 1bit(s) from position 127 --> 0x0000
+     *     getting 4bit(s) from position 128 --> 0x0000
+     *   END_ELEMENT(EVErrorCode)
+     *     getting 1bit(s) from position 132 --> 0x0000
+     *   Element[START_ELEMENT(EVRESSSOC)]
+     *     getting 1bit(s) from position 133 --> 0x0000
+     *     getting 1bit(s) from position 134 --> 0x0000
+     *     getting 7bit(s) from position 135 --> 0x003c
+     *   END_ELEMENT(EVRESSSOC)
+     *     getting 1bit(s) from position 142 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 143 --> 0x0000
+     *   Element[START_ELEMENT(EVMaximumCurrentLimit)]
+     *     getting 1bit(s) from position 144 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 145 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 146 --> 0x0000
+     *     getting 3bit(s) from position 147 --> 0x0000
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 150 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 151 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 152 --> 0x0000
+     *     getting 3bit(s) from position 153 --> 0x0003
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 156 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 157 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 158 --> 0x0000
+     *     getting 1bit(s) from position 159 --> 0x0000
+     *     getting 8bit(s) from position 160 --> 0x0080
+     *     getting 8bit(s) from position 168 --> 0x00fa
+     *     getting 8bit(s) from position 176 --> 0x0001
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 184 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 185 --> 0x0000
+     *   Element[START_ELEMENT(EVMaximumPowerLimit), START_ELEMENT(EVMaximumVoltageLimit)]
+     *     getting 2bit(s) from position 186 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 188 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 189 --> 0x0000
+     *     getting 3bit(s) from position 190 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 193 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 194 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 195 --> 0x0000
+     *     getting 3bit(s) from position 196 --> 0x0005
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 199 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 200 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 201 --> 0x0000
+     *     getting 1bit(s) from position 202 --> 0x0000
+     *     getting 8bit(s) from position 203 --> 0x00c0
+     *     getting 8bit(s) from position 211 --> 0x003e
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 219 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 220 --> 0x0000
+     *   Element[START_ELEMENT(EVMaximumVoltageLimit)]
+     *     getting 1bit(s) from position 221 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 222 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 223 --> 0x0000
+     *     getting 3bit(s) from position 224 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 227 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 228 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 229 --> 0x0000
+     *     getting 3bit(s) from position 230 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 233 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 234 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 235 --> 0x0000
+     *     getting 1bit(s) from position 236 --> 0x0000
+     *     getting 8bit(s) from position 237 --> 0x0028
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 245 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 246 --> 0x0000
+     *   Element[START_ELEMENT(EVEnergyCapacity), START_ELEMENT(EVEnergyRequest), START_ELEMENT(FullSOC), START_ELEMENT(BulkSOC), END_ELEMENT]
+     *     getting 3bit(s) from position 247 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 250 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 251 --> 0x0000
+     *     getting 3bit(s) from position 252 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 255 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 256 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 257 --> 0x0000
+     *     getting 3bit(s) from position 258 --> 0x0006
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 261 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 262 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 263 --> 0x0000
+     *     getting 1bit(s) from position 264 --> 0x0000
+     *     getting 8bit(s) from position 265 --> 0x00d8
+     *     getting 8bit(s) from position 273 --> 0x0036
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 281 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 282 --> 0x0000
+     *   Element[START_ELEMENT(EVEnergyRequest), START_ELEMENT(FullSOC), START_ELEMENT(BulkSOC), END_ELEMENT]
+     *     getting 3bit(s) from position 283 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 286 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 287 --> 0x0000
+     *     getting 3bit(s) from position 288 --> 0x0004
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 291 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 292 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 293 --> 0x0000
+     *     getting 3bit(s) from position 294 --> 0x0006
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 297 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 298 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 299 --> 0x0000
+     *     getting 1bit(s) from position 300 --> 0x0000
+     *     getting 8bit(s) from position 301 --> 0x00f0
+     *     getting 8bit(s) from position 309 --> 0x002e
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 317 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 318 --> 0x0000
+     *   Element[START_ELEMENT(FullSOC), START_ELEMENT(BulkSOC), END_ELEMENT]
+     *     getting 2bit(s) from position 319 --> 0x0000
+     *     getting 1bit(s) from position 321 --> 0x0000
+     *     getting 7bit(s) from position 322 --> 0x005a
+     *   END_ELEMENT(FullSOC)
+     *     getting 1bit(s) from position 329 --> 0x0000
+     *   Element[START_ELEMENT(BulkSOC), END_ELEMENT]
+     *     getting 2bit(s) from position 330 --> 0x0000
+     *     getting 1bit(s) from position 332 --> 0x0000
+     *     getting 7bit(s) from position 333 --> 0x0050
+     *   END_ELEMENT(BulkSOC)
+     *     getting 1bit(s) from position 340 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 341 --> 0x0000
+     * DC_EVChargeParameterType -> Done
+     */
+
+    std::vector<uint8_t> raw_data({0b00000000, 0b00000001, 0b00000000, 0b00011110, 0b00000000, 0b00000110,
+                                   0b00010000, 0b00011111, 0b01000000, 0b00100000, 0b01000001, 0b01000011,
+                                   0b00000000, 0b11111000, 0b00010000, 0b01000000, 0b00101000, 0b00000001,
+                                   0b00000110, 0b00001101, 0b10000011, 0b01100000, 0b00010000, 0b01100000,
+                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000});
+
+    std::string input_json = R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_DC_EVChargeParameterType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+}
+
