@@ -194,6 +194,9 @@ InputStringStream::item_store_t InputStringStream::split_items(const std::string
 
 
 void InputStringStream::verify_item_and_move_to_next(const std::string & expected_item) {
+    #ifndef NDEBUG
+        std::cout << "Ensure item '" << expected_item << "' is available" << std::endl;
+    #endif
     try {
         const std::string &current_item = input_items_.at(item_cnt_++).first;
         if (current_item != expected_item) {
