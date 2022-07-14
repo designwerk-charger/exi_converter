@@ -65,7 +65,8 @@ TestDataContainer const ISO15118_2_REQUEST_TEST_DATA[] = {
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"AuthorizationReq":{}}}})"),
         TestDataContainer(
                 "ChargeParameterDiscoveryReq",
-                "8098020df6a63dcd82240f9094c8000800f0003080fa01020a1807c082014008306c1b00830781702d050000",
+                "8098020df6a63dcd82240f9094c8000800f0003080fa01020a1807c082014008306c1b00830781702d0500",
+                // 0x00 removed from end
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ChargeParameterDiscoveryReq":{"RequestedEnergyTransferMode":"DC_extended","DC_EVChargeParameter":{"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80}}}}})"),
         TestDataContainer(
                 "CableCheckReq",
@@ -123,6 +124,14 @@ TEST(ISO15118_2, SpecificMessageDecoding) {
     auto ISO_MSG = TestDataContainer(
             "SessionStopReq",
             "8098020df6a63dcd82240f91f000",
-            R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"SessionStopReq":{"ChargingSession":"Terminate"}}}})");
+            R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"SessionStopReq":{"ChargingSession":"Terminate"}}}})");  // NOLINT
     ASSERT_EQ(run_decoding(ISO_MSG, "urn:iso:15118:2:2013:MsgDef"), ISO_MSG.json_str);
+}
+
+TEST(ISO15118_2, SpecificMessageEncoding) {
+    auto ISO_MSG = TestDataContainer(
+            "SessionStopReq",
+            "8098020df6a63dcd82240f91f000",
+            R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"SessionStopReq":{"ChargingSession":"Terminate"}}}})");  // NOLINT
+    ASSERT_EQ(run_encoding(ISO_MSG, "urn:iso:15118:2:2013:MsgDef"), ISO_MSG.hex_str);
 }
