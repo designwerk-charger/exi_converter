@@ -77,6 +77,12 @@ TEST(StringStreamTest_ItemSplitting, WorksWithFlatMultipleKeyValues) {
     EXPECT_EQ(items.at(5).first, "4");
 }
 
+TEST(StringStreamTest_ItemSplitting, NullCharacterTest) {
+    auto items = InputStringStream::split_items(R"({"Nullchar:":""})");
+    EXPECT_EQ(items.at(0).first, "Nullchar:\0");
+    EXPECT_EQ(items.at(1).first, "\0");
+}
+
 TEST(StringStreamTest_ItemSplitting, WorksWithAComplexConstruct1) {
     auto items = InputStringStream::split_items(R"({"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]})");
     assert_item_equality(items, {"CanonicalizationMethod", "Algorithm",

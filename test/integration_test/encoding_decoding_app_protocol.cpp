@@ -12,6 +12,9 @@ TestDataContainer const APP_PROTOCOL_TEST_DATA[] = {
                 "supportedAppProtocolRes",
                 "80400080",
                 R"({"supportedAppProtocolRes":{"ResponseCode":"OK_SuccessfulNegotiation","SchemaID":2}})"),
+};
+
+TestDataContainer const APP_PROTOCOL_DECODER_SPECIAL_TEST_DATA[] = {
         TestDataContainer(
                 "supportedAppProtocolReq_With0Character_CausingErrorInOldCcsHandler",
                 "8000e3ab9371d3234b71d1b981899189d191818991d26b9b3a232b3000020000280401e75726e3a69736f3a31353131383a323a323031333a4d7367446566000040000a00080",   // NOLINT
@@ -31,4 +34,25 @@ TEST_P(DecodingAppProtocol, WithExiDecoder) {
 INSTANTIATE_TEST_CASE_P(
         RequestResponseMessages,
         DecodingAppProtocol,
+        ::testing::ValuesIn(APP_PROTOCOL_TEST_DATA));
+
+INSTANTIATE_TEST_CASE_P(
+        RequestResponseSpecialMessages,
+        DecodingAppProtocol,
+        ::testing::ValuesIn(APP_PROTOCOL_DECODER_SPECIAL_TEST_DATA));
+
+
+/* ************************************
+ * Encoding
+ * ********************************* */
+class EncodingAppProtocol :public ::testing::TestWithParam<TestDataContainer> { };
+
+TEST_P(EncodingAppProtocol, WithExiDecoder) {
+    TestDataContainer test_data = GetParam();
+    ASSERT_EQ(run_encoding(test_data, "urn:iso:15118:2:2010:AppProtocol"), test_data.hex_str);
+}
+
+INSTANTIATE_TEST_CASE_P(
+        RequestResponseMessages,
+        EncodingAppProtocol,
         ::testing::ValuesIn(APP_PROTOCOL_TEST_DATA));
