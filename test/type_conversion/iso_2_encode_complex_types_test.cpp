@@ -88,6 +88,49 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleAttributes_EMAIDType) {
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
 
+TEST_F(Iso2EncodeComplexTypesTest, EncodeElementsWithSubstitutes_PowerDeliveryResType) {
+    /* Data extracted from OpenV2G
+     *   DecodePowerDeliveryResType -> Start
+     *   getting 1bit(s) from position 100 --> 0x0000 1
+     *   getting 1bit(s) from position 101 --> 0x0000
+     *   getting value for 'ResponseCode'
+     *   getting 5bit(s) from position 102 --> 0x0000
+     *   getting 1bit(s) from position 107 --> 0x0000
+     *   getting 2bit(s) from position 108 --> 0x0001 2
+     *   getting 1bit(s) from position 110 --> 0x0000
+     *   getting 1bit(s) from position 111 --> 0x0000
+     *   getting value for 'NotificationMaxDelay'
+     *   getting 8bit(s) from position 112 --> 0x0000
+     *   getting 1bit(s) from position 120 --> 0x0000
+     *   getting 1bit(s) from position 121 --> 0x0000
+     *   getting 1bit(s) from position 122 --> 0x0000
+     *   getting value for 'EVSENotification'
+     *   getting 2bit(s) from position 123 --> 0x0000
+     *   getting 1bit(s) from position 125 --> 0x0000
+     *   getting 2bit(s) from position 126 --> 0x0000
+     *   getting 1bit(s) from position 128 --> 0x0000
+     *   getting value for 'EVSEIsolationStatus'
+     *   getting 3bit(s) from position 129 --> 0x0001
+     *   getting 1bit(s) from position 132 --> 0x0000
+     *   getting 1bit(s) from position 133 --> 0x0000
+     *   getting 1bit(s) from position 134 --> 0x0000
+     *   getting value for 'EVSEStatusCode'
+     *   getting 4bit(s) from position 135 --> 0x0001
+     *   getting 1bit(s) from position 139 --> 0x0000
+     *   getting 1bit(s) from position 140 --> 0x0000
+     *   getting 1bit(s) from position 141 --> 0x0000
+     *   DecodePowerDeliveryResType -> Done
+     */
+
+    std::string input_json = R"({"ResponseCode":"OK","DC_EVSEStatus":{"NotificationMaxDelay":0,"EVSENotification":"None","EVSEIsolationStatus":"Valid","EVSEStatusCode":"EVSE_Ready"}})";
+    std::vector<uint8_t> output_raw({0b00000000, 0b01000000, 0b00000000, 0b00000001, 0b00000010, 0x00});
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PowerDeliveryResType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
 TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList) {
     /* Data extracted from OpenV2G
      * PaymentOptionList --> Start
@@ -374,13 +417,173 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterTy
                                    0b00010000, 0b00011111, 0b01000000, 0b00100000, 0b01000001, 0b01000011,
                                    0b00000000, 0b11111000, 0b00010000, 0b01000000, 0b00101000, 0b00000001,
                                    0b00000110, 0b00001101, 0b10000011, 0b01100000, 0b00010000, 0b01100000,
-                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000});
+                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000, 0x00});
+    // last 0x00 manually added
 
     std::string input_json = R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})";
     setupWithJsonData(input_json);
 
     complex_types->encode_DC_EVChargeParameterType();
 
-    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+    compareBinaryVector(bit_stream->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_MessageHeaderTypeWithoutOptionalParts) {
+    /* Start iso header
+    FirstStartTag[START_ELEMENT(SessionID)]
+        getting 1bit(s) from position 16 --> 0x0000
+        getting 1bit(s) from position 17 --> 0x0000
+        getting 8bit(s) from position 18 --> 0x0008
+        getting 8bit(s) from position 26 --> 0x0037
+        getting 8bit(s) from position 34 --> 0x00da
+        getting 8bit(s) from position 42 --> 0x0098
+        getting 8bit(s) from position 50 --> 0x00f7
+        getting 8bit(s) from position 58 --> 0x0036
+        getting 8bit(s) from position 66 --> 0x0008
+        getting 8bit(s) from position 74 --> 0x0090
+        getting 8bit(s) from position 82 --> 0x003e
+    END_ELEMENT(SessionID)
+        getting 1bit(s) from position 90 --> 0x0000
+    Element[START_ELEMENT(Notification), START_ELEMENT(Signature), END_ELEMENT]
+        getting 2bit(s) from position 91 --> 0x0002
+    End iso header
+     */
+
+    std::vector<uint8_t> raw_data({0b00000010, 0b00001101, 0b11110110,
+                                   0b10100110, 0b00111101, 0b11001101, 0b10000010,
+                                   0b00100100, 0b00001111, 0b10010000});
+
+    std::string input_json = R"({"SessionID":"37DA98F73608903E"})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_MessageHeaderType();
+
+    compareBinaryVector(bit_stream->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq) {
+    /* Data extracted from OpenV2G
+     * DecodePowerDeliveryReqType -> Start
+     *     getting 1bit(s) from position 100 --> 0x0000
+     *     getting 1bit(s) from position 101 --> 0x0000
+     *     getting 2bit(s) from position 102 --> 0x0000
+     *     getting 1bit(s) from position 104 --> 0x0000
+     *     getting 1bit(s) from position 105 --> 0x0000
+     *     getting 1bit(s) from position 106 --> 0x0000
+     *     getting 8bit(s) from position 107 --> 0x0000
+     *     getting 1bit(s) from position 115 --> 0x0000
+     *   Element[START_ELEMENT(ChargingProfile), START_ELEMENT(DC_EVPowerDeliveryParameter), START_ELEMENT(EVPowerDeliveryParameter), END_ELEMENT]
+     *     getting 3bit(s) from position 116 --> 0x0001
+     *   DC_EVPowerDeliveryParameterType -> Start1
+     *   FirstStartTag[START_ELEMENT(DC_EVStatus)]
+     *     getting 1bit(s) from position 119 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(EVReady)]
+     *     getting 1bit(s) from position 120 --> 0x0000
+     *     getting 1bit(s) from position 121 --> 0x0000
+     *     getting 1bit(s) from position 122 --> 0x0001
+     *   END_ELEMENT(EVReady)
+     *     getting 1bit(s) from position 123 --> 0x0000
+     *   Element[START_ELEMENT(EVErrorCode)]
+     *     getting 1bit(s) from position 124 --> 0x0000
+     *     getting 1bit(s) from position 125 --> 0x0000
+     *     getting 4bit(s) from position 126 --> 0x0000
+     *   END_ELEMENT(EVErrorCode)
+     *     getting 1bit(s) from position 130 --> 0x0000
+     *   Element[START_ELEMENT(EVRESSSOC)]
+     *     getting 1bit(s) from position 131 --> 0x0000
+     *     getting 1bit(s) from position 132 --> 0x0000
+     *     getting 7bit(s) from position 133 --> 0x003c
+     *   END_ELEMENT(EVRESSSOC)
+     *     getting 1bit(s) from position 140 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 141 --> 0x0000
+     *   Element[START_ELEMENT(BulkChargingComplete), START_ELEMENT(ChargingComplete)]
+     *     getting 2bit(s) from position 142 --> 0x0001
+     *     getting 1bit(s) from position 144 --> 0x0000
+     *     getting 1bit(s) from position 145 --> 0x0001
+     *     getting 1bit(s) from position 146 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 147 --> 0x0000
+     *   DC_EVPowerDeliveryParameterType -> Done1
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 148 --> 0x0000
+     * DecodePowerDeliveryReqType -> Done
+     */
+
+    std::string input_json = R"({"ChargeProgress":"Start","SAScheduleTupleID":1,"DC_EVPowerDeliveryParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"ChargingComplete":true}})";
+    std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0b00100010, 0b00000000, 0b00111100, 0b00010100});
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PowerDeliveryReqType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeList_ChargeParameterDiscoveryRes_PMaxScheduleEntry) {
+    /* Data extracted from OpenV2G
+     * PMaxScheduleType Start
+     *   FirstStartTag[START_ELEMENT(PMaxScheduleEntry)]
+     *     getting 1bit(s) from position 2355 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(RelativeTimeInterval), START_ELEMENT(TimeInterval)]
+     *     getting 2bit(s) from position 2356 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2358 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2359 --> 0x0000
+     *     getting 8bit(s) from position 2360 --> 0x0000
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2368 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2369 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2371 --> 0x0000
+     *     getting 8bit(s) from position 2372 --> 0x0090
+     *     getting 8bit(s) from position 2380 --> 0x001c
+     *   END_ELEMENT(duration)
+     *     getting 1bit(s) from position 2388 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2389 --> 0x0000
+     *   Element[START_ELEMENT(PMax)]
+     *     getting 1bit(s) from position 2390 --> 0x0000
+     *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)]
+     *     getting 1bit(s) from position 2391 --> 0x0000
+     *   FirstStartTag[CHARACTERS[NBIT_UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2392 --> 0x0000
+     *     getting 3bit(s) from position 2393 --> 0x0003
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Multiplier)
+     *     getting 1bit(s) from position 2396 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)]
+     *     getting 1bit(s) from position 2397 --> 0x0000
+     *   FirstStartTag[CHARACTERS[ENUMERATION]]
+     *     getting 1bit(s) from position 2398 --> 0x0000
+     *     getting 3bit(s) from position 2399 --> 0x0005
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Unit)
+     *     getting 1bit(s) from position 2402 --> 0x0000
+     *   Element[START_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)]
+     *     getting 1bit(s) from position 2403 --> 0x0000
+     *   First(xsi:type)StartTag[CHARACTERS[INTEGER]]
+     *     getting 1bit(s) from position 2404 --> 0x0000
+     *     getting 1bit(s) from position 2405 --> 0x0000
+     *     getting 8bit(s) from position 2406 --> 0x00f8
+     *     getting 8bit(s) from position 2414 --> 0x0055
+     *   END_ELEMENT({urn:iso:15118:2:2013:MsgDataTypes}Value)
+     *     getting 1bit(s) from position 2422 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2423 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2424 --> 0x0000
+     *   Element[START_ELEMENT(PMaxScheduleEntry)]
+     *     getting 2bit(s) from position 2425 --> 0x0001
+     * PMaxScheduleType Done
+     */
+
+    std::string input_json = R"({"PMaxScheduleEntry":[{"RelativeTimeInterval":{"start":0,"duration":3600},"PMax":{"Multiplier":0,"Unit":"W","Value":11000}}]})";
+    std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0b01001000, 0b00001110, 0b00000001, 0b10001010, 0b00011111,
+                                     0b00001010, 0b10100001});
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PMaxScheduleType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
 

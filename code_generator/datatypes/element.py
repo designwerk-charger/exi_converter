@@ -5,12 +5,13 @@ from datatypes.base_type import BaseType
 
 class Element:
 
-    def __init__(self, element_name: str, element_type: BaseType, is_optional: bool, max_items: int, substitutes: Dict):
+    def __init__(self, element_name: str, element_type: BaseType, is_optional: bool, max_items: int, substitutes: Dict, created_from_abstract=False):
         self.element_name = element_name
         self.element_type = element_type
         self.is_optional = is_optional
         self.max_items = max_items
         self.is_list = False
+        self.created_from_abstract = created_from_abstract
         if not isinstance(max_items, int):
             print(f"the max item ({max_items}) for element {self.element_name} of type {self.element_type.type_name} is not a number. Assuming 40 as maximum!")
             self.max_items = 40
