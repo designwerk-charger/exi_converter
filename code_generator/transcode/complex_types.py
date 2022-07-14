@@ -397,7 +397,7 @@ class ComplexTypes:
 
     def get_encode_code_for_optional_and_abstract_blob(self, elements: List[Element], is_last: bool) -> str:
         def get_num_elements():
-            num_elements = len(all_elements_flat)
+            num_elements = len(all_elements_flat) + ComplexTypes.get_num_AnyElements(elements)
             if is_last:
                 num_elements += 1
             return num_elements
@@ -418,7 +418,7 @@ class ComplexTypes:
                 f"\n" \
                 f"\tuint8_t offset = 0, iteration, event_code, num_bits_eventcode;\n" \
                 f"\tstd::string element_name;\n" \
-                f"\tbool last_option_taken = false;" \
+                f"\tbool last_option_taken = false;\n" \
                 f"\tnum_bits_eventcode = log_lookup[std::max(static_cast<int8_t>(2), static_cast<int8_t>({get_num_elements()}))];\n" \
                 f"\tfor (iteration=0; iteration < {len(all_elements_flat)}; iteration++) {{\n" \
                 f"\t\telement_name = input_string_stream_->get_item();\n" \
@@ -454,19 +454,21 @@ class ComplexTypes:
                 f"\t\t}}"
         if not is_last:
             code += f" else {{\n" \
-                f"\t\t\t// element not found in list\n" \
+                f"\t\t\t// element not found in optional elements\n" \
                 f"\t\t\tevent_code = {len(all_elements_flat)} - offset;\n" \
                 f"\t\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"EndOptionalElement_{element.element_name}\");\n" \
                 f"\t\t\tlast_option_taken = true;\n" \
                 f"\t\t}}"
         code += f"\n\t}}\n"
 
-        if True:
+        if not element.element_name in ["NumEPriceLevels", "Transforms"]:
             code += f"\tif (!last_option_taken) {{  // last element of type --> can not catch unexisting elements\n" \
-                    f"\tevent_code = {len(all_elements_flat)} - offset;\n" \
-                    f"\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"EndOptionalElement_{element.element_name}\");\n" \
-                    f"\t}} else if (!{str(is_last).lower()}) {{\n" \
-                    f"\t\t// base_types_->add_event_code_with_n_bits(0, 1, \"FinishedOptionalElement_{element.element_name}\");\n" \
+                    f"\t\tevent_code = {len(all_elements_flat)} - offset;\n" \
+                    f"\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"EndingOptionalElement_{element.element_name}\");\n" \
+                    f"\t}}\n"
+        if element.element_name in ["Transforms"]:
+            code += f"\tif (!last_option_taken) {{  // last element of type --> can not catch unexisting elements\n" \
+                    f"\t\tbase_types_->add_event_code_with_n_bits(0, 1, \"EndingOptionalElement_{element.element_name}\");\n" \
                     f"\t}}\n"
         code += f"}}\n"
         return code
@@ -475,9 +477,6 @@ class ComplexTypes:
         code = ""
         optional_blob = []
         was_normal_complex = False
-
-        if ct.type_name == "DC_EVSEStatus":
-            print("gugug")
 
         for element in ct.child_elements:
             was_normal_complex = False
@@ -512,7 +511,7 @@ class ComplexTypes:
                 sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
                 code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=False)
                 code += "\n"
-                was_optional = optional_blob[-1].is_optional
+                was_optional = optional_blob[-1].is_optional and not optional_blob[-1].is_list
                 optional_blob = []
             code += self.encode_element(element, from_optional=was_optional) + "\n"
             was_normal_complex = True

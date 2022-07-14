@@ -461,6 +461,378 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_MessageHeaderTypeWitho
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
 
+TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexCombination_MessageHeaderTypeWithOptionalParts) {
+    /* Data extracted from OpenV2G
+     * Start iso header
+     *   FirstStartTag[START_ELEMENT(SessionID)]
+     *     getting 1bit(s) from position 16 --> 0x0000
+     *     getting 1bit(s) from position 17 --> 0x0000
+     *     getting 8bit(s) from position 18 --> 0x0008
+     *     getting 8bit(s) from position 26 --> 0x0037
+     *     getting 8bit(s) from position 34 --> 0x00da
+     *     getting 8bit(s) from position 42 --> 0x0098
+     *     getting 8bit(s) from position 50 --> 0x00f7
+     *     getting 8bit(s) from position 58 --> 0x0036
+     *     getting 8bit(s) from position 66 --> 0x0008
+     *     getting 8bit(s) from position 74 --> 0x0090
+     *     getting 8bit(s) from position 82 --> 0x003e
+     *     getting 1bit(s) from position 90 --> 0x0000
+     *   Element[START_ELEMENT(Notification), START_ELEMENT(Signature), END_ELEMENT]
+     *     getting 2bit(s) from position 91 --> 0x0001
+     * SignatureType -> Start
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), START_ELEMENT(SignedInfo)]
+     *     getting 2bit(s) from position 93 --> 0x0001
+     * SignedInfo -> Start
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), START_ELEMENT(CanonicalizationMethod)]
+     *     getting 2bit(s) from position 95 --> 0x0001
+     *     getting 1bit(s) from position 97 --> 0x0000
+     *     getting 8bit(s) from position 98 --> 0x0025
+     *     getting 8bit(s) from position 106 --> 0x0068
+     *     getting 8bit(s) from position 114 --> 0x0074
+     *     getting 8bit(s) from position 122 --> 0x0074
+     *     getting 8bit(s) from position 130 --> 0x0070
+     *     getting 8bit(s) from position 138 --> 0x003a
+     *     getting 8bit(s) from position 146 --> 0x002f
+     *     getting 8bit(s) from position 154 --> 0x002f
+     *     getting 8bit(s) from position 162 --> 0x0077
+     *     getting 8bit(s) from position 170 --> 0x0077
+     *     getting 8bit(s) from position 178 --> 0x0077
+     *     getting 8bit(s) from position 186 --> 0x002e
+     *     getting 8bit(s) from position 194 --> 0x0077
+     *     getting 8bit(s) from position 202 --> 0x0033
+     *     getting 8bit(s) from position 210 --> 0x002e
+     *     getting 8bit(s) from position 218 --> 0x006f
+     *     getting 8bit(s) from position 226 --> 0x0072
+     *     getting 8bit(s) from position 234 --> 0x0067
+     *     getting 8bit(s) from position 242 --> 0x002f
+     *     getting 8bit(s) from position 250 --> 0x0054
+     *     getting 8bit(s) from position 258 --> 0x0052
+     *     getting 8bit(s) from position 266 --> 0x002f
+     *     getting 8bit(s) from position 274 --> 0x0063
+     *     getting 8bit(s) from position 282 --> 0x0061
+     *     getting 8bit(s) from position 290 --> 0x006e
+     *     getting 8bit(s) from position 298 --> 0x006f
+     *     getting 8bit(s) from position 306 --> 0x006e
+     *     getting 8bit(s) from position 314 --> 0x0069
+     *     getting 8bit(s) from position 322 --> 0x0063
+     *     getting 8bit(s) from position 330 --> 0x0061
+     *     getting 8bit(s) from position 338 --> 0x006c
+     *     getting 8bit(s) from position 346 --> 0x002d
+     *     getting 8bit(s) from position 354 --> 0x0065
+     *     getting 8bit(s) from position 362 --> 0x0078
+     *     getting 8bit(s) from position 370 --> 0x0069
+     *     getting 8bit(s) from position 378 --> 0x002f
+     *     getting 2bit(s) from position 386 --> 0x0001
+     *   Element[START_ELEMENT(SignatureMethod)]
+     *     getting 1bit(s) from position 388 --> 0x0000
+     *     getting 1bit(s) from position 389 --> 0x0000
+     *     getting 8bit(s) from position 390 --> 0x0035
+     *     getting 8bit(s) from position 398 --> 0x0068
+     *     getting 8bit(s) from position 406 --> 0x0074
+     *     getting 8bit(s) from position 414 --> 0x0074
+     *     getting 8bit(s) from position 422 --> 0x0070
+     *     getting 8bit(s) from position 430 --> 0x003a
+     *     getting 8bit(s) from position 438 --> 0x002f
+     *     getting 8bit(s) from position 446 --> 0x002f
+     *     getting 8bit(s) from position 454 --> 0x0077
+     *     getting 8bit(s) from position 462 --> 0x0077
+     *     getting 8bit(s) from position 470 --> 0x0077
+     *     getting 8bit(s) from position 478 --> 0x002e
+     *     getting 8bit(s) from position 486 --> 0x0077
+     *     getting 8bit(s) from position 494 --> 0x0033
+     *     getting 8bit(s) from position 502 --> 0x002e
+     *     getting 8bit(s) from position 510 --> 0x006f
+     *     getting 8bit(s) from position 518 --> 0x0072
+     *     getting 8bit(s) from position 526 --> 0x0067
+     *     getting 8bit(s) from position 534 --> 0x002f
+     *     getting 8bit(s) from position 542 --> 0x0032
+     *     getting 8bit(s) from position 550 --> 0x0030
+     *     getting 8bit(s) from position 558 --> 0x0030
+     *     getting 8bit(s) from position 566 --> 0x0031
+     *     getting 8bit(s) from position 574 --> 0x002f
+     *     getting 8bit(s) from position 582 --> 0x0030
+     *     getting 8bit(s) from position 590 --> 0x0034
+     *     getting 8bit(s) from position 598 --> 0x002f
+     *     getting 8bit(s) from position 606 --> 0x0078
+     *     getting 8bit(s) from position 614 --> 0x006d
+     *     getting 8bit(s) from position 622 --> 0x006c
+     *     getting 8bit(s) from position 630 --> 0x0064
+     *     getting 8bit(s) from position 638 --> 0x0073
+     *     getting 8bit(s) from position 646 --> 0x0069
+     *     getting 8bit(s) from position 654 --> 0x0067
+     *     getting 8bit(s) from position 662 --> 0x002d
+     *     getting 8bit(s) from position 670 --> 0x006d
+     *     getting 8bit(s) from position 678 --> 0x006f
+     *     getting 8bit(s) from position 686 --> 0x0072
+     *     getting 8bit(s) from position 694 --> 0x0065
+     *     getting 8bit(s) from position 702 --> 0x0023
+     *     getting 8bit(s) from position 710 --> 0x0065
+     *     getting 8bit(s) from position 718 --> 0x0063
+     *     getting 8bit(s) from position 726 --> 0x0064
+     *     getting 8bit(s) from position 734 --> 0x0073
+     *     getting 8bit(s) from position 742 --> 0x0061
+     *     getting 8bit(s) from position 750 --> 0x002d
+     *     getting 8bit(s) from position 758 --> 0x0073
+     *     getting 8bit(s) from position 766 --> 0x0068
+     *     getting 8bit(s) from position 774 --> 0x0061
+     *     getting 8bit(s) from position 782 --> 0x0032
+     *     getting 8bit(s) from position 790 --> 0x0035
+     *     getting 8bit(s) from position 798 --> 0x0036
+     *     getting 3bit(s) from position 806 --> 0x0002
+     *   Element[START_ELEMENT(Reference)]
+     *     getting 1bit(s) from position 809 --> 0x0000
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), ATTRIBUTE[STRING](Type), ATTRIBUTE[STRING](URI), START_ELEMENT(Transforms), START_ELEMENT(DigestMethod)]
+     *     getting 3bit(s) from position 810 --> 0x0002
+     *     getting 8bit(s) from position 813 --> 0x0006
+     *     getting 8bit(s) from position 821 --> 0x0023
+     *     getting 8bit(s) from position 829 --> 0x0069
+     *     getting 8bit(s) from position 837 --> 0x0064
+     *     getting 8bit(s) from position 845 --> 0x0031
+     *   StartTag[START_ELEMENT(Transforms), START_ELEMENT(DigestMethod)]
+     *     getting 2bit(s) from position 853 --> 0x0000
+     *     getting 1bit(s) from position 855 --> 0x0000
+     *     getting 1bit(s) from position 856 --> 0x0000
+     *     getting 8bit(s) from position 857 --> 0x0025
+     *     getting 8bit(s) from position 865 --> 0x0068
+     *     getting 8bit(s) from position 873 --> 0x0074
+     *     getting 8bit(s) from position 881 --> 0x0074
+     *     getting 8bit(s) from position 889 --> 0x0070
+     *     getting 8bit(s) from position 897 --> 0x003a
+     *     getting 8bit(s) from position 905 --> 0x002f
+     *     getting 8bit(s) from position 913 --> 0x002f
+     *     getting 8bit(s) from position 921 --> 0x0077
+     *     getting 8bit(s) from position 929 --> 0x0077
+     *     getting 8bit(s) from position 937 --> 0x0077
+     *     getting 8bit(s) from position 945 --> 0x002e
+     *     getting 8bit(s) from position 953 --> 0x0077
+     *     getting 8bit(s) from position 961 --> 0x0033
+     *     getting 8bit(s) from position 969 --> 0x002e
+     *     getting 8bit(s) from position 977 --> 0x006f
+     *     getting 8bit(s) from position 985 --> 0x0072
+     *     getting 8bit(s) from position 993 --> 0x0067
+     *     getting 8bit(s) from position 1001 --> 0x002f
+     *     getting 8bit(s) from position 1009 --> 0x0054
+     *     getting 8bit(s) from position 1017 --> 0x0052
+     *     getting 8bit(s) from position 1025 --> 0x002f
+     *     getting 8bit(s) from position 1033 --> 0x0063
+     *     getting 8bit(s) from position 1041 --> 0x0061
+     *     getting 8bit(s) from position 1049 --> 0x006e
+     *     getting 8bit(s) from position 1057 --> 0x006f
+     *     getting 8bit(s) from position 1065 --> 0x006e
+     *     getting 8bit(s) from position 1073 --> 0x0069
+     *     getting 8bit(s) from position 1081 --> 0x0063
+     *     getting 8bit(s) from position 1089 --> 0x0061
+     *     getting 8bit(s) from position 1097 --> 0x006c
+     *     getting 8bit(s) from position 1105 --> 0x002d
+     *     getting 8bit(s) from position 1113 --> 0x0065
+     *     getting 8bit(s) from position 1121 --> 0x0078
+     *     getting 8bit(s) from position 1129 --> 0x0069
+     *     getting 8bit(s) from position 1137 --> 0x002f
+     *     getting 3bit(s) from position 1145 --> 0x0002
+     *     getting 2bit(s) from position 1148 --> 0x0001
+     *   Element[START_ELEMENT(DigestMethod)]
+     *     getting 1bit(s) from position 1150 --> 0x0000
+     *     getting 1bit(s) from position 1151 --> 0x0000
+     *     getting 8bit(s) from position 1152 --> 0x0029
+     *     getting 8bit(s) from position 1160 --> 0x0068
+     *     getting 8bit(s) from position 1168 --> 0x0074
+     *     getting 8bit(s) from position 1176 --> 0x0074
+     *     getting 8bit(s) from position 1184 --> 0x0070
+     *     getting 8bit(s) from position 1192 --> 0x003a
+     *     getting 8bit(s) from position 1200 --> 0x002f
+     *     getting 8bit(s) from position 1208 --> 0x002f
+     *     getting 8bit(s) from position 1216 --> 0x0077
+     *     getting 8bit(s) from position 1224 --> 0x0077
+     *     getting 8bit(s) from position 1232 --> 0x0077
+     *     getting 8bit(s) from position 1240 --> 0x002e
+     *     getting 8bit(s) from position 1248 --> 0x0077
+     *     getting 8bit(s) from position 1256 --> 0x0033
+     *     getting 8bit(s) from position 1264 --> 0x002e
+     *     getting 8bit(s) from position 1272 --> 0x006f
+     *     getting 8bit(s) from position 1280 --> 0x0072
+     *     getting 8bit(s) from position 1288 --> 0x0067
+     *     getting 8bit(s) from position 1296 --> 0x002f
+     *     getting 8bit(s) from position 1304 --> 0x0032
+     *     getting 8bit(s) from position 1312 --> 0x0030
+     *     getting 8bit(s) from position 1320 --> 0x0030
+     *     getting 8bit(s) from position 1328 --> 0x0031
+     *     getting 8bit(s) from position 1336 --> 0x002f
+     *     getting 8bit(s) from position 1344 --> 0x0030
+     *     getting 8bit(s) from position 1352 --> 0x0034
+     *     getting 8bit(s) from position 1360 --> 0x002f
+     *     getting 8bit(s) from position 1368 --> 0x0078
+     *     getting 8bit(s) from position 1376 --> 0x006d
+     *     getting 8bit(s) from position 1384 --> 0x006c
+     *     getting 8bit(s) from position 1392 --> 0x0065
+     *     getting 8bit(s) from position 1400 --> 0x006e
+     *     getting 8bit(s) from position 1408 --> 0x0063
+     *     getting 8bit(s) from position 1416 --> 0x0023
+     *     getting 8bit(s) from position 1424 --> 0x0073
+     *     getting 8bit(s) from position 1432 --> 0x0068
+     *     getting 8bit(s) from position 1440 --> 0x0061
+     *     getting 8bit(s) from position 1448 --> 0x0032
+     *     getting 8bit(s) from position 1456 --> 0x0035
+     *     getting 8bit(s) from position 1464 --> 0x0036
+     *     getting 2bit(s) from position 1472 --> 0x0001
+     *   Element[START_ELEMENT(DigestValue)]
+     *     getting 1bit(s) from position 1474 --> 0x0000
+     *     getting 1bit(s) from position 1475 --> 0x0000
+     *     getting 8bit(s) from position 1476 --> 0x0020
+     *     getting 8bit(s) from position 1484 --> 0x0014
+     *     getting 8bit(s) from position 1492 --> 0x00e3
+     *     getting 8bit(s) from position 1500 --> 0x00d8
+     *     getting 8bit(s) from position 1508 --> 0x007a
+     *     getting 8bit(s) from position 1516 --> 0x00e2
+     *     getting 8bit(s) from position 1524 --> 0x0042
+     *     getting 8bit(s) from position 1532 --> 0x004b
+     *     getting 8bit(s) from position 1540 --> 0x006c
+     *     getting 8bit(s) from position 1548 --> 0x0030
+     *     getting 8bit(s) from position 1556 --> 0x005f
+     *     getting 8bit(s) from position 1564 --> 0x00d5
+     *     getting 8bit(s) from position 1572 --> 0x00f1
+     *     getting 8bit(s) from position 1580 --> 0x008a
+     *     getting 8bit(s) from position 1588 --> 0x0024
+     *     getting 8bit(s) from position 1596 --> 0x00fe
+     *     getting 8bit(s) from position 1604 --> 0x002f
+     *     getting 8bit(s) from position 1612 --> 0x002f
+     *     getting 8bit(s) from position 1620 --> 0x0068
+     *     getting 8bit(s) from position 1628 --> 0x007c
+     *     getting 8bit(s) from position 1636 --> 0x00d6
+     *     getting 8bit(s) from position 1644 --> 0x0058
+     *     getting 8bit(s) from position 1652 --> 0x00d5
+     *     getting 8bit(s) from position 1660 --> 0x009b
+     *     getting 8bit(s) from position 1668 --> 0x00be
+     *     getting 8bit(s) from position 1676 --> 0x0051
+     *     getting 8bit(s) from position 1684 --> 0x00a7
+     *     getting 8bit(s) from position 1692 --> 0x00ce
+     *     getting 8bit(s) from position 1700 --> 0x003f
+     *     getting 8bit(s) from position 1708 --> 0x005c
+     *     getting 8bit(s) from position 1716 --> 0x00f0
+     *     getting 8bit(s) from position 1724 --> 0x0086
+     *     getting 8bit(s) from position 1732 --> 0x00f0
+     *     getting 1bit(s) from position 1740 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 1741 --> 0x0000
+     *   Element[START_ELEMENT(Reference), END_ELEMENT]
+     *     getting 2bit(s) from position 1742 --> 0x0001
+     * SignedInfo -> Done
+     *   Element[START_ELEMENT(SignatureValue)]
+     *     getting 1bit(s) from position 1744 --> 0x0000
+     * signatureValue -> Start
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), CHARACTERS[BINARY_BASE64]]
+     *     getting 2bit(s) from position 1745 --> 0x0001
+     *   CHARACTERS[BINARY_BASE64]
+     *     getting 8bit(s) from position 1747 --> 0x0046
+     *     getting 8bit(s) from position 1755 --> 0x0030
+     *     getting 8bit(s) from position 1763 --> 0x0044
+     *     getting 8bit(s) from position 1771 --> 0x0002
+     *     getting 8bit(s) from position 1779 --> 0x0020
+     *     getting 8bit(s) from position 1787 --> 0x0056
+     *     getting 8bit(s) from position 1795 --> 0x00a2
+     *     getting 8bit(s) from position 1803 --> 0x0080
+     *     getting 8bit(s) from position 1811 --> 0x009f
+     *     getting 8bit(s) from position 1819 --> 0x003d
+     *     getting 8bit(s) from position 1827 --> 0x0052
+     *     getting 8bit(s) from position 1835 --> 0x003a
+     *     getting 8bit(s) from position 1843 --> 0x0025
+     *     getting 8bit(s) from position 1851 --> 0x0037
+     *     getting 8bit(s) from position 1859 --> 0x0032
+     *     getting 8bit(s) from position 1867 --> 0x0029
+     *     getting 8bit(s) from position 1875 --> 0x00e5
+     *     getting 8bit(s) from position 1883 --> 0x006c
+     *     getting 8bit(s) from position 1891 --> 0x00f5
+     *     getting 8bit(s) from position 1899 --> 0x00b5
+     *     getting 8bit(s) from position 1907 --> 0x004b
+     *     getting 8bit(s) from position 1915 --> 0x0076
+     *     getting 8bit(s) from position 1923 --> 0x008d
+     *     getting 8bit(s) from position 1931 --> 0x0083
+     *     getting 8bit(s) from position 1939 --> 0x00f2
+     *     getting 8bit(s) from position 1947 --> 0x0021
+     *     getting 8bit(s) from position 1955 --> 0x0043
+     *     getting 8bit(s) from position 1963 --> 0x005e
+     *     getting 8bit(s) from position 1971 --> 0x0070
+     *     getting 8bit(s) from position 1979 --> 0x00d7
+     *     getting 8bit(s) from position 1987 --> 0x0026
+     *     getting 8bit(s) from position 1995 --> 0x0074
+     *     getting 8bit(s) from position 2003 --> 0x00cf
+     *     getting 8bit(s) from position 2011 --> 0x00c5
+     *     getting 8bit(s) from position 2019 --> 0x0047
+     *     getting 8bit(s) from position 2027 --> 0x0028
+     *     getting 8bit(s) from position 2035 --> 0x0099
+     *     getting 8bit(s) from position 2043 --> 0x0002
+     *     getting 8bit(s) from position 2051 --> 0x0020
+     *     getting 8bit(s) from position 2059 --> 0x001c
+     *     getting 8bit(s) from position 2067 --> 0x0079
+     *     getting 8bit(s) from position 2075 --> 0x000c
+     *     getting 8bit(s) from position 2083 --> 0x00dd
+     *     getting 8bit(s) from position 2091 --> 0x00f6
+     *     getting 8bit(s) from position 2099 --> 0x008f
+     *     getting 8bit(s) from position 2107 --> 0x0003
+     *     getting 8bit(s) from position 2115 --> 0x005c
+     *     getting 8bit(s) from position 2123 --> 0x00a0
+     *     getting 8bit(s) from position 2131 --> 0x0012
+     *     getting 8bit(s) from position 2139 --> 0x0050
+     *     getting 8bit(s) from position 2147 --> 0x00bc
+     *     getting 8bit(s) from position 2155 --> 0x00c5
+     *     getting 8bit(s) from position 2163 --> 0x00f6
+     *     getting 8bit(s) from position 2171 --> 0x00c2
+     *     getting 8bit(s) from position 2179 --> 0x009f
+     *     getting 8bit(s) from position 2187 --> 0x00f8
+     *     getting 8bit(s) from position 2195 --> 0x00c8
+     *     getting 8bit(s) from position 2203 --> 0x00db
+     *     getting 8bit(s) from position 2211 --> 0x0063
+     *     getting 8bit(s) from position 2219 --> 0x0023
+     *     getting 8bit(s) from position 2227 --> 0x0081
+     *     getting 8bit(s) from position 2235 --> 0x003f
+     *     getting 8bit(s) from position 2243 --> 0x0080
+     *     getting 8bit(s) from position 2251 --> 0x00ce
+     *     getting 8bit(s) from position 2259 --> 0x00db
+     *     getting 8bit(s) from position 2267 --> 0x00aa
+     *     getting 8bit(s) from position 2275 --> 0x0020
+     *     getting 8bit(s) from position 2283 --> 0x00b9
+     *     getting 8bit(s) from position 2291 --> 0x0072
+     *     getting 8bit(s) from position 2299 --> 0x00d8
+     *     getting 8bit(s) from position 2307 --> 0x000b
+     *     getting 1bit(s) from position 2315 --> 0x0000
+     * signatureValue -> Done
+     *   Element[START_ELEMENT(KeyInfo), START_ELEMENT(Object), END_ELEMENT]
+     *     getting 2bit(s) from position 2316 --> 0x0002
+     * SignatureType -> Done
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2318 --> 0x0000
+     * End iso header
+     */
+
+    std::vector<uint8_t> raw_data({ 0x02, 0x0d, 0xf6, 0xa6, 0x3d, 0xcd, 0x82, 0x24, 0x0f, 0x8a, 0x89, 0x5a, 0x1d,
+                                    0x1d, 0x1c, 0x0e, 0x8b, 0xcb, 0xdd, 0xdd, 0xdd, 0xcb, 0x9d, 0xcc, 0xcb, 0x9b, 0xdc,
+                                    0x99, 0xcb, 0xd5, 0x14, 0x8b, 0xd8, 0xd8, 0x5b, 0x9b, 0xdb, 0x9a, 0x58, 0xd8, 0x5b,
+                                    0x0b, 0x59, 0x5e, 0x1a, 0x4b, 0xd0, 0xd5, 0xa1, 0xd1, 0xd1, 0xc0, 0xe8, 0xbc, 0xbd,
+                                    0xdd, 0xdd, 0xdc, 0xb9, 0xdc, 0xcc, 0xb9, 0xbd, 0xc9, 0x9c, 0xbc, 0xc8, 0xc0, 0xc0,
+                                    0xc4, 0xbc, 0xc0, 0xd0, 0xbd, 0xe1, 0xb5, 0xb1, 0x91, 0xcd, 0xa5, 0x9c, 0xb5, 0xb5,
+                                    0xbd, 0xc9, 0x94, 0x8d, 0x95, 0x8d, 0x91, 0xcd, 0x84, 0xb5, 0xcd, 0xa1, 0x84, 0xc8,
+                                    0xd4, 0xd9, 0x10, 0x31, 0x1b, 0x4b, 0x21, 0x88, 0x12, 0xb4, 0x3a, 0x3a, 0x38, 0x1d,
+                                    0x17, 0x97, 0xbb, 0xbb, 0xbb, 0x97, 0x3b, 0x99, 0x97, 0x37, 0xb9, 0x33, 0x97, 0xaa,
+                                    0x29, 0x17, 0xb1, 0xb0, 0xb7, 0x37, 0xb7, 0x34, 0xb1, 0xb0, 0xb6, 0x16, 0xb2, 0xbc,
+                                    0x34, 0x97, 0xa4, 0x29, 0x68, 0x74, 0x74, 0x70, 0x3a, 0x2f, 0x2f, 0x77, 0x77, 0x77,
+                                    0x2e, 0x77, 0x33, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x32, 0x30, 0x30, 0x31, 0x2f, 0x30,
+                                    0x34, 0x2f, 0x78, 0x6d, 0x6c, 0x65, 0x6e, 0x63, 0x23, 0x73, 0x68, 0x61, 0x32, 0x35,
+                                    0x36, 0x42, 0x01, 0x4e, 0x3d, 0x87, 0xae, 0x24, 0x24, 0xb6, 0xc3, 0x05, 0xfd, 0x5f,
+                                    0x18, 0xa2, 0x4f, 0xe2, 0xf2, 0xf6, 0x87, 0xcd, 0x65, 0x8d, 0x59, 0xbb, 0xe5, 0x1a,
+                                    0x7c, 0xe3, 0xf5, 0xcf, 0x08, 0x6f, 0x01, 0x28, 0xc6, 0x08, 0x80, 0x44, 0x0a, 0xd4,
+                                    0x50, 0x13, 0xe7, 0xaa, 0x47, 0x44, 0xa6, 0xe6, 0x45, 0x3c, 0xad, 0x9e, 0xb6, 0xa9,
+                                    0x6e, 0xd1, 0xb0, 0x7e, 0x44, 0x28, 0x6b, 0xce, 0x1a, 0xe4, 0xce, 0x99, 0xf8, 0xa8,
+                                    0xe5, 0x13, 0x20, 0x44, 0x03, 0x8f, 0x21, 0x9b, 0xbe, 0xd1, 0xe0, 0x6b, 0x94, 0x02,
+                                    0x4a, 0x17, 0x98, 0xbe, 0xd8, 0x53, 0xff, 0x19, 0x1b, 0x6c, 0x64, 0x70, 0x27, 0xf0,
+                                    0x19, 0xdb, 0x75, 0x44, 0x17, 0x2e, 0x5b, 0x01, 0x68});
+
+    std::string input_json = R"({"SessionID":"37DA98F73608903E","Signature":{"SignedInfo":{"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]},"SignatureValue":{"value":"MEQCIFaigJ89UjolNzIp5Wz1tUt2jYPyIUNecNcmdM/FRyiZAiAceQzd9o8DXKASULzF9sKf+MjbYyOBP4DO26oguXLYCw=="}}})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_MessageHeaderType();
+
+    compareBinaryVector(bit_stream->get_exi_data(), raw_data);
+}
+
 TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq) {
     /* Data extracted from OpenV2G
      * DecodePowerDeliveryReqType -> Start
@@ -587,3 +959,84 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeList_ChargeParameterDiscoveryRes_PMaxSc
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
 
+TEST_F(Iso2EncodeComplexTypesTest, EncodeList_ChargeParameterDiscoveryRes_SalesTariff) {
+    /* Data extracted from OpenV2G
+     * SalesTariffType Start
+     *   FirstStartTag[ATTRIBUTE[STRING](Id), START_ELEMENT(SalesTariffID)]
+     *     getting 2bit(s) from position 2429 --> 0x0000
+     *   Id
+     *     getting 8bit(s) from position 2431 --> 0x0005
+     *     getting 8bit(s) from position 2439 --> 0x0069
+     *     getting 8bit(s) from position 2447 --> 0x0064
+     *     getting 8bit(s) from position 2455 --> 0x0031
+     *   StartTag[START_ELEMENT(SalesTariffID)]
+     *     getting 1bit(s) from position 2463 --> 0x0000
+     *     getting 1bit(s) from position 2464 --> 0x0000
+     *     getting 8bit(s) from position 2465 --> 0x0009
+     *     getting 1bit(s) from position 2473 --> 0x0000
+     *   Element[START_ELEMENT(SalesTariffDescription), START_ELEMENT(NumEPriceLevels), START_ELEMENT(SalesTariffEntry)]
+     *     getting 2bit(s) from position 2474 --> 0x0001
+     *   START_ELEMENT(NumEPriceLevels)
+     *     getting 1bit(s) from position 2476 --> 0x0000
+     *     getting 8bit(s) from position 2477 --> 0x0002
+     *     getting 1bit(s) from position 2485 --> 0x0000
+     *   Element[START_ELEMENT(SalesTariffEntry)]
+     *     getting 1bit(s) from position 2486 --> 0x0000
+     *   START_ELEMENT(SalesTariffEntry)
+     *     getting 2bit(s) from position 2487 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2489 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2490 --> 0x0000
+     *     getting 8bit(s) from position 2491 --> 0x0000
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2499 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2500 --> 0x0001
+     *     getting 2bit(s) from position 2502 --> 0x0000
+     *     getting 1bit(s) from position 2504 --> 0x0000
+     *     getting 8bit(s) from position 2505 --> 0x0001
+     *     getting 1bit(s) from position 2513 --> 0x0000
+     *     getting 2bit(s) from position 2514 --> 0x0001
+     *   Element[START_ELEMENT(SalesTariffEntry), END_ELEMENT]
+     *     getting 2bit(s) from position 2516 --> 0x0000
+     *     getting 2bit(s) from position 2518 --> 0x0000
+     *   FirstStartTag[START_ELEMENT(start)]
+     *     getting 1bit(s) from position 2520 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2521 --> 0x0000
+     *     getting 8bit(s) from position 2522 --> 0x0089
+     *     getting 8bit(s) from position 2530 --> 0x000e
+     *   End_ELEMENT(start)
+     *     getting 1bit(s) from position 2538 --> 0x0000
+     *   Element[START_ELEMENT(duration), END_ELEMENT]
+     *     getting 2bit(s) from position 2539 --> 0x0000
+     *   FirstStartTag[CHARACTERS[UNSIGNED_INTEGER]]
+     *     getting 1bit(s) from position 2541 --> 0x0000
+     *     getting 8bit(s) from position 2542 --> 0x0087
+     *     getting 8bit(s) from position 2550 --> 0x000e
+     *   END_ELEMENT(duration)
+     *     getting 1bit(s) from position 2558 --> 0x0000
+     *   Element[END_ELEMENT]
+     *     getting 1bit(s) from position 2559 --> 0x0000
+     *     getting 2bit(s) from position 2560 --> 0x0000
+     *     getting 1bit(s) from position 2562 --> 0x0000
+     *     getting 8bit(s) from position 2563 --> 0x0002
+     *     getting 1bit(s) from position 2571 --> 0x0000
+     *     getting 2bit(s) from position 2572 --> 0x0001
+     *   Element[START_ELEMENT(SalesTariffEntry), END_ELEMENT]
+     *     getting 2bit(s) from position 2574 --> 0x0001
+     * SalesTariffType Done
+     */
+
+    std::string input_json = R"({"Id":"id1","SalesTariffID":10,"NumEPriceLevels":2,"SalesTariffEntry":[{"RelativeTimeInterval":{"start":0},"EPriceLevel":1},{"RelativeTimeInterval":{"start":1801,"duration":1799},"EPriceLevel":2}]})";
+    std::vector<uint8_t> output_raw({0b00000001, 0b01011010, 0b01011001, 0b00001100, 0b01000000, 0b10010010,
+                                     0b00000010, 0b00000000, 0b00000000, 0b10000000, 0b00010010, 0b00000100,
+                                     0b01001000, 0b01110000, 0b01000011, 0b10000111, 0b00000000, 0b00001000,
+                                     0b10100000});
+    setupWithJsonData(input_json);
+
+    complex_types->encode_SalesTariffType();
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
