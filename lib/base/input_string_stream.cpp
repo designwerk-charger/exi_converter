@@ -43,13 +43,6 @@ inline void check_control_char(const std::string & input_data, std::size_t * cur
     }
 }
 
-inline void check_optional_control_char(const std::string & input_data, std::size_t * current_pos, char expected_char) {
-    char current_char = get_control_char(input_data, current_pos);
-    if (current_char == expected_char) {
-        (*current_pos)++;
-    }
-}
-
 inline void check_control_chars(const std::string & input_data, std::size_t * current_pos,
                                 char expected_char1, char expected_char2) {
     char current_char = get_control_char(input_data, current_pos);
@@ -142,17 +135,20 @@ void extract_key(const std::string & input_data, std::size_t * current_pos, Inpu
         return;
     } else if (current_char == '"') {
         (*current_pos)++;
+
+        auto key = extract_string(input_data, current_pos);
+        data->emplace_back(std::make_pair(key, InputStringStream::key_str));
+
+        check_control_char(input_data, current_pos, ':');
+        current_char = get_control_char(input_data, current_pos);
+    } else if (current_char == '{') {
+        // within an array. proceed without doing nothing
     } else {
         throw std::invalid_argument("Invalid control character at start key '" + std::string(1, current_char)
                                     + "' at position " + std::to_string(*current_pos) + " found! ("
                                     + input_data_with_position_marked(input_data, *current_pos) + ")");
     }
 
-    auto key = extract_string(input_data, current_pos);
-    data->emplace_back(std::make_pair(key, InputStringStream::key_str));
-
-    check_control_char(input_data, current_pos, ':');
-    current_char = get_control_char(input_data, current_pos);
     if (current_char == '{') {
         do {
             extract_key(input_data, current_pos, data);
