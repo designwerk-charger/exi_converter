@@ -72,8 +72,32 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
     return bitstream->get_exi_data();
 }
 
-std::string encode_din_spec(InputStringStream * stringstream, BitStream * bitstream) {
-    return "";
+std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, BitStream * bitstream) {
+    BaseTypes base_types(bitstream, stringstream);
+    din_spec::EnumTypes enums(&base_types, stringstream);
+    din_spec::ComplexTypes complex_types(&base_types, &enums, stringstream);
+    din_spec::BodyMessage body_message(&complex_types, bitstream, stringstream);
+
+    bitstream->add_max_8bits(77, 7);
+
+    stringstream->verify_item_and_move_to_next("V2G_Message");
+    base_types.add_event_code("V2G_Message");
+
+    stringstream->verify_item_and_move_to_next("Header");
+    complex_types.encode_MessageHeaderType();
+
+
+    auto body = stringstream->get_item_and_move_to_next();
+    if (body != "Body") {
+        throw std::runtime_error("Found \"" + body + "\" instead of \"Body\" item found in "
+                                 + stringstream->get_input_data());
+    }
+    base_types.add_event_code("Body");
+    body_message.encodeBody();
+    base_types.add_event_code("FinishedBody");
+    base_types.add_event_code("Finished");
+
+    return bitstream->get_exi_data();
 }
 
 std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitStream * bitstream) {
@@ -109,8 +133,7 @@ std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
         return encode_iso15118_2(&stringstream, &bitstream);
     } else if (ns == "urn:din:70121:2012:MsgDef") {
-        // Todo
-        encode_din_spec(&stringstream, &bitstream);
+        return encode_din_spec(&stringstream, &bitstream);
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
         return encode_app_protocol(&stringstream, &bitstream);
     }

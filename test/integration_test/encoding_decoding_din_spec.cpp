@@ -118,3 +118,19 @@ INSTANTIATE_TEST_CASE_P(
         RequestMessages,
         DecodingDIN_SPEC,
         ::testing::ValuesIn(DIN_SPEC_REQUEST_TEST_DATA));
+
+/* ************************************
+ * Encoding
+ * ********************************* */
+class EncodingDIN_SPEC :public ::testing::TestWithParam<TestDataContainer> { };
+
+TEST_P(EncodingDIN_SPEC, WithExiDecoder) {
+    TestDataContainer test_data = GetParam();
+    ASSERT_EQ(run_encoding(test_data, "urn:din:70121:2012:MsgDef"), test_data.hex_str);
+}
+
+INSTANTIATE_TEST_CASE_P(
+        ResponseMessages,
+        EncodingDIN_SPEC,
+        ::testing::ValuesIn(DIN_SPEC_RESPONSE_TEST_DATA));
+
