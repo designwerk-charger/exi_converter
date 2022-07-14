@@ -11,7 +11,6 @@
 #include "din_spec/complex_types.h"
 #include "din_spec/body_message.h"
 #include "app_protocol/complex_types.h"
-#include "app_protocol/body_message.h"
 
 
 
@@ -81,7 +80,6 @@ std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitSt
     BaseTypes base_types(bitstream, stringstream);
     app_protocol::EnumTypes enums(&base_types, stringstream);
     app_protocol::ComplexTypes complex_types(&base_types, &enums, stringstream);
-    app_protocol::BodyMessage body_message(&complex_types, bitstream, stringstream);
 
     auto message_id = stringstream->get_item_and_move_to_next();
     if (message_id == "supportedAppProtocolReq") {
@@ -184,7 +182,6 @@ std::string decode_app_protocol(BitStream *bitstream) {
     OutputStringStream stringstream;
     app_protocol::EnumTypes enums(&base_types);
     app_protocol::ComplexTypes complex_types(&base_types, &enums, &stringstream);
-    app_protocol::BodyMessage body_message(&complex_types, bitstream, &stringstream);
 
     uint8_t message_id = bitstream->get_max_4bytes(2);
     if (message_id == 0) {
