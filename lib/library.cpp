@@ -3,6 +3,7 @@
 #include <pybind11/stl.h>
 
 #include <iostream>
+#include <utility>
 #include "base/bitstream.h"
 #include "type_conversion/base_types.h"
 
@@ -40,7 +41,7 @@ PYBIND11_MODULE(exi_converter, m) {
     pybind11::class_<ExiCodec>(m, "ExiCodec", "Class to encode and decode EXI")
             .def(pybind11::init<>())
             .def("decode", &ExiCodec::py_decode, "Decode EXI to json")
-            .def("encode", &ExiCodec::encode, "Enocode EXI from json");
+            .def("encode", &ExiCodec::py_encode, "Enocode EXI from json");
 }
 
 
@@ -119,11 +120,7 @@ std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitSt
     return bitstream->get_exi_data();
 }
 
-std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
-    std::cout << "input string: "<< json_str << std::endl;
-    std::cout << "function encode ..." << std::endl;
-
-
+std::vector<uint8_t> ExiCodec::encode(const std::string& json_str, const std::string& ns) {
     InputStringStream stringstream(json_str);
     BitStream bitstream;
 
@@ -140,7 +137,12 @@ std::vector<uint8_t> ExiCodec::encode(std::string json_str, std::string ns) {
     throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }
 
-std::string ExiCodec::py_decode(const char * data, uint32_t length, std::string ns) {
+pybind11::bytes ExiCodec::py_encode(const std::string& json_str, const std::string& ns) {
+    const auto &data =  encode(json_str, ns);
+    return pybind11::bytes(reinterpret_cast<const char *>(data.data()), data.size());
+}
+
+std::string ExiCodec::py_decode(const char * data, uint32_t length, const std::string& ns) {
     return decode(std::vector<uint8_t>(data, data+length), ns);
 }
 
