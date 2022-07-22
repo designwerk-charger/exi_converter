@@ -3,8 +3,6 @@
 
 /* Static local function */
 inline void jp_check_control_char(const std::string & input_data, std::size_t * current_pos, char expected_char);
-inline void jp_check_control_chars(const std::string & input_data, std::size_t * current_pos,
-                                    char expected_char1, char expected_char2);
 inline char jp_get_control_char(const std::string & input_data, std::size_t * current_pos);
 
 std::string get_input_data_with_position_marked(std::string input_data, std::size_t current_pos);
@@ -16,45 +14,37 @@ inline std::string jp_extract_value_int(const std::string & input_data, std::siz
 std::shared_ptr<JArray> jp_extract_array(const std::string & input_data, std::size_t * current_pos);
 std::pair<std::string, std::shared_ptr<JItemInterface>> jp_extract_single_object(const std::string & input_data,
                                                                                 std::size_t * current_pos);
-std::shared_ptr<JItemInterface> jp_extract_object(const std::string & input_data, std::size_t * current_pos);
+std::shared_ptr<JObject> jp_extract_object(const std::string & input_data, std::size_t * current_pos);
 
 
 
 
-JsonParser::JsonParser(const std::string & input_data) { }
+JsonParser::JsonParser(const std::string & input_data) : parsed_json(parse(input_data)) { }
 
 JsonParser::JsonParser() { }
 
-JObject JsonParser::parse(std::string json_str) {
-    JObject data;
-
+std::shared_ptr<JObject> JsonParser::parse(const std::string & json_str) {
     size_t current_pos = 0;
 
-    auto o = std::make_shared<JObject>();
-    char current_char;
-    do {
-        data.append(jp_extract_single_object(json_str, &current_pos));
-        current_char = jp_get_control_char(json_str, &current_pos);
-        if (current_char == '}') {
-            current_pos++;
-            current_char = jp_get_control_char(json_str, &current_pos);
-        }
-    } while (current_char == ',');
-
-
-
-    return data;
+    auto obj = jp_extract_object(json_str, &current_pos);
+    return obj;
 }
 
-
-std::shared_ptr<JItemInterface> jp_extract_object(const std::string & input_data, std::size_t * current_pos) {
+// an object must start with { and end with }
+std::shared_ptr<JObject> jp_extract_object(const std::string & input_data, std::size_t * current_pos) {
     auto o = std::make_shared<JObject>();
+
+    jp_check_control_char(input_data, current_pos, '{');
     char current_char;
     do {
         o->append(jp_extract_single_object(input_data, current_pos));
         current_char = jp_get_control_char(input_data, current_pos);
+        if (current_char == ',') {
+            (*current_pos)++;
+        }
     } while (current_char == ',');
 
+    jp_check_control_char(input_data, current_pos, '}');
     return o;
 }
 
@@ -63,38 +53,14 @@ std::pair<std::string, std::shared_ptr<JItemInterface>> jp_extract_single_object
     std::pair<std::string, std::shared_ptr<JItemInterface>> o;
     std::string key_str;
 
-    /* start key */
-    char start_char = jp_get_control_char(input_data, current_pos);
-    (*current_pos)++;
+    /* get key */
+    jp_check_control_char(input_data, current_pos, '"');
+    key_str = jp_extract_string(input_data, current_pos);
+    jp_check_control_char(input_data, current_pos, ':');
 
-    if ((start_char != '{') && (start_char != ',')) {
-        throw std::invalid_argument("Invalid start key characters '" + std::string(1, start_char)
-                                    + "' at position " + std::to_string(*current_pos) + " found! ("
-                                    + get_input_data_with_position_marked(input_data, *current_pos) + ")");
-    }
 
+    /* key's value */
     char current_char = jp_get_control_char(input_data, current_pos);
-    if (current_char == '{') {
-        (*current_pos)++;
-        current_char = jp_get_control_char(input_data, current_pos);
-    }
-
-    if (current_char == '}') {
-        throw std::invalid_argument("An object can not start with } at position "
-                                    + std::to_string(*current_pos) + " ("
-                                    + get_input_data_with_position_marked(input_data, *current_pos) + ")");
-    } else if (current_char == '"') {
-        (*current_pos)++;
-
-        key_str = jp_extract_string(input_data, current_pos);
-
-        jp_check_control_char(input_data, current_pos, ':');
-    } else {
-        throw std::invalid_argument("33");
-    }
-
-    /* key value */
-    current_char = jp_get_control_char(input_data, current_pos);
     if (current_char == '"') {
         const auto & value = jp_extract_value_string(input_data, current_pos);
         o = std::make_pair(key_str, std::make_shared<JValue>(value));
@@ -106,13 +72,7 @@ std::pair<std::string, std::shared_ptr<JItemInterface>> jp_extract_single_object
             (*current_pos)++;
             o = std::make_pair(key_str, std::make_shared<JEmpty>());
         } else {
-            auto sub_obj = std::make_shared<JObject>();
-            do {
-                auto single_obj = jp_extract_single_object(input_data, current_pos);
-                sub_obj->append(std::move(single_obj));
-                // (*current_pos)--;
-                current_char = jp_get_control_char(input_data, current_pos);
-            } while (current_char == ',');
+            auto sub_obj = jp_extract_object(input_data, current_pos);
             o = std::make_pair(key_str, sub_obj);
         }
     } else if (current_char == '[') {
@@ -123,17 +83,10 @@ std::pair<std::string, std::shared_ptr<JItemInterface>> jp_extract_single_object
         o = std::make_pair(key_str, std::make_shared<JValue>(value));
     }
 
-    /* endkey */
-    current_char = jp_get_control_char(input_data, current_pos);
-    if (current_char == '}') {
-    } else if (current_char != ',') {
-        throw std::invalid_argument("An object can not end with " + std::string(1, current_char)
-                                    + " at position " + std::to_string(*current_pos) + " ("
-                                    + get_input_data_with_position_marked(input_data, *current_pos) + ")");
-    }
     return o;
 }
 
+// An array must start with [ and must end with ]
 std::shared_ptr<JArray> jp_extract_array(const std::string & input_data, std::size_t * current_pos) {
     auto arr = std::make_shared<JArray>();
     jp_check_control_char(input_data, current_pos, '[');
@@ -143,29 +96,30 @@ std::shared_ptr<JArray> jp_extract_array(const std::string & input_data, std::si
         do {
             auto obj = jp_extract_object(input_data, current_pos);
             arr->append(obj);
-            (*current_pos)++;
             current_char = jp_get_control_char(input_data, current_pos);
-        } while (current_char == ',');
+            if (current_char == ',') {
+                (*current_pos)++;
+            } else {
+                break;
+            }
+        } while (true);
     } else if (current_char == '"') {
         do {
             const auto & value = jp_extract_value_string(input_data, current_pos);
             arr->append(std::make_shared<JValue>(value));
             current_char = jp_get_control_char(input_data, current_pos);
-            (*current_pos)++;
-        } while (current_char == ',');
+            if (current_char == ',') {
+                (*current_pos)++;
+            } else {
+                break;
+            }
+        } while (true);
+    } else if (current_char == ']') {
+        // leave the array empty
     } else {
         throw std::invalid_argument("Unhandled control character '" + std::string(1, current_char)
-                                    + "' at " + std::to_string(*current_pos) + " while parsing array ("
-                                    + get_input_data_with_position_marked(input_data, *current_pos) + ")");
-    }
-
-    if ((current_char == '}') || (current_char == '"')) {
-        (*current_pos)++;
-    } else if (current_char == ']') {
-        (*current_pos)++;
-        return arr;
-    } else {
-        (*current_pos)--;
+        + "' at " + std::to_string(*current_pos) + " while parsing array ("
+        + get_input_data_with_position_marked(input_data, *current_pos) + ")");
     }
 
     jp_check_control_char(input_data, current_pos, ']');
@@ -186,9 +140,8 @@ inline char jp_get_control_char(const std::string & input_data, std::size_t * cu
         }
         return ctrl_char;
     } catch (const std::out_of_range& _) {
-        return '}';
-        throw std::invalid_argument("Trying to get character at position " + std::to_string(*current_pos)
-                                    + " from string with length " + std::to_string(input_data.size()) + " ("
+        throw std::invalid_argument("Trying to get character from end (position " + std::to_string(*current_pos)
+                                    + ") of string with length " + std::to_string(input_data.size()) + " ("
                                     + get_input_data_with_position_marked(input_data, *current_pos) + ")");
     }
 }
@@ -201,18 +154,6 @@ inline void jp_check_control_char(const std::string & input_data, std::size_t * 
         throw std::invalid_argument("Unexpected control character '" + std::string(1, current_char)
                                     + "' at position " + std::to_string(*current_pos) + " found! '"
                                     + std::string(1, expected_char) + "' was required! ("
-                                    + get_input_data_with_position_marked(input_data, *current_pos) + ")");
-    }
-}
-
-inline void jp_check_control_chars(const std::string & input_data, std::size_t * current_pos,
-                                char expected_char1, char expected_char2) {
-    char current_char = jp_get_control_char(input_data, current_pos);
-    if ((current_char == expected_char1) || (current_char == expected_char2)) {
-        (*current_pos)++;
-    } else {
-        throw std::invalid_argument("Invalid control characters '" + std::string(1, current_char)
-                                    + "' at position " + std::to_string(*current_pos) + " found! ("
                                     + get_input_data_with_position_marked(input_data, *current_pos) + ")");
     }
 }

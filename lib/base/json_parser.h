@@ -41,6 +41,7 @@ class JArray: public JItemInterface {
     JArray() : content({}) {}
     [[nodiscard]] const std::vector<std::shared_ptr<JItemInterface>> & get_array() const override {return content;}
     void append(std::shared_ptr<JItemInterface> item) {content.emplace_back(std::move(item));}
+    bool is_empty() override {return content.empty();}
 
  private:
     std::vector<std::shared_ptr<JItemInterface>> content;
@@ -61,14 +62,13 @@ class JObject: public JItemInterface {
 
 
 class JsonParser {
-
-public:
-    typedef enum {start, ctrl, key_str, value_str, value_int, arr} state_t;
-    typedef std::vector<std::pair<std::string, state_t>> item_store_t;
-
+ public:
     explicit JsonParser(const std::string & input_data);
     JsonParser();
     virtual ~JsonParser() = default;  // LCOV_EXCL_LINE
 
-    static JObject parse(std::string json_str);
+    static std::shared_ptr<JObject> parse(const std::string & json_str);
+
+ private:
+    std::shared_ptr<JObject> parsed_json;
 };
