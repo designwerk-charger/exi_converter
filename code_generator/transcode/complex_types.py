@@ -27,6 +27,7 @@ class ComplexTypes:
                                            "#include <string>\n#include <sstream>\n#include <unordered_map>\n"
                                            "#include \"type_conversion/base_types.h\"\n#include \"enum_types.h\"\n"
                                            "#include \"base/output_string_stream.h\"\n"
+                                           "#include \"base/json_parser.h\"\n"
                                            "#include \"base/input_string_stream.h\"\n",
                                   namespace=namespace)
         self.cpp_class.add_member("BaseTypes * base_types_;\n\tEnumTypes * enum_types_;\n"
@@ -349,7 +350,8 @@ class ComplexTypes:
                        f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
                        f"{indent_str}\tbase_types_->add_event_code(\"EndSimpleElement{element.element_type.type_name}\");\n"
             else:
-                return f"{indent_str}\t\t{element.element_type.encode_function.call()};\n"
+                return f"{indent_str}\t\tstd::shared_ptr<JObject> jobject;\n" \
+                       f"{indent_str}\t\t{element.element_type.encode_function.call()};\n"
 
         if isinstance(element, Attribute):
             raise RuntimeError(f"List can not be of type Attribute! {element}")
@@ -386,8 +388,11 @@ class ComplexTypes:
             return_str += f"{indent_str}//   without add_event_code(...) because previous element was optional;\n"
         else:
             return_str += f"{indent_str}base_types_->add_event_code(\"Start{element.element_name}\");\n"
-        return_str += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
-                      f"{indent_str}{element.element_type.encode_function.call()};\n"
+        return_str += f"{indent_str}{{\n" \
+                      f"{indent_str}\tinput_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
+                      f"{indent_str}\tstd::shared_ptr<JObject> jobject;\n" \
+                      f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
+                      f"{indent_str}}}"
         return return_str
 
     def encode_element(self, element: Element, indent=0, from_optional=False) -> str:
@@ -525,7 +530,7 @@ class ComplexTypes:
 
         return CppFunction(function_name=ct.encode_function.function_name,
                            return_type="void",
-                           arguments=None,
+                           arguments="const std::shared_ptr<JObject> & json",
                            code=code,
                            comment=None)
 

@@ -81,7 +81,7 @@ class BodyMessage:
                            comment=None)
 
     def getEncodeFunction(self, elements) -> CppFunction: #void (foo::*method)()
-        code = f"static std::unordered_map<std::string, std::pair<uint32_t, void(ComplexTypes::*)(void)>> const table = {{\n"
+        code = f"static std::unordered_map<std::string, std::pair<uint32_t, void(ComplexTypes::*)(const std::shared_ptr<JObject> &)>> const table = {{\n"
         for key, value in elements.items():
             if value.type.local_name in self.complex_type_names:
                 code += f"\t{{\"{value.local_name}\", std::make_pair({key}, &ComplexTypes::encode_{value.type.local_name})}},\n"
@@ -93,7 +93,8 @@ class BodyMessage:
                 "\tauto message_nr = it->second.first;\n" \
                 "\tauto message_fcn = it->second.second;\n" \
                 "\tbit_stream_->add_max_8bits(message_nr, 6);\n" \
-                "\t(complex_types_->*message_fcn)();\n" \
+                f"\t\tstd::shared_ptr<JObject> jobject = std::make_shared<JObject>();\n" \
+                "\t(complex_types_->*message_fcn)(jobject);\n" \
                 f"}} else {{\n" \
                 f"\tthrow std::runtime_error(\"The message with name \" + msg_name + \" can not be found\");\n" \
                 f"}}\n"

@@ -57,7 +57,7 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
     base_types.add_event_code("V2G_Message");
 
     stringstream->verify_item_and_move_to_next("Header");
-    complex_types.encode_MessageHeaderType();
+    complex_types.encode_MessageHeaderType(std::make_shared<JObject>());
 
 
     auto body = stringstream->get_item_and_move_to_next();
@@ -85,7 +85,7 @@ std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, BitStream
     base_types.add_event_code("V2G_Message");
 
     stringstream->verify_item_and_move_to_next("Header");
-    complex_types.encode_MessageHeaderType();
+    complex_types.encode_MessageHeaderType(std::make_shared<JObject>());
 
 
     auto body = stringstream->get_item_and_move_to_next();
@@ -109,10 +109,10 @@ std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitSt
     auto message_id = stringstream->get_item_and_move_to_next();
     if (message_id == "supportedAppProtocolReq") {
         bitstream->add_max_8bits(0, 2);
-        complex_types.encode_supportedAppProtocolReqType();
+        complex_types.encode_supportedAppProtocolReqType(std::make_shared<JObject>());
     } else if (message_id == "supportedAppProtocolRes") {
         bitstream->add_max_8bits(1, 2);
-        complex_types.encode_supportedAppProtocolResType();
+        complex_types.encode_supportedAppProtocolResType(std::make_shared<JObject>());
     } else {
         throw std::runtime_error("The AppProtocol is unknown (" + message_id + ")!");
     }

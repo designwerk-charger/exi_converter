@@ -67,7 +67,7 @@ class ComplexType(BaseType):
     def encode_function(self):
         return CppFunction(function_name=f"encode_{self.type_name}",
                            return_type="void", arguments="bool",
-                           comment="",
+                           comment="", call_args="jobject",
                            code="")
 
     @property

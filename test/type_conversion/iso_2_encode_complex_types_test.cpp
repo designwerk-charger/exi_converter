@@ -7,6 +7,7 @@
 
 class Iso2EncodeComplexTypesTest : public ::testing::Test {
  public:
+    std::shared_ptr<JObject> json_object;
     std::shared_ptr<InputStringStream> string_stream;
     std::shared_ptr<BitStream> bit_stream;
     std::shared_ptr<BaseTypes> base_types;
@@ -19,6 +20,7 @@ class Iso2EncodeComplexTypesTest : public ::testing::Test {
     }
 
     void setupWithJsonData(const std::string & input_json) {
+        json_object = JsonParser::parse(input_json);
         string_stream = std::make_shared<InputStringStream>(input_json);
         bit_stream = std::make_shared<BitStream>();
         base_types = std::make_shared<BaseTypes>(bit_stream.get(), string_stream.get());
@@ -69,7 +71,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElements_PhysicalValueType) {
     std::vector<uint8_t> output_raw({0b00100000, 0b01100000, 0b00001000, 0x00});
     setupWithJsonData(input_json);
 
-    complex_types->encode_PhysicalValueType();
+    complex_types->encode_PhysicalValueType(json_object);
 
     ASSERT_EQ(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -83,7 +85,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleAttributes_EMAIDType) {
     // hex input original from RiseV2G "5205696434620888A828486866264668284866A6CFA00");
     setupWithJsonData(input_json);
 
-    complex_types->encode_EMAIDType();
+    complex_types->encode_EMAIDType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -126,7 +128,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeElementsWithSubstitutes_PowerDeliveryRe
     std::vector<uint8_t> output_raw({0b00000000, 0b01000000, 0b00000000, 0b00000001, 0b00000010, 0x00});
     setupWithJsonData(input_json);
 
-    complex_types->encode_PowerDeliveryResType();
+    complex_types->encode_PowerDeliveryResType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -150,7 +152,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_P
     std::vector<uint8_t> output_raw = {0b00100100};
     setupWithJsonData(input_json);
 
-    complex_types->encode_PaymentOptionListType();
+    complex_types->encode_PaymentOptionListType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -175,7 +177,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_PaymentServiceSelectio
     std::vector<uint8_t> output_raw = {0b0000000, 0b01001000};
     setupWithJsonData(input_json);
 
-    complex_types->encode_SelectedServiceType();
+    complex_types->encode_SelectedServiceType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -206,7 +208,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexElementsList_PaymentServiceSelec
     std::vector<uint8_t> output_raw = {0b00000000, 0b00100101};
     setupWithJsonData(input_json);
 
-    complex_types->encode_SelectedServiceListType();
+    complex_types->encode_SelectedServiceListType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -224,7 +226,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqTyp
     std::string input_json = R"({"ServiceDiscoveryReq":{}})";
     setupWithJsonData(input_json);
 
-    complex_types->encode_ServiceDiscoveryReqType();
+    complex_types->encode_ServiceDiscoveryReqType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
 }
@@ -423,7 +425,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterTy
     std::string input_json = R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})";
     setupWithJsonData(input_json);
 
-    complex_types->encode_DC_EVChargeParameterType();
+    complex_types->encode_DC_EVChargeParameterType(json_object);
 
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
@@ -456,7 +458,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_MessageHeaderTypeWitho
     std::string input_json = R"({"SessionID":"37DA98F73608903E"})";
     setupWithJsonData(input_json);
 
-    complex_types->encode_MessageHeaderType();
+    complex_types->encode_MessageHeaderType(json_object);
 
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
@@ -828,7 +830,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexCombination_MessageHeaderTypeWit
     std::string input_json = R"({"SessionID":"37DA98F73608903E","Signature":{"SignedInfo":{"CanonicalizationMethod":{"Algorithm":"http://www.w3.org/TR/canonical-exi/"},"SignatureMethod":{"Algorithm":"http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"},"Reference":[{"URI":"#id1","Transforms":{"Transform":[{"Algorithm":"http://www.w3.org/TR/canonical-exi/"}]},"DigestMethod":{"Algorithm":"http://www.w3.org/2001/04/xmlenc#sha256"},"DigestValue":"FOPYeuJCS2wwX9XxiiT+Ly9ofNZY1Zu+UafOP1zwhvA="}]},"SignatureValue":{"value":"MEQCIFaigJ89UjolNzIp5Wz1tUt2jYPyIUNecNcmdM/FRyiZAiAceQzd9o8DXKASULzF9sKf+MjbYyOBP4DO26oguXLYCw=="}}})";
     setupWithJsonData(input_json);
 
-    complex_types->encode_MessageHeaderType();
+    complex_types->encode_MessageHeaderType(json_object);
 
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
@@ -886,7 +888,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq) {
     std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0b00100010, 0b00000000, 0b00111100, 0b00010100});
     setupWithJsonData(input_json);
 
-    complex_types->encode_PowerDeliveryReqType();
+    complex_types->encode_PowerDeliveryReqType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -954,7 +956,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeList_ChargeParameterDiscoveryRes_PMaxSc
                                      0b00001010, 0b10100001});
     setupWithJsonData(input_json);
 
-    complex_types->encode_PMaxScheduleType();
+    complex_types->encode_PMaxScheduleType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
@@ -1036,7 +1038,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeList_ChargeParameterDiscoveryRes_SalesT
                                      0b10100000});
     setupWithJsonData(input_json);
 
-    complex_types->encode_SalesTariffType();
+    complex_types->encode_SalesTariffType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
