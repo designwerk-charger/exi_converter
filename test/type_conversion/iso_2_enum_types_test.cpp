@@ -26,10 +26,9 @@ TEST(Iso2EnumTypesTest, encode_responseCodeType) {
     MockBaseTypes mock(&bs);
     iso15118_2::EnumTypes et(&mock, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("FAILED_CertificateExpired"));
     EXPECT_CALL(mock, injectNBitsForEnum(10, 5)).Times(1);
 
-    et.encode_responseCodeType();
+    et.encode_responseCodeType("FAILED_CertificateExpired");
 }
 
 TEST(Iso2EnumTypesTest, encode_throws_exception_when_responseCodeType_not_found) {
@@ -38,7 +37,5 @@ TEST(Iso2EnumTypesTest, encode_throws_exception_when_responseCodeType_not_found)
     MockBaseTypes mock(&bs);
     iso15118_2::EnumTypes et(&mock, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("ValueNotInEnum"));
-
-    ASSERT_THROW(et.encode_responseCodeType(), std::runtime_error);
+    ASSERT_THROW(et.encode_responseCodeType("ValueNotInEnum"), std::runtime_error);
 }

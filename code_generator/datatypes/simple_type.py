@@ -37,15 +37,15 @@ class BoolType(SimpleType):
 
     @property
     def encode_function(self):
-        return CppFunction(function_name="injectBoolValue",
-                           return_type="void", arguments=None,
+        return CppFunction(function_name="injectBoolValue", arguments="const std::string & value",
+                           return_type="void", call_args="value",
                            comment="/ \\brief writes the given boolean value to the bitstream",
                            code="", member_object_name="base_types_")
 
     @property
     def decode_function(self):
         return CppFunction(function_name="extractBoolValue",
-                           return_type="bool", arguments=None,
+                           return_type="bool", arguments="const std::string & value",
                            comment="/ \\brief read a bit from bitstream and returns the interpreted value",
                            code="", member_object_name="base_types_")
 
@@ -68,8 +68,8 @@ class Base64Type(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectBase64Value",
-                           return_type="void", arguments=None,
-                           comment="",
+                           return_type="void", arguments="const std::string & value",
+                           comment="", call_args="value",
                            code="", member_object_name="base_types_")
 
     @property
@@ -127,8 +127,8 @@ class EnumType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name=f"encode_{self.type_name}",
-                           return_type="void", arguments="std::string value",
-                           comment="",
+                           return_type="void", arguments="const std::string & value",
+                           comment="", call_args="value",
                            code="", member_object_name="enum_types_")
 
     @property
@@ -150,8 +150,8 @@ class StringType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectString",
-                           return_type="void", arguments=None,
-                           comment="",
+                           return_type="void", arguments="const std::string & value",
+                           comment="", call_args="value",
                            code="", member_object_name="base_types_")
 
     @property
@@ -173,8 +173,8 @@ class UriType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectUri",
-                           return_type="void", arguments=None,
-                           comment="",
+                           return_type="void", arguments="const std::string & value",
+                           comment="", call_args="value",
                            code="", member_object_name="base_types_")
 
     @property
@@ -208,9 +208,9 @@ class DecimalType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectIntegerNumber",
-                           return_type="void", arguments="uint8_t n_bytes, bool is_unsigned",
+                           return_type="void", arguments="const std::string & value, uint8_t n_bytes, bool is_unsigned",
                            comment="",
-                           code="", member_object_name="base_types_", call_args=f"{self.num_bytes}, {str(self.is_unsigned).lower()}")
+                           code="", member_object_name="base_types_", call_args=f"value, {self.num_bytes}, {str(self.is_unsigned).lower()}")
 
     @property
     def decode_function(self):
@@ -238,9 +238,9 @@ class NBitDecimalType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectNBitNumber",
-                           return_type="void", arguments="uint8_t n_bits, int32_t offset",
+                           return_type="void", arguments="const std::string & value, uint8_t n_bits, int32_t offset",
                            comment="",
-                           code="", member_object_name="base_types_", call_args=f"{self.num_bits}, {self.min_val}")
+                           code="", member_object_name="base_types_", call_args=f"value, {self.num_bits}, {self.min_val}")
 
     @property
     def decode_function(self):
@@ -265,9 +265,9 @@ class HexBinType(SimpleType):
     @property
     def encode_function(self):
         return CppFunction(function_name="injectHexBin",
-                           return_type="void", arguments="uint8_t max_length",
+                           return_type="void", arguments="const std::string & value, uint8_t max_length",
                            comment="",
-                           code="", member_object_name="base_types_", call_args=f"{self.max_length}")
+                           code="", member_object_name="base_types_", call_args=f"value, {self.max_length}")
 
     @property
     def decode_function(self):

@@ -58,7 +58,6 @@ class Enums:
         num_items = len(enum.enumerations)
         num_bits = ceil(log2(num_items))
         code = f"const uint8_t n_bits = {num_bits};\n" \
-               f"auto str_enum = input_string_stream->get_item_and_move_to_next();\n" \
                f"static std::unordered_map<std::string, uint8_t> const table = {{\n"
         for i, item in enumerate(enum.enumerations):
             code += f"\t{{\"{item}\", {i}}},\n"
@@ -73,10 +72,11 @@ class Enums:
                 f"\tthrow std::runtime_error(stm.str());\n" \
                 f"}}\n"
         return CppFunction(function_name=f"encode_{enum.type_name}",
-                    return_type="void",
-                    arguments=None,
-                    code=code,
-                    comment=None)
+                           return_type="void",
+                           arguments="const std::string & str_enum",
+                           code=code,
+                           call_args="value",
+                           comment=None)
 
     def write_enum_conversion_header(self, directory: str):
         self.cpp_class.write_h(directory)

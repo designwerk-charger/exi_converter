@@ -25,22 +25,21 @@ class ComplexTypes:
         self.cpp_class = CppClass(class_name="ComplexTypes", derived_from_class=None,
                                   includes="#include <iostream>\n#include <cstdint>\n#include <cstdio>\n"
                                            "#include <string>\n#include <sstream>\n#include <unordered_map>\n"
+                                           "#include <map>\n"
                                            "#include \"type_conversion/base_types.h\"\n#include \"enum_types.h\"\n"
                                            "#include \"base/output_string_stream.h\"\n"
-                                           "#include \"base/json_parser.h\"\n"
-                                           "#include \"base/input_string_stream.h\"\n",
+                                           "#include \"base/json_parser.h\"\n",
                                   namespace=namespace)
         self.cpp_class.add_member("BaseTypes * base_types_;\n\tEnumTypes * enum_types_;\n"
                                   "\tOutputStringStream * output_string_stream_;\n"
-                                  "\tInputStringStream * input_string_stream_;\n"
                                   "\tenum { arrsize = 16 };\n"
                                   "\tstatic constexpr uint8_t log_lookup[arrsize] = {1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};\n")
         self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, OutputStringStream * output_string_stream",
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\n"
-                                       "output_string_stream_ = output_string_stream;\ninput_string_stream_ = nullptr;\n")
+                                       "output_string_stream_ = output_string_stream;\n\n")
         self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, InputStringStream * input_string_stream",
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\n"
-                                       "input_string_stream_ = input_string_stream;\noutput_string_stream_ = nullptr;\n")
+                                       "output_string_stream_ = nullptr;\n")
 
         for ct in self.all_complex_types:
             self.cpp_class.add_function(self.getDecodeFunction(ct))
@@ -320,9 +319,9 @@ class ComplexTypes:
         else:
             code += f"{indent_str}base_types_->add_event_code(\"Start+{element.element_name}\");\n"
 
-        code += f"{indent_str}input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
+        code += f"{indent_str}const std::string & value = (*json)[\"{element.element_name}\"]->get_value();\n" \
                 f"{indent_str}#ifndef NDEBUG\n" \
-                f"{indent_str}\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.element_type.type_name} '{element.element_name}' -> \" << std::endl;\n" \
+                f"{indent_str}\tstd::cout << \"setting value (\" + value + \") for {element.element_type.type_name} '{element.element_name}' -> \" << std::endl;\n" \
                 f"{indent_str}#endif\n" \
                 f"{indent_str}{element.element_type.encode_function.call()};\n"
         return code
@@ -343,31 +342,35 @@ class ComplexTypes:
     def encode_list(self, element: Element, indent: int):
         def _encode_list_item():
             if element.element_type.is_simple_not_complex:
-                return f"{indent_str}\tbase_types_->add_event_code(\"StartSimpleElement{element.element_type.type_name}\");\n" \
+                return f"{indent_str}\tstd::string value = array[i]->get_value();\n" \
+                       f"{indent_str}\tbase_types_->add_event_code(\"StartSimpleElement{element.element_type.type_name}\");\n" \
                        f"{indent_str}\t#ifndef NDEBUG\n" \
-                       f"{indent_str}\t\tstd::cout << \"setting value (\" + input_string_stream_->get_item() + \") for {element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
+                       f"{indent_str}\t\tstd::cout << \"setting value (\" + value + \") for {element.__class__.__name__} '{element.element_name}' -> \" << std::endl;\n" \
                        f"{indent_str}\t#endif\n" \
                        f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
                        f"{indent_str}\tbase_types_->add_event_code(\"EndSimpleElement{element.element_type.type_name}\");\n"
             else:
-                return f"{indent_str}\t\tstd::shared_ptr<JObject> jobject;\n" \
-                       f"{indent_str}\t\t{element.element_type.encode_function.call()};\n"
+                return f"{indent_str}\t\tstd::shared_ptr<JObject> obj = std::dynamic_pointer_cast<JObject>(array[i]);\n" \
+                       f"{indent_str}\t\t{element.element_type.encode_function.call('obj')};\n"
 
         if isinstance(element, Attribute):
             raise RuntimeError(f"List can not be of type Attribute! {element}")
 
         indent_str = "\t" * indent
         code = f"{indent_str}{{  // encode list Element type {element.element_type.type_name}\n" \
-               f"{indent_str}\tinput_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
+               f"{indent_str}\tconst auto & array = (*json)[\"{element.element_name}\"]->get_array();\n" \
+               f"{indent_str}\t// input_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
                f"{indent_str}\tbase_types_->add_event_code(\"Start{element.element_name}List\");\n" \
-               f"{indent_str}\tbool is_in_list = input_string_stream_->is_list_start_move_to_next();\n" \
-               f"{indent_str}\tif (!is_in_list) {{\n" \
-               f"{indent_str}\t\tthrow std::runtime_error(\"Expecting at least one item in list {element.element_type.type_name}\");\n" \
+               f"{indent_str}\t// bool is_in_list = input_string_stream_->is_list_start_move_to_next();\n" \
+               f"{indent_str}\tif ({element.max_items} > array.size()) [[unlikely]] {{\n" \
+               f"{indent_str}\t\tthrow std::runtime_error(\"There are more items in the list than specified for {element.element_type.type_name}\");\n" \
                f"{indent_str}\t}}\n" \
-               f"{indent_str}\tfor(int i=0; i<{element.max_items}; i++) {{\n" \
-               f"{indent_str}\t\tif (i!=0) {{\n" \
-               f"{indent_str}\t\t\tis_in_list = !input_string_stream_->is_list_end_move_to_next();\n" \
-               f"{indent_str}\t\t\tif (is_in_list) {{\n" \
+               f"{indent_str}\tif (array.size() < 1) [[unlikely]] {{\n" \
+               f"{indent_str}\t\tthrow std::runtime_error(\"The list is empty which is not implemented for {element.element_type.type_name}\");\n" \
+               f"{indent_str}\t}}\n" \
+               f"{indent_str}\tfor(int i=0; i < array.size(); i++) {{\n" \
+               f"{indent_str}\t\tif ( i!=0 ) {{\n" \
+               f"{indent_str}\t\t\tif (i < array.size()) {{\n" \
                f"{indent_str}\t\t\t\tbase_types_->add_event_code_with_n_bits(0, 2, \"NextListItem_{element.element_name}\");\n" \
                f"{indent_str}\t\t\t}} else {{\n" \
                f"{indent_str}\t\t\t\tbase_types_->add_event_code_with_n_bits(1, 2, \"NoFurtherListItem_{element.element_name}\");\n" \
@@ -389,8 +392,7 @@ class ComplexTypes:
         else:
             return_str += f"{indent_str}base_types_->add_event_code(\"Start{element.element_name}\");\n"
         return_str += f"{indent_str}{{\n" \
-                      f"{indent_str}\tinput_string_stream_->verify_item_and_move_to_next(\"{element.element_name}\");\n" \
-                      f"{indent_str}\tstd::shared_ptr<JObject> jobject;\n" \
+                      f"{indent_str}\tstd::shared_ptr<JObject> jobject = json->get_object(\"{element.element_name}\");\n" \
                       f"{indent_str}\t{element.element_type.encode_function.call()};\n" \
                       f"{indent_str}}}"
         return return_str
@@ -413,7 +415,7 @@ class ComplexTypes:
                f"\t#ifndef NDEBUG\n" \
                f"\t\tstd::cout << \"optional value blob starting [{[en.element_name for en in all_elements_flat]}{end_str}] \" << std::endl;\n" \
                f"\t#endif\n" \
-               f"\tstatic std::unordered_map<std::string, uint8_t> const table = {{\n"
+               f"\tstatic std::map<std::string, uint8_t> const table = {{\n"
 
         while_loop_offset = 0
         for i, element in enumerate(all_elements_flat):
@@ -425,10 +427,8 @@ class ComplexTypes:
                 f"\tstd::string element_name;\n" \
                 f"\tbool last_option_taken = false;\n" \
                 f"\tnum_bits_eventcode = log_lookup[std::max(static_cast<int8_t>(2), static_cast<int8_t>({get_num_elements()}))];\n" \
-                f"\tfor (iteration=0; iteration < {len(all_elements_flat)}; iteration++) {{\n" \
-                f"\t\telement_name = input_string_stream_->get_item();\n" \
-                f"\t\tauto it = table.find(element_name);\n" \
-                f"\t\tif (it != table.end()) {{\n" \
+                f"\tfor (std::map<std::string, uint8_t>::const_iterator it=table.begin(); it != table.end(); ++it) {{\n" \
+                f"\t\tif (json->exists(it->first)) {{\n" \
                 f"\t\t\tuint8_t index = it->second;\n" \
                 f"\t\t\tswitch(index) {{\n"
         for i, element in enumerate(all_elements_flat):

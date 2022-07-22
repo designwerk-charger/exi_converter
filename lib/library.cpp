@@ -44,8 +44,8 @@ PYBIND11_MODULE(exi_converter, m) {
             .def("encode", &ExiCodec::py_encode, "Enocode EXI from json");
 }
 
-
-std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStream * bitstream) {
+// TODO MBN: Remove stringstream
+std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
     BaseTypes base_types(bitstream, stringstream);
     iso15118_2::EnumTypes enums(&base_types, stringstream);
     iso15118_2::ComplexTypes complex_types(&base_types, &enums, stringstream);
@@ -53,27 +53,20 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, BitStre
 
     bitstream->add_max_8bits(76, 7);
 
-    stringstream->verify_item_and_move_to_next("V2G_Message");
+    auto v2g = (*json_object)["V2G_Message"]->to_object();
     base_types.add_event_code("V2G_Message");
 
-    stringstream->verify_item_and_move_to_next("Header");
-    complex_types.encode_MessageHeaderType(std::make_shared<JObject>());
+    complex_types.encode_MessageHeaderType(v2g.get_object("Header"));
 
-
-    auto body = stringstream->get_item_and_move_to_next();
-    if (body != "Body") {
-        throw std::runtime_error("Found \"" + body + "\" instead of \"Body\" item found in "
-                                 + stringstream->get_input_data());
-    }
     base_types.add_event_code("Body");
-    body_message.encodeBody();
+    body_message.encodeBody(v2g.get_object("Body"));
     base_types.add_event_code("FinishedBody");
     base_types.add_event_code("Finished");
 
     return bitstream->get_exi_data();
 }
 
-std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, BitStream * bitstream) {
+std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
     BaseTypes base_types(bitstream, stringstream);
     din_spec::EnumTypes enums(&base_types, stringstream);
     din_spec::ComplexTypes complex_types(&base_types, &enums, stringstream);
@@ -81,38 +74,32 @@ std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, BitStream
 
     bitstream->add_max_8bits(77, 7);
 
-    stringstream->verify_item_and_move_to_next("V2G_Message");
+    auto v2g = (*json_object)["V2G_Message"]->to_object();
     base_types.add_event_code("V2G_Message");
 
-    stringstream->verify_item_and_move_to_next("Header");
-    complex_types.encode_MessageHeaderType(std::make_shared<JObject>());
+    complex_types.encode_MessageHeaderType(v2g.get_object("Header"));
 
-
-    auto body = stringstream->get_item_and_move_to_next();
-    if (body != "Body") {
-        throw std::runtime_error("Found \"" + body + "\" instead of \"Body\" item found in "
-                                 + stringstream->get_input_data());
-    }
     base_types.add_event_code("Body");
-    body_message.encodeBody();
+    body_message.encodeBody(v2g.get_object("Body"));
+
     base_types.add_event_code("FinishedBody");
     base_types.add_event_code("Finished");
 
     return bitstream->get_exi_data();
 }
 
-std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitStream * bitstream) {
+std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
     BaseTypes base_types(bitstream, stringstream);
     app_protocol::EnumTypes enums(&base_types, stringstream);
     app_protocol::ComplexTypes complex_types(&base_types, &enums, stringstream);
 
-    auto message_id = stringstream->get_item_and_move_to_next();
+    const auto & message_id = json_object->get_next_key_name();
     if (message_id == "supportedAppProtocolReq") {
         bitstream->add_max_8bits(0, 2);
-        complex_types.encode_supportedAppProtocolReqType(std::make_shared<JObject>());
+        complex_types.encode_supportedAppProtocolReqType(json_object->get_object(message_id));
     } else if (message_id == "supportedAppProtocolRes") {
         bitstream->add_max_8bits(1, 2);
-        complex_types.encode_supportedAppProtocolResType(std::make_shared<JObject>());
+        complex_types.encode_supportedAppProtocolResType(json_object->get_object(message_id));
     } else {
         throw std::runtime_error("The AppProtocol is unknown (" + message_id + ")!");
     }
@@ -121,6 +108,7 @@ std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, BitSt
 }
 
 std::vector<uint8_t> ExiCodec::encode(const std::string& json_str, const std::string& ns) {
+    std::shared_ptr<JObject> json_object = JsonParser::parse(json_str);
     InputStringStream stringstream(json_str);
     BitStream bitstream;
 
@@ -128,11 +116,11 @@ std::vector<uint8_t> ExiCodec::encode(const std::string& json_str, const std::st
     bitstream.add_max_8bits(0x80, 8);
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
-        return encode_iso15118_2(&stringstream, &bitstream);
+        return encode_iso15118_2(&stringstream, json_object, &bitstream);
     } else if (ns == "urn:din:70121:2012:MsgDef") {
-        return encode_din_spec(&stringstream, &bitstream);
+        return encode_din_spec(&stringstream, json_object, &bitstream);
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
-        return encode_app_protocol(&stringstream, &bitstream);
+        return encode_app_protocol(&stringstream, json_object, &bitstream);
     }
     throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }

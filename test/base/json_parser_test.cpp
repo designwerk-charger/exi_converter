@@ -163,3 +163,17 @@ TEST(JsonParser_parseRealWorld, WorksWithAComplexConstruct3) {
     EXPECT_EQ((*item)["V2G_Message"]->to_object()["Body"]->to_object()["SessionSetupRes"] \
     ->to_object()["ResponseCode"]->get_value(), "OK_NewSessionEstablished");
 }
+
+TEST(JsonParser_JObject, iterate_over_keys) {
+    auto item = JsonParser::parse(R"({"key1":"Value1","key2":44})");
+
+    EXPECT_EQ(item->get_next_key_name(), "key1");
+    EXPECT_EQ(item->get_next_key_name(), "key2");
+}
+
+TEST(JsonParser_JObject, exists_returns_true__when__key_exists) {
+    auto item = JsonParser::parse(R"({"key1":"Value1"})");
+
+    EXPECT_TRUE(item->exists("key1"));
+    EXPECT_FALSE(item->exists("key2"));
+}

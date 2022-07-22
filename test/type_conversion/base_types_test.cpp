@@ -100,10 +100,9 @@ TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("true"));
     EXPECT_CALL(mbs, add_max_8bits(1, 1)).Times(1);
 
-    bt.injectBoolValue();
+    bt.injectBoolValue("true");
 }
 
 TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
@@ -111,10 +110,9 @@ TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("false"));
     EXPECT_CALL(mbs, add_max_8bits(0, 1)).Times(1);
 
-    bt.injectBoolValue();
+    bt.injectBoolValue("false");
 }
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_BoolUnknownInjected) {
@@ -122,9 +120,7 @@ TEST(BaseTypeTest, RaiseRuntimeException_When_BoolUnknownInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("bool?"));
-
-    EXPECT_THROW(bt.injectBoolValue(), std::runtime_error);
+    EXPECT_THROW(bt.injectBoolValue("bool?"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
@@ -132,13 +128,11 @@ TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("277130"));
-
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b00010000, 8)).Times(1);
 
-    bt.injectIntegerNumber(4, true);
+    bt.injectIntegerNumber("277130", 4, true);
 }
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_UintCanNotBeInjected) {
@@ -146,9 +140,7 @@ TEST(BaseTypeTest, RaiseRuntimeException_When_UintCanNotBeInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("r277130"));
-
-    EXPECT_THROW(bt.injectIntegerNumber(4, true), std::invalid_argument);
+    EXPECT_THROW(bt.injectIntegerNumber("r277130", 4, true), std::invalid_argument);
 }
 
 TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
@@ -156,14 +148,12 @@ TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("277130"));
-
     EXPECT_CALL(mbs, add_max_8bits(0b0, 1)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b00010000, 8)).Times(1);
 
-    bt.injectIntegerNumber(4, false);
+    bt.injectIntegerNumber("277130", 4, false);
 }
 
 TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
@@ -171,17 +161,15 @@ TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
     MockInputStringStream miss;
     BaseTypes bt(&mbs, &miss);
 
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("1"));
     EXPECT_CALL(mbs, add_max_8bits(0x04, 3)).Times(1);
 
-    bt.injectNBitNumber(3, -3);
+    bt.injectNBitNumber("1", 3, -3);
 }
 
 TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     BitStream bs;
     MockInputStringStream miss;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("CH123DW123"));
 
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>test_vector;
@@ -197,7 +185,7 @@ TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     test_vector.push_back(0b00110010);
     test_vector.push_back(0b00110011);
 
-    bt.injectString();
+    bt.injectString("CH123DW123");
     exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, test_vector);
@@ -207,7 +195,6 @@ TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
     BitStream bs;
     MockInputStringStream miss;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("F05FBD2A935C8EC5"));
 
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>expected_data;
@@ -221,7 +208,7 @@ TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
     expected_data.push_back(0b10001110);
     expected_data.push_back(0b11000101);
 
-    bt.injectHexBin(16);
+    bt.injectHexBin("F05FBD2A935C8EC5", 16);
     exi_data = bs.get_exi_data();
 
     ASSERT_EQ(exi_data, expected_data);
@@ -274,18 +261,16 @@ TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputIsNotAMultipleOf4) {
     MockInputStringStream miss;
     BitStream bs;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("kI3"));
 
-    EXPECT_THROW(bt.injectBase64Value(), std::runtime_error);
+    EXPECT_THROW(bt.injectBase64Value("kI3"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputContainsNonEncodableCharacters) {
     MockInputStringStream miss;
     BitStream bs;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("k)3"));
 
-    EXPECT_THROW(bt.injectBase64Value(), std::runtime_error);
+    EXPECT_THROW(bt.injectBase64Value("k)3"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, InjectBase64_TestData1) {
@@ -293,9 +278,8 @@ TEST(BaseTypeTest, InjectBase64_TestData1) {
     MockInputStringStream miss;
     BitStream bs;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zm9v"));
 
-    bt.injectBase64Value();
+    bt.injectBase64Value("Zm9v");
 
     ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
 }
@@ -305,9 +289,8 @@ TEST(BaseTypeTest, InjectBase64_TestData2) {
     MockInputStringStream miss;
     BitStream bs;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zm8="));
 
-    bt.injectBase64Value();
+    bt.injectBase64Value("Zm8=");
 
     ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
 }
@@ -317,9 +300,8 @@ TEST(BaseTypeTest, InjectBase64_TestData3) {
     MockInputStringStream miss;
     BitStream bs;
     BaseTypes bt(&bs, &miss);
-    EXPECT_CALL(miss, get_item_and_move_to_next()).WillOnce(testing::Return("Zg=="));
 
-    bt.injectBase64Value();
+    bt.injectBase64Value("Zg==");
 
     ASSERT_EQ(bs.get_exi_data(), expected_exi_data);
 }

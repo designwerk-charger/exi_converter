@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
-#include <unordered_map>
+#include <map>
 
 class JValue;
 class JArray;
@@ -18,6 +18,7 @@ class JItemInterface {
     [[nodiscard]] virtual const std::string & get_value() const {throw std::runtime_error("Conversion to JValue failed!");}
     [[nodiscard]] virtual const std::vector<std::shared_ptr<JItemInterface>> & get_array() const {throw std::runtime_error("Conversion to JArray failed!");}
     virtual const JObject & to_object() {throw std::runtime_error("Conversion to JObject failed!");}
+    virtual std::shared_ptr<JObject> get_object(const std::string & key) {throw std::runtime_error("Conversion to JObject failed!");}
     virtual bool is_empty() {return false;}
 };
 
@@ -49,14 +50,34 @@ class JArray: public JItemInterface {
 
 class JObject: public JItemInterface {
  public:
-    JObject() : content({}) {}
+    JObject() : content({}), iterator(content.end()) {}
+
     const JObject & to_object() override {return *this;}
+
+    bool exists(const std::string & key) {
+        return content.find(key) != content.end();
+    }
+
+    std::shared_ptr<JObject> get_object(const std::string & key) override {
+        return std::dynamic_pointer_cast<JObject>(content[key]);
+    }
+
     void append(std::pair<std::string, std::shared_ptr<JItemInterface>> item) {content.insert(std::move(item));}
+
     const std::shared_ptr<JItemInterface> & operator [] (const std::string & key) const {return content.at(key);}
-    size_t size() const {return content.size();}
+
+    [[nodiscard]] size_t size() const {return content.size();}
+
+    const std::string & get_next_key_name() {
+        if (iterator == content.end()) {
+            iterator = content.begin();
+        }
+        return iterator++->first;
+    }
 
  private:
-    std::unordered_map<std::string, std::shared_ptr<JItemInterface>> content;
+    std::map<std::string, std::shared_ptr<JItemInterface>> content;
+    std::map<std::string, std::shared_ptr<JItemInterface>>::iterator iterator;
 };
 
 
