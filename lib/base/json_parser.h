@@ -59,7 +59,11 @@ class JObject: public JItemInterface {
     }
 
     std::shared_ptr<JObject> get_object(const std::string & key) override {
-        return std::dynamic_pointer_cast<JObject>(content[key]);
+        const auto & desired_key = content[key];
+        if (desired_key.get() == nullptr) [[unlikely]] {
+            throw std::runtime_error("The Key '" + key + "' could not be found in object!");
+        }
+        return std::dynamic_pointer_cast<JObject>(desired_key);
     }
 
     void append(std::pair<std::string, std::shared_ptr<JItemInterface>> item) {content.insert(std::move(item));}

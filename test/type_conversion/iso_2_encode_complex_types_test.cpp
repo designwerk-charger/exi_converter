@@ -133,7 +133,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeElementsWithSubstitutes_PowerDeliveryRe
     compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
 }
 
-TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList) {
+TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList_withOneItem) {
     /* Data extracted from OpenV2G
      * PaymentOptionList --> Start
      *   PaymentOption 1
@@ -149,7 +149,17 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_P
      */
 
     std::string input_json = R"({"PaymentOption":["ExternalPayment"]})";
-    std::vector<uint8_t> output_raw = {0b00100100};
+    std::vector<uint8_t> output_raw = {0x24};
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PaymentOptionListType(json_object);
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeSimpleElementList_ServiceDiscoveryRes_PaymentOptionList_withTwoItem) {
+    std::string input_json = R"({"PaymentOption":["Contract","ExternalPayment"]})";
+    std::vector<uint8_t> output_raw = {0x01, 0x00};
     setupWithJsonData(input_json);
 
     complex_types->encode_PaymentOptionListType(json_object);
@@ -214,6 +224,8 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexElementsList_PaymentServiceSelec
 }
 
 TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqType_when_empty) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ServiceDiscoveryReq":{}}}}
+       EXI:    8098020df6a63dcd82240f91b8 */
     /* Data extracted from OpenV2G
      * DecodeServiceDiscoveryReq -> Start
      *   FirstStartTag[START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceScope), START_ELEMENT({urn:iso:15118:2:2013:MsgBody}ServiceCategory), END_ELEMENT]
@@ -226,12 +238,54 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqTyp
     std::string input_json = R"({"ServiceDiscoveryReq":{}})";
     setupWithJsonData(input_json);
 
+    complex_types->encode_ServiceDiscoveryReqType(json_object->get_object("ServiceDiscoveryReq"));
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqType_when_ServiceScopeOnly) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ServiceDiscoveryReq":{"ServiceScope":"bla"}}}}
+       EXI:    8098020df6a63dcd82240f91b00ac4d8c240 */
+    std::vector<uint8_t> raw_data({0x00, 0xac, 0x4d, 0x8c, 0x24});
+
+    std::string input_json = R"({"ServiceScope":"bla"})";
+    setupWithJsonData(input_json);
+
     complex_types->encode_ServiceDiscoveryReqType(json_object);
 
     compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
 }
 
-TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterType) {
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqType_when_ServiceCategoryOnly) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ServiceDiscoveryReq":{"ServiceCategory":"Internet"}}}}
+       EXI:    8098020df6a63dcd82240f91b480 */
+    std::vector<uint8_t> raw_data({0x48});
+
+    std::string input_json = R"({"ServiceCategory":"Internet"})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_ServiceDiscoveryReqType(json_object);
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_ServiceDiscoveryReqType_when_ServiceScopeAndServiceCategory) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ServiceDiscoveryReq":{"ServiceScope":"bla","ServiceCategory":"Internet"}}}}
+       EXI:    8098020df6a63dcd82240f91b00ac4d8c20800 */
+    std::vector<uint8_t> raw_data({0x00, 0xac, 0x4d, 0x8c, 0x20, 0x80});
+
+    std::string input_json = R"({"ServiceScope":"bla","ServiceCategory":"Internet"})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_ServiceDiscoveryReqType(json_object);
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterType__when_all_options_available) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ChargeParameterDiscoveryReq":{"RequestedEnergyTransferMode":"DC_extended","DC_EVChargeParameter":{"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80}}}}}
+       EXI:    8098020df6a63dcd82240f9094c8000800f0003080fa01020a1807c082014008306c1b00830781702d050000 */
+
     /* Data extracted from OpenV2G
      * DC_EVChargeParameterType -> Start
      *   FirstStartTag[START_ELEMENT(DepartureTime), START_ELEMENT(DC_EVStatus)]
@@ -419,10 +473,23 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterTy
                                    0b00010000, 0b00011111, 0b01000000, 0b00100000, 0b01000001, 0b01000011,
                                    0b00000000, 0b11111000, 0b00010000, 0b01000000, 0b00101000, 0b00000001,
                                    0b00000110, 0b00001101, 0b10000011, 0b01100000, 0b00010000, 0b01100000,
-                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000, 0x00});
-    // last 0x00 manually added
+                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000});
 
     std::string input_json = R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})";
+    setupWithJsonData(input_json);
+
+    complex_types->encode_DC_EVChargeParameterType(json_object);
+
+    compareBinaryVector(bit_stream->get_exi_data(), raw_data);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterType__when_no_options_available) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ChargeParameterDiscoveryReq":{"RequestedEnergyTransferMode":"DC_extended","DC_EVChargeParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40}}}}}}
+       EXI:    8098020df6a63dcd82240f9094ca400780018407d00890402820 */
+
+    std::vector<uint8_t> raw_data({0x48, 0x00, 0xf0, 0x00, 0x30, 0x80, 0xfa, 0x01, 0x12, 0x08, 0x05, 0x04});
+
+    std::string input_json = R"({"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40}})";
     setupWithJsonData(input_json);
 
     complex_types->encode_DC_EVChargeParameterType(json_object);
