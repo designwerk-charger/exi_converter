@@ -56,6 +56,10 @@ TestDataContainer const ISO15118_2_REQUEST_TEST_DATA[] = {
                 "8098020df6a63dcd82240f91b8",
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ServiceDiscoveryReq":{}}}})"),
         TestDataContainer(
+                "ServiceDiscoveryReq_WithNotificationHeader",
+                "8098020df6a63dcd82240f8080536bcafb330bab63a09b80",
+                R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E","Notification":{"FaultCode":"NoTLSRootCertificatAvailable","FaultMsg":"my_fault"}},"Body":{"ServiceDiscoveryReq":{}}}})"),
+        TestDataContainer(
                 "PaymentServiceSelectionReq",
                 "8098020df6a63dcd82240f9132001280",
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"PaymentServiceSelectionReq":{"SelectedPaymentOption":"ExternalPayment","SelectedServiceList":{"SelectedService":[{"ServiceID":1}]}}}}})"),
