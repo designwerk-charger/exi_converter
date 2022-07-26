@@ -128,6 +128,12 @@ TEST_P(EncodingISO15118_2, WithExiDecoder) {
 }
 
 INSTANTIATE_TEST_CASE_P(
+        ResponseMessages,
+        EncodingISO15118_2,
+        ::testing::ValuesIn(ISO15118_2_RESPONSE_TEST_DATA)
+);
+
+INSTANTIATE_TEST_CASE_P(
         RequestMessages,
         EncodingISO15118_2,
         ::testing::ValuesIn(ISO15118_2_REQUEST_TEST_DATA)

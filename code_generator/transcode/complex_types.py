@@ -438,8 +438,6 @@ class ComplexTypes:
             num_elements -= counter_values[i]
             if not elements[-1].is_optional or is_last:
                 num_elements -= 1
-            if num_elements == 0:
-                print("outout")
             return ceil(log2(max(1, num_elements)))
 
         all_elements_flat, counter_values = ComplexTypes.get_all_elements_flat2(elements)
@@ -471,7 +469,7 @@ class ComplexTypes:
                     f"\t\t\t\t\t{get_element_description_line(element)}\n"
             if element.is_optional or element.created_from_abstract:
                 code += f"\t\t\t\t\tevent_code = index - offset;\n" \
-                        f"\t\t\t\t\toffset = index + 1;\n" \
+                        f"\t\t\t\t\toffset = index + {self.get_num_abstract_elements_per_base(element)};\n" \
                         f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"OptionalElement_{element.element_name}\");\n" \
                         f"\t\t\t\t\tnum_bits_eventcode = {get_num_bits_eventcode_regarding_abstract(i)};\n"
             else:
@@ -486,9 +484,6 @@ class ComplexTypes:
             if element.created_from_abstract:
                  code += f"\t\t\t\t\t// this element is abstract. The optional blob needs to end\n" \
                          f"\t\t\t\t\tlast_option_taken = true;\n"
-            #     if True:
-            #         code += f"\t\t\t\t\t// adding event code because it is the last element\n" \
-            #                 f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(0, 1, \"EndingElement_{element.element_name}\");\n"
             elif i == (len(all_elements_flat)-1):
                 code += f"\t\t\t\t\tlast_option_taken = true;\n"
             code += f"\t\t\t\t\tbreak;\n"
@@ -515,9 +510,6 @@ class ComplexTypes:
         code = ""
         optional_blob = []
         was_normal_complex = False
-
-        if ct.type_name == "DC_EVChargeParameterType":
-            print("gugugs")
 
         is_last = False
         for element in ct.child_elements:
