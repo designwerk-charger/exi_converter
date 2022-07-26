@@ -118,6 +118,23 @@ INSTANTIATE_TEST_CASE_P(
 
 
 /* ************************************
+ * Encoding
+ * ********************************* */
+class EncodingISO15118_2 :public ::testing::TestWithParam<TestDataContainer> { };
+
+TEST_P(EncodingISO15118_2, WithExiDecoder) {
+    TestDataContainer test_data = GetParam();
+    ASSERT_EQ(run_encoding(test_data, "urn:iso:15118:2:2013:MsgDef"), test_data.hex_str);
+}
+
+INSTANTIATE_TEST_CASE_P(
+        RequestMessages,
+        EncodingISO15118_2,
+        ::testing::ValuesIn(ISO15118_2_REQUEST_TEST_DATA)
+);
+
+
+/* ************************************
  * Specific test messages
  * ********************************* */
 TEST(ISO15118_2, SpecificMessageDecoding) {

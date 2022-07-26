@@ -84,6 +84,25 @@ class ComplexTypes:
         return all_elements_flat
 
     @staticmethod
+    def get_all_elements_flat2(elements: List[Element]):
+        cnt = -1
+        all_elements_flat = []
+        counter_value = []
+        for e in elements:
+            if e.element_type.is_abstract:
+                cnt += len(e.substitutes.items())
+                for (element_name, element_type) in e.substitutes.items():
+                    all_elements_flat.append(Element(element_name=element_name, element_type=element_type,
+                                                     is_optional=e.is_optional, max_items=1, substitutes={},
+                                                     created_from_abstract=True))
+                    counter_value.append(cnt)
+            else:
+                cnt += 1
+                counter_value.append(cnt)
+                all_elements_flat.append(e)
+        return all_elements_flat, counter_value
+
+    @staticmethod
     def get_num_AnyElements(elements: List[Element]) -> int:
         return sum([isinstance(e, AnyElement) for e in elements])
 
@@ -402,14 +421,28 @@ class ComplexTypes:
 
     def get_encode_code_for_optional_and_abstract_blob(self, elements: List[Element], is_last: bool) -> str:
         def get_num_elements():
-            num_elements = len(all_elements_flat) + ComplexTypes.get_num_AnyElements(elements)
-            if not elements[-1].is_optional:
-                num_elements -= 1
+            num_elements = len(all_elements_flat) + ComplexTypes.get_num_AnyElements(elements) + 1
             if is_last:
                 num_elements += 1
-            return num_elements
+            return max(2, num_elements)
 
-        all_elements_flat = ComplexTypes.get_all_elements_flat(elements)
+        def get_element_description_line(element: Element):
+            abstract_str = f"derived from abstract base {element.element_type.base_type_name}" if element.created_from_abstract else ""
+            optional_str = f"optional " if element.is_optional else ""
+            list_str = f"list " if element.is_list else ""
+            element_type = element.__class__.__name__
+            return f"// {optional_str} {list_str} {element_type} '{element.element_name}:{element.element_type.type_name}' {abstract_str}"
+
+        def get_num_bits_eventcode_regarding_abstract(i: int) -> int:
+            num_elements = get_num_elements()
+            num_elements -= counter_values[i]
+            if not elements[-1].is_optional or is_last:
+                num_elements -= 1
+            if num_elements == 0:
+                print("outout")
+            return ceil(log2(max(1, num_elements)))
+
+        all_elements_flat, counter_values = ComplexTypes.get_all_elements_flat2(elements)
         end_str = " + END_ELEMENT" if is_last else ""
         code = f"{{  // Encoding optional elements: {[en.element_name for en in all_elements_flat]}{end_str}\n" \
                f"\t#ifndef NDEBUG\n" \
@@ -417,7 +450,6 @@ class ComplexTypes:
                f"\t#endif\n" \
                f"\tstatic std::unordered_map<std::string, uint8_t> const table = {{\n"
 
-        while_loop_offset = 0
         for i, element in reversed(list(enumerate(all_elements_flat))):
             code += f"\t\t{{\"{element.element_name}\", {i}}},\n"
 
@@ -426,59 +458,57 @@ class ComplexTypes:
                 f"\tuint8_t offset = 0, iteration = 0, event_code, num_bits_eventcode;\n" \
                 f"\tstd::string element_name;\n" \
                 f"\tbool last_option_taken = false; bool no_element_taken = true;\n" \
-                f"\tnum_bits_eventcode = log_lookup[std::max(static_cast<int8_t>(2), static_cast<int8_t>({get_num_elements()}))];\n" \
+                f"\tnum_bits_eventcode = {max(2, ceil(log2(get_num_elements())))};\n" \
                 f"\tif (json.get() != nullptr) [[likely]] {{\n" \
                 f"\tfor (const auto & it: table) {{\n" \
                 f"\t\titeration++;\n" \
                 f"\t\tconst auto & current_option = it.first;\n" \
                 f"\t\tif (json->exists(current_option)) {{\n" \
-                f"\t\t\tno_element_taken = false;\n" \
                 f"\t\t\tuint8_t index = it.second;\n" \
                 f"\t\t\tswitch(index) {{\n"
         for i, element in enumerate(all_elements_flat):
-            code += f"\t\t\t\tcase {i}:\n"
-            while_loop_offset += ComplexTypes.get_num_abstract_elements_per_base(element)
-            code += f"\t\t\t\t\tevent_code = index - offset;\n" \
-                    f"\t\t\t\t\toffset = index + 1;\n" \
-                    f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"OptionalElement_{element.element_name}\");\n" \
-                    f"\t\t\t\t\tnum_bits_eventcode = log_lookup[static_cast<int8_t>({get_num_elements()} - iteration)];\n"
+            code += f"\t\t\t\tcase {i}:\n" \
+                    f"\t\t\t\t\t{get_element_description_line(element)}\n"
+            if element.is_optional or element.created_from_abstract:
+                code += f"\t\t\t\t\tevent_code = index - offset;\n" \
+                        f"\t\t\t\t\toffset = index + 1;\n" \
+                        f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"OptionalElement_{element.element_name}\");\n" \
+                        f"\t\t\t\t\tnum_bits_eventcode = {get_num_bits_eventcode_regarding_abstract(i)};\n"
+            else:
+                code += f"\t\t\t\t\tevent_code = index - offset;\n" \
+                        f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"NonOptionalElement_{element.element_name}\");\n"
 
             if element.is_list:
                 code += self.encode_list(element, 5)
             else:
                 code += f"{self.encode_element(element, 5, from_optional=True)}\n"
 
-            if i == (len(all_elements_flat)-1):
+            if element.created_from_abstract:
+                 code += f"\t\t\t\t\t// this element is abstract. The optional blob needs to end\n" \
+                         f"\t\t\t\t\tlast_option_taken = true;\n"
+            #     if True:
+            #         code += f"\t\t\t\t\t// adding event code because it is the last element\n" \
+            #                 f"\t\t\t\t\tbase_types_->add_event_code_with_n_bits(0, 1, \"EndingElement_{element.element_name}\");\n"
+            elif i == (len(all_elements_flat)-1):
                 code += f"\t\t\t\t\tlast_option_taken = true;\n"
             code += f"\t\t\t\t\tbreak;\n"
         code += f"\t\t\t\tdefault:\n" \
                 f"\t\t\t\t\tthrow std::runtime_error(\"The item \" +  std::to_string(index) + \" does not exist!\");\n" \
                 f"\t\t\t}}\n" \
-                f"\t\t}}"
-        code += f"\n\t}}}}\n"
+                f"\t\t\tno_element_taken = false;\n" \
+                f"\t\t}}}}\n" \
+                f"\t}}\n"
 
-        if elements[-1].element_type.is_abstract:
-            code += f"\t// last option is abstract. No element taken is not a choice, but ending element is\n" \
-                    f"base_types_->add_event_code_with_n_bits(0, 1, \"EndingElement_{elements[-1].element_name}\");\n"
-        else:
-            code += f"\tif (!last_option_taken) {{\n" \
-                    f"\t\tevent_code = {len(all_elements_flat)} - offset;\n" \
-                    f"\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"EndingOptionalElement_{element.element_name}\");\n" \
-                    f"\t}}\n"
+        code += f"\tif (!last_option_taken) {{\n" \
+                f"\t\tevent_code = {len(all_elements_flat)} - offset;\n" \
+                f"\t\tbase_types_->add_event_code_with_n_bits(event_code, num_bits_eventcode, \"EndingOptionalElement_{element.element_name}\");\n" \
+                f"\t}}"
+        if is_last:
+            code += f" else if (last_option_taken) {{\n" \
+                    f"\t\tbase_types_->add_event_code_with_n_bits(0, 1, \"EndingElement_{element.element_name}\");\n" \
+                    f"\t}}"
+        code += f"\n}}\n"
 
-        if not elements[-1].is_optional and not elements[-1].element_type.is_abstract:
-            code += f"\t// the last element is not optional so we have to add it here\n" \
-                    f"\tif (last_option_taken) {{\n" \
-                    f"\t\t// last option has been taken. so we need to add a bit for start\n" \
-                    f"\t\tbase_types_->add_event_code_with_n_bits(0, 1, \"CompensationStartElement_{elements[-1].element_name}\");\n" \
-                    f"\t}}\n"
-            if elements[-1].is_list:
-                # code += self.encode_list(element, 2)
-                raise RuntimeError("list with previous option --> untested")
-            else:
-                code += f"{self.encode_element(elements[-1], 1, from_optional=True)}\n"
-
-        code += f"}}\n"
         return code
 
     def getEncodeFunction(self, ct: ComplexType):
@@ -486,7 +516,12 @@ class ComplexTypes:
         optional_blob = []
         was_normal_complex = False
 
+        if ct.type_name == "DC_EVChargeParameterType":
+            print("gugugs")
+
+        is_last = False
         for element in ct.child_elements:
+            is_last = ct.child_elements[-1] == element
             was_normal_complex = False
             if element.is_list:
                 if element.is_optional:
@@ -521,13 +556,14 @@ class ComplexTypes:
                 code += "\n"
                 # was_optional = optional_blob[-1].is_optional and not optional_blob[-1].is_list
                 optional_blob = []
+                was_normal_complex = True # isinstance(element, Attribute)
             else:
                 code += self.encode_element(element, from_optional=False) + "\n"
                 was_normal_complex = True
 
         if len(optional_blob) != 0:
             sorted_blob = ComplexTypes.sort_optional_and_abstract_elements(optional_blob)
-            code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=True)
+            code += self.get_encode_code_for_optional_and_abstract_blob(sorted_blob, is_last=is_last)
 
         if was_normal_complex:
             code += f"base_types_->add_event_code(\"Finish{ct.type_name}\");\n"

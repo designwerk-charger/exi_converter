@@ -87,15 +87,15 @@ class BodyMessage:
                 code += f"\t{{\"{value.local_name}\", std::make_pair({key}, &ComplexTypes::encode_{value.type.local_name})}},\n"
         code += f"}};\n\n"
 
-        code += f"const auto & msg_name = body->get_next_key_name();\n" \
-                f"auto it = table.find(msg_name);\n" \
+        code += f"const auto & message_name = body->get_next_key_name();\n" \
+                f"auto it = table.find(message_name);\n" \
                 f"if (it != table.end()) {{\n" \
                 "\tauto message_nr = it->second.first;\n" \
                 "\tauto message_fcn = it->second.second;\n" \
                 "\tbit_stream_->add_max_8bits(message_nr, 6);\n" \
-                "\t(complex_types_->*message_fcn)(body);\n" \
+                "\t(complex_types_->*message_fcn)(body->get_object(message_name));\n" \
                 f"}} else {{\n" \
-                f"\tthrow std::runtime_error(\"The message with name \" + msg_name + \" can not be found\");\n" \
+                f"\tthrow std::runtime_error(\"The message with name \" + message_name + \" can not be found\");\n" \
                 f"}}\n"
 
         return CppFunction(function_name="encodeBody",

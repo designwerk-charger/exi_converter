@@ -99,6 +99,23 @@ TestDataContainer const DIN_SPEC_REQUEST_TEST_DATA[] = {
         )
 };
 
+// Data recorded by comemso and decoded with wireshark
+// Select Payload
+TestDataContainer const DIN_SPEC_TEST_DATA_COMEMSO[] = {
+        TestDataContainer(
+                "ContractAuthenticationReq",
+                "809a0235b6479d88586be0d0b8",
+                R"({"V2G_Message":{"Header":{"SessionID":"D6D91E762161AF83"},"Body":{"ContractAuthenticationReq":{}}}})"),
+        TestDataContainer(
+                "ContractAuthenticationRes",
+                "809a0235b6479d88586be0d0c00000",
+                R"({"V2G_Message":{"Header":{"SessionID":"D6D91E762161AF83"},"Body":{"ContractAuthenticationRes":{"ResponseCode":"OK","EVSEProcessing":"Finished"}}}})"),
+        TestDataContainer(
+                "ChargeParameterDiscoveryReq",
+                "809a0235b6479d88586be0d0719008400280806010060701d0505005018243200406090a0010630a00",  // NOLINT
+                R"({"V2G_Message":{"Header":{"SessionID":"D6D91E762161AF83"},"Body":{"ChargeParameterDiscoveryReq":{"EVRequestedEnergyTransferType":"DC_extended","DC_EVChargeParameter":{"DC_EVStatus":{"EVReady":false,"EVCabinConditioning":true,"EVRESSConditioning":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":20},"EVMaximumCurrentLimit":{"Multiplier":1,"Unit":"A","Value":8},"EVMaximumPowerLimit":{"Multiplier":3,"Unit":"W","Value":29},"EVMaximumVoltageLimit":{"Multiplier":2,"Unit":"V","Value":5},"EVEnergyCapacity":{"Multiplier":3,"Unit":"Wh","Value":200},"EVEnergyRequest":{"Multiplier":3,"Unit":"Wh","Value":160},"FullSOC":99,"BulkSOC":80}}}}})"),
+};
+
 /* ************************************
  * Decoding
  * ********************************* */
@@ -119,6 +136,11 @@ INSTANTIATE_TEST_CASE_P(
         DecodingDIN_SPEC,
         ::testing::ValuesIn(DIN_SPEC_REQUEST_TEST_DATA));
 
+INSTANTIATE_TEST_CASE_P(
+        DecodingComemsoDINMessages,
+        DecodingDIN_SPEC,
+        ::testing::ValuesIn(DIN_SPEC_TEST_DATA_COMEMSO));
+
 /* ************************************
  * Encoding
  * ********************************* */
@@ -134,3 +156,12 @@ INSTANTIATE_TEST_CASE_P(
         EncodingDIN_SPEC,
         ::testing::ValuesIn(DIN_SPEC_RESPONSE_TEST_DATA));
 
+INSTANTIATE_TEST_CASE_P(
+        RequestMessages,
+        EncodingDIN_SPEC,
+        ::testing::ValuesIn(DIN_SPEC_REQUEST_TEST_DATA));
+
+INSTANTIATE_TEST_CASE_P(
+        EncodingComemsoDINMessages,
+        EncodingDIN_SPEC,
+        ::testing::ValuesIn(DIN_SPEC_TEST_DATA_COMEMSO));

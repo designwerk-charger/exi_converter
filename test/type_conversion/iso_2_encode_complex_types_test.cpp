@@ -473,7 +473,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterTy
                                    0b00010000, 0b00011111, 0b01000000, 0b00100000, 0b01000001, 0b01000011,
                                    0b00000000, 0b11111000, 0b00010000, 0b01000000, 0b00101000, 0b00000001,
                                    0b00000110, 0b00001101, 0b10000011, 0b01100000, 0b00010000, 0b01100000,
-                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000});
+                                   0b11110000, 0b00101110, 0b00000101, 0b10100000, 0b10100000, 0x00});
 
     std::string input_json = R"({"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80})";
     setupWithJsonData(input_json);
@@ -497,7 +497,7 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_DC_EVChargeParameterTy
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
 
-TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalElements_MessageHeaderTypeWithoutOptionalParts) {
+TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexCombination_MessageHeaderTypeWithoutOptionalParts) {
     /* Start iso header
     FirstStartTag[START_ELEMENT(SessionID)]
         getting 1bit(s) from position 16 --> 0x0000
@@ -902,7 +902,9 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeComplexCombination_MessageHeaderTypeWit
     compareBinaryVector(bit_stream->get_exi_data(), raw_data);
 }
 
-TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq) {
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq_withDC_EVPowerDeliveryParameter) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"PowerDeliveryReq":{"ChargeProgress":"Start","SAScheduleTupleID":1,"DC_EVPowerDeliveryParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"ChargingComplete":true}}}}}
+       EXI:    8098020df6a63dcd82240f915000022003c140 */
     /* Data extracted from OpenV2G
      * DecodePowerDeliveryReqType -> Start
      *     getting 1bit(s) from position 100 --> 0x0000
@@ -952,7 +954,19 @@ TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq) {
      */
 
     std::string input_json = R"({"ChargeProgress":"Start","SAScheduleTupleID":1,"DC_EVPowerDeliveryParameter":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"ChargingComplete":true}})";
-    std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0b00100010, 0b00000000, 0b00111100, 0b00010100});
+    std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0x22, 0x00, 0x3C, 0x14, 0x00});
+    setupWithJsonData(input_json);
+
+    complex_types->encode_PowerDeliveryReqType(json_object);
+
+    compareBinaryVector(bit_stream.get()->get_exi_data(), output_raw);
+}
+
+TEST_F(Iso2EncodeComplexTypesTest, EncodeOptionalDerivation_PowerDeliveryReq_withoutDC_EVPowerDeliveryParameter) {
+    /* INPUT:  {"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"PowerDeliveryReq":{"ChargeProgress":"Start","SAScheduleTupleID":1}}}}
+       EXI:    8098020df6a63dcd82240f9150000600 */
+    std::string input_json = R"({"ChargeProgress":"Start","SAScheduleTupleID":1})";
+    std::vector<uint8_t> output_raw({0b00000000, 0b00000000, 0x60});
     setupWithJsonData(input_json);
 
     complex_types->encode_PowerDeliveryReqType(json_object);
