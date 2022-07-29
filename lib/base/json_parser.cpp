@@ -134,7 +134,6 @@ inline char jp_get_control_char(const std::string & input_data, std::size_t * cu
     try {
         char ctrl_char = input_data.at(*current_pos);
         if (ctrl_char == ' ') {
-            [[unlikely]]
             (*current_pos)++;
             ctrl_char = input_data.at(*current_pos);
         }
