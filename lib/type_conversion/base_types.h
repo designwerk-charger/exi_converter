@@ -5,14 +5,12 @@
 #include <cstdio>
 #include <string>
 #include "base/bitstream.h"
-#include "base/input_string_stream.h"
 
 
 class BaseTypes {
 public:
 
     BaseTypes(BitStream * bit_stream);
-    BaseTypes(BitStream * bit_stream, InputStringStream * input_string_stream);
     virtual ~BaseTypes() = default;  // LCOV_EXCL_LINE
 
     virtual void injectHexBin(const std::string & value, uint8_t max_length);
@@ -59,6 +57,5 @@ public:
 
 private:
     BitStream * bit_stream_;
-    InputStringStream * input_string_stream_;
     void _injectUnsignedNumber(uint32_t number);
 };

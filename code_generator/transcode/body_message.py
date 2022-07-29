@@ -37,13 +37,13 @@ class BodyMessage:
                                   includes="#include <utility>\n#include <unordered_map>\n#include \"complex_types.h\"\n#include \"base/bitstream.h\"\n#include \"base/output_string_stream.h\"\n",
                                   namespace=namespace)
         self.cpp_class.add_member("ComplexTypes * complex_types_;\n\tBitStream * bit_stream_;\n"
-                                  "\tOutputStringStream * output_string_stream_;\n\tInputStringStream * input_string_stream_;")
+                                  "\tOutputStringStream * output_string_stream_;")
         self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, OutputStringStream * output_string_stream",
                                        "complex_types_ = complex_types;\nbit_stream_ = bit_stream;\n"
-                                       "output_string_stream_ = output_string_stream;\ninput_string_stream_ = nullptr;\n")
-        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream, InputStringStream * input_string_stream",
+                                       "output_string_stream_ = output_string_stream;\n")
+        self.cpp_class.add_constructor("ComplexTypes * complex_types, BitStream * bit_stream",
                                        "complex_types_ = complex_types;\nbit_stream_ = bit_stream;\n"
-                                       "output_string_stream_ = nullptr;\ninput_string_stream_ = input_string_stream;\n")
+                                       "output_string_stream_ = nullptr;\n")
 
         self.cpp_class.add_function(self.getDecodeFunction(relevant_body_elements_numbered))
         self.cpp_class.add_function(self.getEncodeFunction(relevant_body_elements_numbered))

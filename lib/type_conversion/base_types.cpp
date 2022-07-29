@@ -5,9 +5,7 @@
 
 #include "base_types.h"
 
-BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream), input_string_stream_(nullptr) {}
-BaseTypes::BaseTypes(BitStream * bit_stream, InputStringStream * input_string_stream) :
-    bit_stream_(bit_stream), input_string_stream_(input_string_stream) {}
+BaseTypes::BaseTypes(BitStream * bit_stream) : bit_stream_(bit_stream) {}
 
 
 void BaseTypes::injectHexBin(const std::string & value, uint8_t max_length) {

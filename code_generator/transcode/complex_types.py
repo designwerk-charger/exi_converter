@@ -37,7 +37,7 @@ class ComplexTypes:
         self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, OutputStringStream * output_string_stream",
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\n"
                                        "output_string_stream_ = output_string_stream;\n\n")
-        self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types, InputStringStream * input_string_stream",
+        self.cpp_class.add_constructor("BaseTypes * base_types, EnumTypes * enum_types",
                                        "base_types_ = base_types;\nenum_types_ = enum_types;\n"
                                        "output_string_stream_ = nullptr;\n")
 

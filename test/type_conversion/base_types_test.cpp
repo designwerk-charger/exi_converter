@@ -1,6 +1,5 @@
 #include "type_conversion/base_types.h"
 #include "base/bitstream.h"
-#include "mock/mock_input_string_stream.h"
 #include "mock/mock_bitstream.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -97,8 +96,7 @@ TEST(BaseTypeTest, GetHexStringFromExiStream_When_AskedForHexString) {
 
 TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_CALL(mbs, add_max_8bits(1, 1)).Times(1);
 
@@ -107,8 +105,7 @@ TEST(BaseTypeTest, Add1ToExi_When_BoolTrueWasInjected) {
 
 TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_CALL(mbs, add_max_8bits(0, 1)).Times(1);
 
@@ -117,16 +114,14 @@ TEST(BaseTypeTest, Add0ToExi_When_BoolFalseWasInjected) {
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_BoolUnknownInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_THROW(bt.injectBoolValue("bool?"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b11110101, 8)).Times(1);
@@ -137,16 +132,14 @@ TEST(BaseTypeTest, UintWasAddedToExi_When_UintWasInjected) {
 
 TEST(BaseTypeTest, RaiseRuntimeException_When_UintCanNotBeInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_THROW(bt.injectIntegerNumber("r277130", 4, true), std::invalid_argument);
 }
 
 TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_CALL(mbs, add_max_8bits(0b0, 1)).Times(1);
     EXPECT_CALL(mbs, add_max_8bits(0b10001010, 8)).Times(1);
@@ -158,8 +151,7 @@ TEST(BaseTypeTest, IntWasAddedToExi_When_IntWasInjected) {
 
 TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
     MockBitStream mbs;
-    MockInputStringStream miss;
-    BaseTypes bt(&mbs, &miss);
+    BaseTypes bt(&mbs);
 
     EXPECT_CALL(mbs, add_max_8bits(0x04, 3)).Times(1);
 
@@ -168,8 +160,7 @@ TEST(BaseTypeTest, NumberAddedToExi_When_InjectNBitNumberCalled) {
 
 TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
     BitStream bs;
-    MockInputStringStream miss;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>test_vector;
@@ -193,8 +184,7 @@ TEST(BaseTypeTest, StringWasAddedToExi_When_StringWasInjected) {
 
 TEST(BaseTypeTest, BinDataWasAddedToExi_When_HexStringWasInjected) {
     BitStream bs;
-    MockInputStringStream miss;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     std::vector<uint8_t>exi_data;
     std::vector<uint8_t>expected_data;
@@ -258,26 +248,23 @@ TEST(BaseTypeTest, ExtractBase64_TestData3) {
 }
 
 TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputIsNotAMultipleOf4) {
-    MockInputStringStream miss;
     BitStream bs;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     EXPECT_THROW(bt.injectBase64Value("kI3"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, InjectBase64_ThrowException_when_InputContainsNonEncodableCharacters) {
-    MockInputStringStream miss;
     BitStream bs;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     EXPECT_THROW(bt.injectBase64Value("k)3"), std::runtime_error);
 }
 
 TEST(BaseTypeTest, InjectBase64_TestData1) {
     std::vector<uint8_t> expected_exi_data({0x03, 'f', 'o', 'o'});
-    MockInputStringStream miss;
     BitStream bs;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     bt.injectBase64Value("Zm9v");
 
@@ -286,9 +273,8 @@ TEST(BaseTypeTest, InjectBase64_TestData1) {
 
 TEST(BaseTypeTest, InjectBase64_TestData2) {
     std::vector<uint8_t> expected_exi_data({0x02, 'f', 'o'});
-    MockInputStringStream miss;
     BitStream bs;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     bt.injectBase64Value("Zm8=");
 
@@ -297,9 +283,8 @@ TEST(BaseTypeTest, InjectBase64_TestData2) {
 
 TEST(BaseTypeTest, InjectBase64_TestData3) {
     std::vector<uint8_t> expected_exi_data({0x01, 'f'});
-    MockInputStringStream miss;
     BitStream bs;
-    BaseTypes bt(&bs, &miss);
+    BaseTypes bt(&bs);
 
     bt.injectBase64Value("Zg==");
 

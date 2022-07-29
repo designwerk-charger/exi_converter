@@ -8,7 +8,6 @@
 class Iso2EncodeComplexTypesTest : public ::testing::Test {
  public:
     std::shared_ptr<JObject> json_object;
-    std::shared_ptr<InputStringStream> string_stream;
     std::shared_ptr<BitStream> bit_stream;
     std::shared_ptr<BaseTypes> base_types;
     std::shared_ptr<iso15118_2::EnumTypes> enum_types;
@@ -21,12 +20,11 @@ class Iso2EncodeComplexTypesTest : public ::testing::Test {
 
     void setupWithJsonData(const std::string & input_json) {
         json_object = JsonParser::parse(input_json);
-        string_stream = std::make_shared<InputStringStream>(input_json);
         bit_stream = std::make_shared<BitStream>();
-        base_types = std::make_shared<BaseTypes>(bit_stream.get(), string_stream.get());
-        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get(), string_stream.get());
+        base_types = std::make_shared<BaseTypes>(bit_stream.get());
+        enum_types = std::make_shared<iso15118_2::EnumTypes>(base_types.get());
         complex_types = std::make_shared<iso15118_2::ComplexTypes>(base_types.get(),
-                                                                   enum_types.get(), string_stream.get());
+                                                                   enum_types.get());
     }
 };
 

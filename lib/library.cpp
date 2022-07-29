@@ -45,11 +45,11 @@ PYBIND11_MODULE(exi_converter, m) {
 }
 
 // TODO MBN: Remove stringstream
-std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
-    BaseTypes base_types(bitstream, stringstream);
-    iso15118_2::EnumTypes enums(&base_types, stringstream);
-    iso15118_2::ComplexTypes complex_types(&base_types, &enums, stringstream);
-    iso15118_2::BodyMessage body_message(&complex_types, bitstream, stringstream);
+std::vector<uint8_t> encode_iso15118_2(std::shared_ptr<JObject> json_object, BitStream * bitstream) {
+    BaseTypes base_types(bitstream);
+    iso15118_2::EnumTypes enums(&base_types);
+    iso15118_2::ComplexTypes complex_types(&base_types, &enums);
+    iso15118_2::BodyMessage body_message(&complex_types, bitstream);
 
     bitstream->add_max_8bits(76, 7);
 
@@ -66,11 +66,11 @@ std::vector<uint8_t> encode_iso15118_2(InputStringStream * stringstream, std::sh
     return bitstream->get_exi_data();
 }
 
-std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
-    BaseTypes base_types(bitstream, stringstream);
-    din_spec::EnumTypes enums(&base_types, stringstream);
-    din_spec::ComplexTypes complex_types(&base_types, &enums, stringstream);
-    din_spec::BodyMessage body_message(&complex_types, bitstream, stringstream);
+std::vector<uint8_t> encode_din_spec(std::shared_ptr<JObject> json_object, BitStream * bitstream) {
+    BaseTypes base_types(bitstream);
+    din_spec::EnumTypes enums(&base_types);
+    din_spec::ComplexTypes complex_types(&base_types, &enums);
+    din_spec::BodyMessage body_message(&complex_types, bitstream);
 
     bitstream->add_max_8bits(77, 7);
 
@@ -88,10 +88,10 @@ std::vector<uint8_t> encode_din_spec(InputStringStream * stringstream, std::shar
     return bitstream->get_exi_data();
 }
 
-std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, std::shared_ptr<JObject> json_object, BitStream * bitstream) {
-    BaseTypes base_types(bitstream, stringstream);
-    app_protocol::EnumTypes enums(&base_types, stringstream);
-    app_protocol::ComplexTypes complex_types(&base_types, &enums, stringstream);
+std::vector<uint8_t> encode_app_protocol(std::shared_ptr<JObject> json_object, BitStream * bitstream) {
+    BaseTypes base_types(bitstream);
+    app_protocol::EnumTypes enums(&base_types);
+    app_protocol::ComplexTypes complex_types(&base_types, &enums);
 
     const auto & message_id = json_object->get_next_key_name();
     if (message_id == "supportedAppProtocolReq") {
@@ -109,18 +109,17 @@ std::vector<uint8_t> encode_app_protocol(InputStringStream * stringstream, std::
 
 std::vector<uint8_t> ExiCodec::encode(const std::string& json_str, const std::string& ns) {
     std::shared_ptr<JObject> json_object = JsonParser::parse(json_str);
-    InputStringStream stringstream(json_str);
     BitStream bitstream;
 
     // adding exi options
     bitstream.add_max_8bits(0x80, 8);
 
     if (ns == "urn:iso:15118:2:2013:MsgDef") {
-        return encode_iso15118_2(&stringstream, json_object, &bitstream);
+        return encode_iso15118_2(json_object, &bitstream);
     } else if (ns == "urn:din:70121:2012:MsgDef") {
-        return encode_din_spec(&stringstream, json_object, &bitstream);
+        return encode_din_spec(json_object, &bitstream);
     } else if (ns == "urn:iso:15118:2:2010:AppProtocol") {
-        return encode_app_protocol(&stringstream, json_object, &bitstream);
+        return encode_app_protocol(json_object, &bitstream);
     }
     throw std::runtime_error("The namespace '" + ns + "' is unknown!");
 }
