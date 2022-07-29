@@ -165,3 +165,17 @@ INSTANTIATE_TEST_CASE_P(
         EncodingComemsoDINMessages,
         EncodingDIN_SPEC,
         ::testing::ValuesIn(DIN_SPEC_TEST_DATA_COMEMSO));
+
+
+TEST(BruteForceTest, DISABLED_GoThroughDin) {
+    for (int i=0; i < 10000; i++) {
+        for (const auto & dataset : DIN_SPEC_RESPONSE_TEST_DATA) {
+            run_encoding(dataset, "urn:din:70121:2012:MsgDef");
+            run_decoding(dataset, "urn:din:70121:2012:MsgDef");
+        }
+        for (const auto & dataset : DIN_SPEC_REQUEST_TEST_DATA) {
+            run_encoding(dataset, "urn:din:70121:2012:MsgDef");
+            run_decoding(dataset, "urn:din:70121:2012:MsgDef");
+        }
+    }
+}
