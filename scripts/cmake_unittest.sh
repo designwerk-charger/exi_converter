@@ -6,8 +6,8 @@ function runCMakeUnittestsAndCoverage {
     _TEST_TARGET=$2
     _TEST_BINARY="$BUILD_DIR/test/$_TEST_TARGET"
     _TEST_RAPPORT="${UNITTEST_REPORTS_DIR}/${_TEST_TARGET}_report.xml"
-    _GENHTML_BINARY="${BASE_DIR}/testlib/lcov-master-3926d58f/bin/genhtml"
-    _LCOV_BINARY="${BASE_DIR}/testlib/lcov-master-3926d58f/bin/lcov"
+    _GENHTML_BINARY="${BASE_DIR}/testlib/lcov-master-dfeb7505e/bin/genhtml"
+    _LCOV_BINARY="${BASE_DIR}/testlib/lcov-master-dfeb7505e/bin/lcov"
 
     if [ "$3" ]; then
         logInfo "Just run the following test: $3"

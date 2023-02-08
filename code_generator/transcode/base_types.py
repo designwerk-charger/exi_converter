@@ -1,0 +1,49 @@
+from typing import List
+
+from cpp.cpp_class import CppClass
+from cpp.cpp_function import CppFunction
+from datatypes.base_type import BaseType
+
+
+class BaseTypes:
+
+    def __init__(self, type_tree: List[BaseType]):
+        self.simple_types = {}
+        for item in type_tree:
+            self.simple_types.update(item.get_simple_types())
+
+        self.cpp_class = CppClass(class_name="BaseTypes", derived_from_class=None, virtual=True,
+                                  includes="#include <cstdint>\n#include <cstdio>\n#include <string>\n"
+                                           "#include \"base/bitstream.h\"\n#include \"base/input_string_stream.h\"\n")
+        self.cpp_class.add_member("BitStream * bit_stream_;\nInputStringStream * input_string_stream_;")
+        self.cpp_class.add_constructor("BitStream * bit_stream",
+                                       "bit_stream_ = bit_stream;\ninput_string_stream_ = nullptr;")
+        self.cpp_class.add_constructor("BitStream * bit_stream, InputStringStream * input_string_stream",
+                                       "bit_stream_ = bit_stream;\ninput_string_stream_ = input_string_stream;\n")
+        for t in self.simple_types.values():
+            self.cpp_class.add_functions(t.get_base_type_functions())
+
+        self.cpp_class.add_function(CppFunction(function_name="check_event_code_is_0",
+                                                return_type="void", arguments="std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
+        self.cpp_class.add_function(CppFunction(function_name="get_event_code_with_n_bits",
+                                                return_type="uint8_t", arguments="int8_t n_bits, std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
+        self.cpp_class.add_function(CppFunction(function_name="add_event_code",
+                                                return_type="void", arguments="std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
+        self.cpp_class.add_function(CppFunction(function_name="add_event_code_with_n_bits",
+                                                return_type="void", arguments="int8_t event_code, int8_t n_bits, std::string current_type_name",
+                                                code="",
+                                                comment=""
+                                                ))
+
+    def write_base_type_header(self, directory: str):
+        self.cpp_class.write_h(directory)
+        # self.cpp_class.write_cpp(directory)
