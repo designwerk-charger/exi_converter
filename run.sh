@@ -16,12 +16,26 @@ function printHelp {
     logLine "Usage ./run.sh <command>"
     logLine ""
     logLine "<command>                  Description"
+    logLine "converter_tool             Compiles the library as release together with converter_tool (runs clean before)"
     logLine "unittests                  Runs all unittests and code coverage (runs clean before)"
     logLine "gtest                      Runs Google Test unittests (c++)"
     logLine "gtest <foo.*|*.bar>        Runs the unittests matching the filter criteria"
     logLine "clean                      Removes the test-reports, test-coverage and build directory"
 }
 
+function runReleaseBuild() {
+    mkdir -p $BUILD_DIR
+    pushd $BUILD_DIR > /dev/null
+    checkSuccess $? "Change to build dir '$BUILD_DIR'"
+
+    cmake $BASE_DIR -DCMAKE_BUILD_TYPE=Release
+    checkSuccess $? "Run cmake $BASE_DIR for release"
+
+    cmake --build . --target converter_tool
+    checkSuccess $? "Build converter_tool"
+
+    popd > /dev/null
+}
 
 function clean {
     rm -rf "$UNITTEST_REPORTS_DIR"
@@ -35,6 +49,10 @@ function setupUnittestOutputDirectory {
 }
 
 case "$1" in
+    converter_tool)
+        clean
+        runReleaseBuild
+        ;;
     unittests)
         clean
         setupUnittestOutputDirectory

@@ -50,7 +50,7 @@ def decode(msgs, ns):
 
     td_str = ', '.join([f"{td:.2f}" for td in timedeltas])
     print(f"decoding times: {td_str}")
-    print(f"decoding mean: {mean(timedeltas):.2f}ms")
+    print(f"decoding mean: {mean(timedeltas):.3f}ms")
 
 
 def encode(msgs, ns):
@@ -63,7 +63,7 @@ def encode(msgs, ns):
 
     td_str = ', '.join([f"{td:.2f}" for td in timedeltas])
     print(f"encoding times: {td_str}")
-    print(f"encoding mean: {mean(timedeltas):.2f}ms")
+    print(f"encoding mean: {mean(timedeltas):.3f}ms")
 
 def bruteforce_enc_dec(msgs, ns, times: int):
     timedeltas = []
@@ -75,7 +75,7 @@ def bruteforce_enc_dec(msgs, ns, times: int):
             timedeltas.append((datetime.datetime.now()-tstart).total_seconds()*1000)
             if raw != enc:
                 raise RuntimeError(f"failed encoding or decoding {name}")
-    print(f"decoding and encoding all messages for {times} times: mean={mean(timedeltas):.2f}ms, max={max(timedeltas):.2f}ms, min={min(timedeltas):.2f}ms")
+    print(f"decoding and encoding all messages for {times} times: mean={mean(timedeltas):.3f}ms, max={max(timedeltas):.3f}ms, min={min(timedeltas):.3f}ms")
 
 
 
@@ -84,4 +84,4 @@ print(f"Decoding and Encoding the following messages: {msgs_str}")
 decode(din_msgs, din_ns)
 encode(din_msgs, din_ns)
 
-bruteforce_enc_dec(din_msgs, din_ns, 1000)
+bruteforce_enc_dec(din_msgs, din_ns, 10000)
