@@ -106,6 +106,16 @@ jobs:
       with:
         security_control: registry.jit.io/control-osv-scanner-alpine:latest
         
+  software-component-analysis-trivy-csharp:
+    if: fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'software-component-analysis-trivy-csharp' && fromJSON(github.event.inputs.client_payload).payload.workflow_slug == 'workflow-sca'
+    runs-on: ubuntu-20.04
+    timeout-minutes: 60
+    steps:
+    - name: trivy-dotnet
+      uses: jitsecurity-controls/jit-github-action@v4.2.1
+      with:
+        security_control: registry.jit.io/control-trivy-dotnet-slim:latest
+        
   static-code-analysis-c-cpp:
     if: fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'static-code-analysis-c-cpp' && fromJSON(github.event.inputs.client_payload).payload.workflow_slug == 'workflow-sast'
     runs-on: ubuntu-20.04
