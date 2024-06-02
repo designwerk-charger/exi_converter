@@ -96,6 +96,16 @@ jobs:
       with:
         security_control: registry.jit.io/control-osv-scanner-alpine:latest
         
+  software-component-analysis-poetry:
+    if: fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'software-component-analysis-poetry' && fromJSON(github.event.inputs.client_payload).payload.workflow_slug == 'workflow-sca'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+    - name: osv-scanner
+      uses: jitsecurity-controls/jit-github-action@v4.2.2
+      with:
+        security_control: registry.jit.io/control-osv-scanner-alpine:latest
+        
   software-component-analysis-python:
     if: fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'software-component-analysis-python' && fromJSON(github.event.inputs.client_payload).payload.workflow_slug == 'workflow-sca'
     runs-on: ubuntu-22.04
