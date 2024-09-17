@@ -17,7 +17,8 @@ The whole generating and building process is controlled by CMake.
 
 
 ## Library usage with iso15118
-1. Install pybind11 dependency: `pip3 install pybind11`
+  
+1. Install dependencies: `pip3 install wheel pybind11 xmlschema` (either install pybind11 systemwide, with pipx or in a venv)
 2. Create the `version.py` file containing the desired version (e.g. 0.1) for the library: `./set-version.sh . 0.1`
 3. Run `pip3 install .` to compile the sources and install the library to python your local python/site-packages
 4. Add the `lib/cpp_exi_codec.py` to your iso1518 sources
