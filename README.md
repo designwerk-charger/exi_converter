@@ -55,3 +55,8 @@ On our AMD PC we got a 10us average for decoding/encoding one message:
 ```
 decoding and encoding all messages for 10000 times: mean=0.010ms, max=0.104ms, min=0.003ms
 ```
+
+On a raspberry Pi 5:
+``` pseudocode
+decoding and encoding all messages for 10000 times: mean=0.051ms, max=0.223ms, min=0.026ms
+```
