@@ -7,3 +7,7 @@ test-coverage
 test-reports
 testout
 version.py
+exi_converter.egg-info/PKG-INFO
+exi_converter.egg-info/SOURCES.txt
+exi_converter.egg-info/top_level.txt
+exi_converter.egg-info/dependency_links.txt
