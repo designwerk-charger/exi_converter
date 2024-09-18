@@ -5,9 +5,7 @@
 
 INCLUDE( FindPackageHandleStandardArgs )
 
-
-SET( PYBIND11_HINT_DIR "/usr/local/include/python3.7" "/usr/local/include/python3.8" "$ENV{STAGING_DIR}/usr/include/python3.7m/pybind11/include" "$ENV{VIRTUAL_ENV}/lib64/python3.10/site-packages/pybind11")
-SET( PYBIND11_INCLUDE_DIR "$ENV{VIRTUAL_ENV}/lib64/python3.10/site-packages/pybind11/include" )
+SET( PYBIND11_HINT_DIR "$ENV{VIRTUAL_ENV}/lib64/python3.10/site-packages/pybind11" "$ENV{VIRTUAL_ENV}/lib/python3.11/site-packages/pybind11/include" "/usr/local/include/python3.7" "/usr/local/include/python3.8" "$ENV{STAGING_DIR}/usr/include/python3.7m/pybind11/include")
 
 MESSAGE ("pybind hints: ${PYBIND11_HINT_DIR}")
 
