@@ -5,7 +5,15 @@
 
 INCLUDE( FindPackageHandleStandardArgs )
 
-SET( PYBIND11_HINT_DIR "$ENV{VIRTUAL_ENV}/lib64/python3.10/site-packages/pybind11" "$ENV{VIRTUAL_ENV}/lib/python3.11/site-packages/pybind11/include" "/usr/local/include/python3.7" "/usr/local/include/python3.8" "$ENV{STAGING_DIR}/usr/include/python3.7m/pybind11/include")
+execute_process(
+  COMMAND "${PYTHON_EXECUTABLE}" -c "import site; pyList = site.getsitepackages(); print(\" \".join(map(lambda v: '\"' + str(v) + '\"', pyList)));"
+  OUTPUT_VARIABLE PYTHON_SITE_DIR
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# MESSAGE ("Python site: ${PYTHON_SITE}")
+
+SET( PYBIND11_HINT_DIR "$ENV{VIRTUAL_ENV}/lib64/python3.10/site-packages/pybind11/include" "$ENV{VIRTUAL_ENV}/lib/python3.11/site-packages/pybind11/include" "/usr/local/include/python3.7" "/usr/local/include/python3.8" "$ENV{STAGING_DIR}/usr/include/python3.7m/pybind11/include")
 
 MESSAGE ("pybind hints: ${PYBIND11_HINT_DIR}")
 
@@ -13,6 +21,7 @@ FIND_PATH(
   PYBIND11_INCLUDE_DIR
     pybind11/pybind11.h
   HINTS
+    ${PYTHON_SITE_DIR}/pybind11/include
     ${PYBIND11_HINT_DIR}
 )
 
