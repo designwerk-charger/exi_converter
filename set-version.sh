@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 # Buildroot only runs shell scripts
 
 #####################################
 # Creates the version.py file used used to set the package version by setup.py
-# 
+#
 # ./set-version.sh <path to version.py> <fallback version>
-#   1. Try to get version by 'git describe' from current working directory 
+#   1. Try to get version by 'git describe' from current working directory
 #   2. If that fails, it uses the 'fallback version'
 #####################################
 
@@ -22,6 +22,12 @@ if [ $? -ne 0 ]; then
     fi
 else
     echo "Using git describe '$VERSION' as version."
+fi
+
+VERSION=$(echo "$VERSION" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+if [[ "$VERSION" == "" ]]; then
+    echo "Illegal version format detected, using VERSION=0.0.0."
+    VERSION="0.0.0"
 fi
 
 if [ ! -d "$1" ]; then
