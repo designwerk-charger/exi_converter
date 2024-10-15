@@ -73,6 +73,10 @@ TestDataContainer const ISO15118_2_REQUEST_TEST_DATA[] = {
                 // 0x00 removed from end
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"ChargeParameterDiscoveryReq":{"RequestedEnergyTransferMode":"DC_extended","DC_EVChargeParameter":{"DepartureTime":0,"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60},"EVMaximumCurrentLimit":{"Multiplier":-3,"Unit":"A","Value":32000},"EVMaximumPowerLimit":{"Multiplier":1,"Unit":"W","Value":8000},"EVMaximumVoltageLimit":{"Multiplier":1,"Unit":"V","Value":40},"EVEnergyCapacity":{"Multiplier":1,"Unit":"Wh","Value":7000},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":6000},"FullSOC":90,"BulkSOC":80}}}}})"),
         TestDataContainer(
+                "ChargeParameterDiscoveryReq",
+                "8098020c0bb3353fe8214f509002191fffffffe1e0020281061807c05142d0a40840d63f00060000106098750500a000",
+                R"({"V2G_Message":{"Header":{"SessionID":"302ECCD4FFA0853D"},"Body":{"ChargeParameterDiscoveryReq":{"MaxEntriesSAScheduleTuple":1,"RequestedEnergyTransferMode":"DC_extended","DC_EVChargeParameter":{"DepartureTime":4294967295,"DC_EVStatus":{"EVReady":false,"EVErrorCode":"FAILED_RESSTemperatureInhibit","EVRESSSOC":5},"EVMaximumCurrentLimit":{"Multiplier":-1,"Unit":"A","Value":8000},"EVMaximumPowerLimit":{"Multiplier":2,"Unit":"W","Value":5300},"EVMaximumVoltageLimit":{"Multiplier":-1,"Unit":"V","Value":8150},"EVEnergyCapacity":{"Multiplier":-3,"Unit":"Wh","Value":0},"EVEnergyRequest":{"Multiplier":1,"Unit":"Wh","Value":15000},"FullSOC":80,"BulkSOC":80}}}}})"),
+        TestDataContainer(
                 "CableCheckReq",
                 "8098020df6a63dcd82240f9031001e00",
                 R"({"V2G_Message":{"Header":{"SessionID":"37DA98F73608903E"},"Body":{"CableCheckReq":{"DC_EVStatus":{"EVReady":true,"EVErrorCode":"NO_ERROR","EVRESSSOC":60}}}}})"),

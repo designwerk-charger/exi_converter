@@ -31,7 +31,7 @@ public:
 
     virtual void injectIntegerNumber(const std::string & value, uint8_t n_bytes, bool is_unsigned);
 
-    virtual int32_t extractIntegerNumber(uint8_t n_bytes, bool is_unsigned);
+    virtual int64_t extractIntegerNumber(uint8_t n_bytes, bool is_unsigned);
 
     virtual void injectBase64Value(const std::string & value);
 

@@ -215,7 +215,7 @@ class DecimalType(SimpleType):
     @property
     def decode_function(self):
         return CppFunction(function_name="extractIntegerNumber",
-                           return_type="int32_t", arguments="uint8_t n_bytes, bool is_unsigned",
+                           return_type="int64_t", arguments="uint8_t n_bytes, bool is_unsigned",
                            comment="",
                            code="", member_object_name="base_types_", call_args=f"{self.num_bytes}, {str(self.is_unsigned).lower()}")
 
