@@ -99,15 +99,19 @@ void BaseTypes::_injectUnsignedNumber(uint32_t number) {
 }
 
 void BaseTypes::injectIntegerNumber(const std::string & value, uint8_t n_bytes, bool is_unsigned) {
-    uint32_t number = std::stoi(value);
+    uint32_t number;
     if (!is_unsigned) {
-        // Todo MBN there might be an error
-        if (number < 0) {
+        int32_t number_i = std::stoi(value);
+        if (number_i < 0) {
             bit_stream_->add_max_8bits(1, 1);
+            number = number_i * -1;
+        } else {
+            number = number_i;
         }
         bit_stream_->add_max_8bits(0, 1);
+    } else {
+        number = std::stoul(value);
     }
-    number = abs(number);
 
     _injectUnsignedNumber(number);
 }
