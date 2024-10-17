@@ -13,6 +13,7 @@ class OutputStringStream {
     void start_key(const std::string & key);
     void add_value(const std::string & value);
     void add_value(int32_t value);
+    void add_value(int64_t value);
     void add_value(bool value);
     void end_key();
 

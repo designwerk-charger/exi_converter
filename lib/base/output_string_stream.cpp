@@ -38,6 +38,11 @@ void OutputStringStream::add_value(int32_t value) {
     last_command_ = addvalue;
 }
 
+void OutputStringStream::add_value(int64_t value) {
+    output_data_ << value;
+    last_command_ = addvalue;
+}
+
 void OutputStringStream::add_value(bool value) {
     output_data_ << ((value == 0) ? "false" : "true");
     last_command_ = addvalue;
