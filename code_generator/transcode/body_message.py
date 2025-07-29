@@ -13,7 +13,7 @@ class BodyMessage:
     @staticmethod
     def get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema) -> Dict[int, XsdElement]:
         element_top = {}
-        for elem in schema.elements.target_dict.values():
+        for elem in schema.elements._target_dict.values():
             if elem.type.local_name == "BodyBaseType":
                 element_top[elem.local_name] = elem
             elif elem.type.base_type and elem.type.base_type.local_name == "BodyBaseType":
