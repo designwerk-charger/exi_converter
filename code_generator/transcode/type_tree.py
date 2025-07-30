@@ -22,14 +22,13 @@ class TypeTree:
 
     def __init__(self, schema_file: str, namespace: str):
         self._schema = xmlschema.XMLSchema(source=schema_file)
-
-        self._all_types = TypeTree.extract_all_types(self._schema.types._target_dict.values())
+        self._all_types = TypeTree.extract_all_types(self._schema.maps.types.values())
         TypeTree.update_derivations(self._all_types)
 
         self._type_tree = []
         top_level_msgs = self.get_full_list_of_message_types(MESSAGE_TYPES[namespace]) + ADDITIONAL_TYPES[namespace]
         top_level_msgs.append("V2G_Message")
-        for name, types in self._schema.types._target_dict.items():
+        for name, types in self._schema.maps.types.items():
             if types.local_name in top_level_msgs:
                 self._type_tree.append(self.diveIntoType(types, self._all_types))
 
@@ -80,12 +79,12 @@ class TypeTree:
 
     @staticmethod
     def extractComponentType(c: XsdComponent):
-        if c.type.qualified_name in c.schema.types._target_dict.keys():
-            return c.schema.types._target_dict[c.type.qualified_name]
-        if c.type.base_type and c.type.base_type.qualified_name in c.schema.types._target_dict.keys():
-            return c.schema.types._target_dict[c.type.base_type.qualified_name]
-        if c.type.primitive_type.qualified_name in c.schema.types._target_dict.keys():
-            return c.schema.types._target_dict[c.type.primitive_type.qualified_name]
+        if c.type.qualified_name in c.schema.maps.types.keys():
+            return c.schema.maps.types[c.type.qualified_name]
+        if c.type.base_type and c.type.base_type.qualified_name in c.schema.maps.types.keys():
+            return c.schema.maps.types[c.type.base_type.qualified_name]
+        if c.type.primitive_type.qualified_name in c.schema.maps.types.keys():
+            return c.schema.maps.types[c.type.primitive_type.qualified_name]
         else:
             raise KeyError(f"The type ({c.type.qualified_name}) for {c.name} does not exist.")
 
