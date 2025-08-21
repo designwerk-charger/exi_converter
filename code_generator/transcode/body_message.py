@@ -1,19 +1,21 @@
 import collections
 from typing import Dict
 
-from xmlschema import XsdElement
+from xmlschema import XsdElement, XMLSchema10
 
 from cpp.cpp_class import CppClass
 from cpp.cpp_function import CppFunction
 from transcode.complex_types import ComplexTypes
 
+from transcode.helpers import get_target_dict
+
 
 class BodyMessage:
 
     @staticmethod
-    def get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema) -> Dict[int, XsdElement]:
+    def get_elements_with_type_derived_from_body_base_sorted_lexicographically(schema: XMLSchema10) -> Dict[int, XsdElement]:
         element_top = {}
-        for elem in schema.elements.target_dict.values():
+        for elem in get_target_dict(schema.elements).values():
             if elem.type.local_name == "BodyBaseType":
                 element_top[elem.local_name] = elem
             elif elem.type.base_type and elem.type.base_type.local_name == "BodyBaseType":

@@ -37,11 +37,10 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 
 ########################################################################
 # Find the necessary dependencies
-find_package(PythonInterp 3 REQUIRED)
-find_package(PythonLibs   3 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 REQUIRED)
 
-include_directories(${PYTHON_INCLUDE_DIRS} ${PYBIND11_INCLUDE_DIRS})
+include_directories(${Python3_INCLUDE_DIRS} ${PYBIND11_INCLUDE_DIRS})
 
 
 ########################################################################
@@ -58,7 +57,7 @@ set(LIB_SRCS lib/library.cpp lib/base/bitstream.cpp lib/type_conversion/base_typ
 set(_EXE_SRC converter_tool/main.cpp)
 add_executable(converter_tool ${_EXE_SRC})
 add_dependencies(converter_tool exi_converter)
-target_link_libraries(converter_tool PUBLIC exi_converter ${PYTHON_LIBRARY})
+target_link_libraries(converter_tool PUBLIC exi_converter ${Python3_LIBRARIES})
 
 ########################################################################
 # style checks

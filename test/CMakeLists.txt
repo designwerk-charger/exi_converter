@@ -22,7 +22,7 @@ add_definitions(-DPROJECT_ROOT=\"${CMAKE_SOURCE_DIR}\")
 # Configure the test executable
 add_executable(exi_converter_test ${TEST_SRCS} tests.cpp)
 add_dependencies(exi_converter_test exi_converter gtest gmock)
-target_link_libraries(exi_converter_test PUBLIC gtest gmock exi_converter ${PYTHON_LIBRARY})
+target_link_libraries(exi_converter_test PUBLIC gtest gmock exi_converter ${Python3_LIBRARIES})
 
 
 # Configure GoogleTest framework
