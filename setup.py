@@ -79,6 +79,7 @@ setup(
     package_dir={},
     include_package_data=True,
     entry_points={},
+    setup_requires=['xmlschema'],
     description="MDC CAN Interface Library",
     long_description=long_description,
     long_description_content_type='text/markdown',
