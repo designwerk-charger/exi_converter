@@ -87,7 +87,6 @@ setup(
     cmdclass=dict(build_ext=CMakeBuild),
     classifiers=[
         "Operating System :: POSIX :: Linux",
-        "License :: Other/Proprietary License",
         "Programming Language :: Python :: 3 :: Only"
     ]
 )
